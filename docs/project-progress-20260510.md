@@ -4,16 +4,19 @@ Version: 20260510
 
 ## Current Phase
 
-CreatorMesh has completed the Port abstraction design phase.
+CreatorMesh has completed the Port abstraction implementation phase.
 
-All three Port designs are complete and merged: ConnectorPort (implemented), RunnerPort (designed), WorkflowRunnerPort (designed).
+All three Port abstractions are fully designed and implemented in TypeScript:
+- ConnectorPort: designed + implemented (NotionConnectorAdapter)
+- RunnerPort: designed + TypeScript types implemented (ClaudeCodeRunnerAdapter pending)
+- WorkflowRunnerPort: designed + TypeScript types + LocalWorkflowRunner + ThoughtToNoteWorkflow implemented
 
 The current phase is focused on:
 
-- Implementing RunnerPort TypeScript types (types.ts, port.ts, index.ts)
-- Implementing WorkflowPort core types (types.ts, port.ts, index.ts)
-- Implementing LocalWorkflowRunner (phase-1 sequential workflow executor)
-- Designing and implementing the first workflow: ThoughtToNoteWorkflow
+- Implementing ClaudeCodeRunnerAdapter (complete the first real runner)
+- Designing and implementing a minimal Orchestrator (step dispatch coordinator)
+- Designing and implementing ThoughtAgent (first reasoning role)
+- Wiring ThoughtToNoteWorkflow end-to-end with real agent + connector calls
 
 ## Current Development Principle
 
@@ -50,7 +53,7 @@ Inspected on 20260510.
 | `docs/design-context.md` | Present |
 | `docs/context-brief.md` | Present |
 | `docs/skill-invocation.md` | Present |
-| `docs/skill-validation-checklist.md` | Missing |
+| `docs/skill-validation-checklist.md` | Deferred — not planned for now |
 | `docs/project-goal-20260510.md` | Present |
 | `docs/project-progress-20260510.md` | Present |
 
@@ -455,12 +458,16 @@ Suggested next steps, roughly in order:
 11. ~~**Update `src/connectors/INTERFACE.md`**~~ — **Done.** `payload?: Record<string, unknown>` added to `ConnectorAction`; Main Files updated from "planned" to "implemented".
 12. ~~**Design RunnerPort**~~ — **Done.** `src/runners/DESIGN.md` + `INTERFACE.md` rewritten: RunnerPort, RunnerRegistry, 7 task types, 5 permission levels, HumanRunner pause mechanism. Mirrors ConnectorPort governance model.
 13. ~~**Design Claude Code runner**~~ — **Done.** `src/runners/claude-code/DESIGN.md` + `INTERFACE.md` created: ClaudeCodeRunnerAdapter via subprocess invocation; MVP task types: read/plan/write/test; structured error taxonomy; artifact detection strategy.
-14. **Design WorkflowPort** — **Done.** `src/workflows/DESIGN.md` + `INTERFACE.md` rewritten: WorkflowRunnerPort (execute/resume/status/cancel), WorkflowDefinition, 6 step types (agent/connector/runner/knowledge/human-review/storage), GovernanceCheckpoint, StepInputMapping, WorkflowRun lifecycle, LocalWorkflowRunner design.
-15. **Add `docs/skill-validation-checklist.md`** — currently missing. Useful before broader harness promotion.
-16. **Implement RunnerPort TypeScript types** (`src/runners/types.ts`, `port.ts`, `index.ts`) — designs are complete; implementation mirrors ConnectorPort pattern.
-17. **Implement WorkflowPort core types** (`src/workflows/types.ts`, `port.ts`, `index.ts`) — prerequisite for LocalWorkflowRunner.
-18. **Implement LocalWorkflowRunner** (`src/workflows/local-runner.ts`) — phase-1 sequential in-process executor; pause/resume via HumanReviewStep.
-19. **Implement ThoughtToNoteWorkflow** (`src/workflows/definitions/thought-to-note.ts`) — first end-to-end workflow: classify (AgentStep) → review (HumanReviewStep) → write-notion (ConnectorStep with always-approve governance checkpoint).
+14. ~~**Design WorkflowPort**~~ — **Done.** `src/workflows/DESIGN.md` + `INTERFACE.md` rewritten: WorkflowRunnerPort (execute/resume/status/cancel), WorkflowDefinition, 6 step types (agent/connector/runner/knowledge/human-review/storage), GovernanceCheckpoint, StepInputMapping, WorkflowRun lifecycle, LocalWorkflowRunner design.
+15. **Add `docs/skill-validation-checklist.md`** — **Deferred. Not planned for now.**
+16. ~~**Implement RunnerPort TypeScript types**~~ — **Done.** `src/runners/types.ts`, `port.ts`, `index.ts` implemented. 8 smoke tests added. Test suite: 75 tests.
+17. ~~**Implement WorkflowPort core types**~~ — **Done.** `src/workflows/types.ts`, `port.ts`, `index.ts` implemented. 10 smoke tests added. Test suite: 85 tests.
+18. ~~**Implement LocalWorkflowRunner**~~ — **Done.** `src/workflows/local-runner.ts` implemented with pause/resume/cancel/status lifecycle. HumanReviewStep pauses run; WorkflowResumeInput resumes. 10 smoke tests. Test suite: 95 tests.
+19. ~~**Implement ThoughtToNoteWorkflow**~~ — **Done.** `src/workflows/definitions/thought-to-note.ts` implemented: classify (AgentStep) → review-classification (HumanReviewStep) → write-notion (ConnectorStep, requiresApproval, always-approve GovernanceCheckpoint). 13 smoke tests. Test suite: 108 tests.
+20. **Implement ClaudeCodeRunnerAdapter** (`src/runners/claude-code/` — 5 files) — design complete; subprocess invocation of `claude` CLI; MVP: read/plan/write/test.
+21. **Design + implement minimal Orchestrator** (`src/orchestrator/`) — step dispatch coordinator; wires ConnectorPort, RunnerPort, agent roles into workflow execution; replaces LocalWorkflowRunner stubs.
+22. **Design + implement ThoughtAgent** (`src/agents/`) — first reasoning role; classifies and structures a Thought using Claude API; stateless.
+23. **Wire ThoughtToNoteWorkflow end-to-end** — replace LocalWorkflowRunner step stubs with real Orchestrator dispatch to ThoughtAgent + NotionConnectorAdapter.
 
 ## Known Risks
 
@@ -498,6 +505,6 @@ The connector layer is now complete at both design and implementation levels. `C
 
 The connector cleanup is now complete: `src/connectors/INTERFACE.md` reflects the implemented state (including the `payload` field), and `createMessage()` has full smoke test parity with `createThought()`. The test suite stands at 67 tests, all passing.
 
-All three Port designs are now complete and merged: ConnectorPort (implemented), RunnerPort (designed — DESIGN.md + INTERFACE.md), WorkflowRunnerPort (designed — DESIGN.md + INTERFACE.md). The Claude Code runner adapter design is also complete.
+All three Port abstractions are now designed and implemented in TypeScript. RunnerPort types (types.ts / port.ts / index.ts) and WorkflowPort types (types.ts / port.ts / index.ts) are implemented. LocalWorkflowRunner executes workflows sequentially with pause/resume/cancel/status lifecycle. ThoughtToNoteWorkflow is the first concrete WorkflowDefinition: classify → review-classification → write-notion, with always-approve GovernanceCheckpoint on the Notion write step. The test suite stands at 108 tests across 12 test files, all passing.
 
-The next milestones are: implementing RunnerPort TypeScript types, implementing WorkflowPort types, implementing LocalWorkflowRunner, and building the first end-to-end workflow (ThoughtToNoteWorkflow). The design foundation is complete and ready for the TypeScript implementation phase.
+The next milestones are: ClaudeCodeRunnerAdapter (first real execution runner), minimal Orchestrator (step dispatch from workflow to real ports), ThoughtAgent (first reasoning role via Claude API), and end-to-end wiring of ThoughtToNoteWorkflow with real implementations.
