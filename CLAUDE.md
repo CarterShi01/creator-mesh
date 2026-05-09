@@ -7,11 +7,12 @@ Follow `AGENTS.md` as the primary instruction file for all development work in t
 Before reading implementation files, always read in this order:
 
 1. `AGENTS.md`
-2. `docs/context-map.md` — if it exists
+2. `docs/context-map.md` — when available
 3. `docs/architecture.md`
 4. Target directory `README.md`
-5. Target directory `INTERFACE.md` — if it exists
-6. Only then: specific implementation files needed for the task
+5. Target directory `DESIGN.md` — when available
+6. Target directory `INTERFACE.md` — when available
+7. Only then: specific implementation files needed for the task
 
 ## Context Budget
 
@@ -31,6 +32,12 @@ For any non-trivial change:
 1. State what you are going to do and which files will be affected.
 2. Wait for confirmation if the change is large or crosses module boundaries.
 3. Then make the edits.
+
+## Design Context
+
+When useful design reasoning emerges during a session, suggest updating the relevant `DESIGN.md`.
+
+Use `creator-design-context-maintainer` when asked to preserve design context.
 
 ## After Meaningful Work
 

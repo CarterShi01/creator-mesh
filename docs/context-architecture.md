@@ -54,9 +54,28 @@ A boundary document for each source module. It explains what the module is for, 
 
 A contract document for each source module. It describes the types and functions that other modules are allowed to depend on. Reading this is usually sufficient to understand how to interact with a module without reading its implementation.
 
+### `src/<module>/DESIGN.md`
+
+A middle-layer design context document for each source module. It captures the reasoning behind current design decisions, tradeoffs, assumptions, alternatives considered, and open questions. Reading this bridges the gap between the high-level README and the contract-level INTERFACE.
+
 ### Skills
 
 Reusable task patterns encoded once and invoked by name. Skills reduce the token cost of routine operations. When a task is performed more than once, consider whether it should become a skill.
+
+## DESIGN.md as Middle-Layer Context
+
+`DESIGN.md` sits between `README.md` and `INTERFACE.md`.
+
+It is used to preserve design reasoning, tradeoffs, assumptions, alternatives, and ChatGPT handoff context.
+
+Reading order:
+
+1. README.md explains responsibility.
+2. DESIGN.md explains reasoning.
+3. INTERFACE.md explains contract.
+4. Source code explains implementation.
+
+This helps reduce context cost when switching between Claude Code, ChatGPT, and human collaborators.
 
 ## Why This Structure Works
 

@@ -10,8 +10,9 @@ Before reading any implementation file, read in this order:
 2. `docs/context-map.md` — this file
 3. `docs/architecture.md`
 4. Target directory `README.md`
-5. Target directory `INTERFACE.md` — if it exists
-6. Only then: specific implementation files needed for the task
+5. Target directory `DESIGN.md` — if it exists
+6. Target directory `INTERFACE.md` — if it exists
+7. Only then: specific implementation files needed for the task
 
 ## Source Map
 
