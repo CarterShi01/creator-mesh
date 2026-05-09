@@ -4,19 +4,22 @@ Version: 20260510
 
 ## Current Phase
 
-CreatorMesh has completed the Port abstraction implementation phase.
+CreatorMesh has completed the first end-to-end workflow execution phase.
 
-All three Port abstractions are fully designed and implemented in TypeScript:
+All core adapters are implemented and wired together:
 - ConnectorPort: designed + implemented (NotionConnectorAdapter)
-- RunnerPort: designed + TypeScript types implemented (ClaudeCodeRunnerAdapter pending)
-- WorkflowRunnerPort: designed + TypeScript types + LocalWorkflowRunner + ThoughtToNoteWorkflow implemented
+- RunnerPort: designed + implemented (ClaudeCodeRunnerAdapter with injectable SubprocessInvoker)
+- WorkflowRunnerPort: designed + implemented (LocalWorkflowRunner with optional StepExecutor)
+- Orchestrator: implemented (dispatches AgentStep / ConnectorStep / RunnerStep via registered adapters)
+- ThoughtAgent: implemented (stateless reasoning role backed by Anthropic API; injectable client)
+- ThoughtToNoteWorkflow: wired end-to-end (ThoughtAgent → HumanReview → NotionConnector via Orchestrator)
 
-The current phase is focused on:
+The first full workflow path is validated by smoke tests: a raw Thought flows through classification, human review, and Notion page creation without stubs.
 
-- Implementing ClaudeCodeRunnerAdapter (complete the first real runner)
-- Designing and implementing a minimal Orchestrator (step dispatch coordinator)
-- Designing and implementing ThoughtAgent (first reasoning role)
-- Wiring ThoughtToNoteWorkflow end-to-end with real agent + connector calls
+The next phase is focused on:
+- Real integration testing with actual API credentials (Anthropic + Notion)
+- Adding remaining workflow steps or a second workflow
+- Strengthening governance layer (approval checkpoints at Orchestrator level)
 
 ## Current Development Principle
 
@@ -432,14 +435,13 @@ Slash command invocation was previously reported as "Unknown skill" for `creator
 
 ## Current Focus
 
-The current focus is implementing the Port abstractions in TypeScript and validating the first end-to-end workflow.
+The current focus is real integration validation and governance strengthening.
 
-1. Strengthen and validate the documentation and harness system.
-2. Validate Claude Code assisted development on small features.
-3. Prepare for Notion as the first knowledge connector.
-4. Prepare for Claude Code as the first development runner.
-5. Use context briefs to hand off design context to ChatGPT when needed.
-6. Keep project progress accurate after each meaningful session.
+1. Test ThoughtToNoteWorkflow with real Anthropic API and Notion API credentials.
+2. Implement approval enforcement in Orchestrator (governance checkpoints before connector/runner steps).
+3. Design and implement a second workflow or extend ThoughtToNoteWorkflow with richer output mapping.
+4. Strengthen docs-presence harness to verify new implementation files are tracked.
+5. Keep project progress accurate after each meaningful session.
 
 ## Next Recommended Work
 
@@ -464,10 +466,10 @@ Suggested next steps, roughly in order:
 17. ~~**Implement WorkflowPort core types**~~ — **Done.** `src/workflows/types.ts`, `port.ts`, `index.ts` implemented. 10 smoke tests added. Test suite: 85 tests.
 18. ~~**Implement LocalWorkflowRunner**~~ — **Done.** `src/workflows/local-runner.ts` implemented with pause/resume/cancel/status lifecycle. HumanReviewStep pauses run; WorkflowResumeInput resumes. 10 smoke tests. Test suite: 95 tests.
 19. ~~**Implement ThoughtToNoteWorkflow**~~ — **Done.** `src/workflows/definitions/thought-to-note.ts` implemented: classify (AgentStep) → review-classification (HumanReviewStep) → write-notion (ConnectorStep, requiresApproval, always-approve GovernanceCheckpoint). 13 smoke tests. Test suite: 108 tests.
-20. **Implement ClaudeCodeRunnerAdapter** (`src/runners/claude-code/` — 5 files) — design complete; subprocess invocation of `claude` CLI; MVP: read/plan/write/test.
-21. **Design + implement minimal Orchestrator** (`src/orchestrator/`) — step dispatch coordinator; wires ConnectorPort, RunnerPort, agent roles into workflow execution; replaces LocalWorkflowRunner stubs.
-22. **Design + implement ThoughtAgent** (`src/agents/`) — first reasoning role; classifies and structures a Thought using Claude API; stateless.
-23. **Wire ThoughtToNoteWorkflow end-to-end** — replace LocalWorkflowRunner step stubs with real Orchestrator dispatch to ThoughtAgent + NotionConnectorAdapter.
+20. ~~**Implement ClaudeCodeRunnerAdapter**~~ — **Done.** `src/runners/claude-code/`: `errors.ts`, `registry.ts`, `invoke.ts` (SubprocessInvoker interface + ChildProcessInvoker), `adapter.ts`, `index.ts`. Injectable SubprocessInvoker for testability. Adapter never throws; all errors return structured RunnerResult.status="failure". 15 smoke tests. Test suite: 109 tests.
+21. ~~**Design + implement minimal Orchestrator**~~ — **Done.** `src/orchestrator/orchestrator.ts`: Orchestrator class implements StepExecutor; dispatches agent/connector/runner steps to registered adapters; resolves `$input.*` and `$steps.*.*` input mappings. `StepExecutor` interface added to `src/workflows/port.ts`. `AgentRole` interface added to `src/agents/port.ts`. 10 smoke tests. Test suite: 100 tests.
+22. ~~**Design + implement ThoughtAgent**~~ — **Done.** `src/agents/thought-agent.ts`: ThoughtAgent implements AgentRole; injectable ThoughtAgentClient for testability; AnthropicThoughtClient backed by claude-haiku-4-5-20251001; returns ThoughtClassification (category, summary, tags, confidence, suggestedTitle). @anthropic-ai/sdk installed. 9 smoke tests. Test suite: 109 tests.
+23. ~~**Wire ThoughtToNoteWorkflow end-to-end**~~ — **Done.** LocalWorkflowRunner accepts optional StepExecutor constructor arg; when present, non-HumanReview steps dispatch to Orchestrator. Fixed thought-to-note inputMapping to reference classify.suggestedTitle and classify.summary. 9 end-to-end smoke tests validate full path: ThoughtAgent → HumanReview pause → NotionConnector write. Test suite: 109 tests total.
 
 ## Known Risks
 
