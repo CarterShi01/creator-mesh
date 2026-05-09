@@ -2,65 +2,124 @@
 
 ## Purpose
 
-`agents` defines agent roles and reasoning contracts. An agent is a named role that can reason about a specific domain, task, or decision. Agents do not execute work directly — they reason and return structured outputs.
+`agents` defines stateless reasoning roles. An agent receives structured input, reasons about it using role-specific instructions, and returns structured output. Agents do not execute code, call connectors, or write to storage.
 
 ## Public Concepts
 
-- `AgentRole` — a named reasoning role with a defined domain and capability set
-- `AgentInstruction` — the instruction set given to an agent for a specific task
-- `AgentCapability` — a declared ability of an agent role
-- `AgentInput` — the structured input an agent receives to reason about
-- `AgentOutput` — the structured result an agent produces after reasoning
+### AgentRole
 
-Possible future agent roles:
-- `ThoughtAgent`
-- `MessageAgent`
-- `KnowledgeAgent`
-- `PlanningAgent`
-- `ResearchAgent`
-- `ReviewAgent`
-- `GovernanceAgent`
+```
+AgentRole {
+  agentId: string
+  execute(input: AgentInput): Promise<AgentOutput>
+}
+```
 
-## Inputs
+### AgentInput / AgentOutput
 
-`AgentTask` from `src/orchestrator`, containing the task description, context, and input data.
+```
+AgentInput {
+  agentRole: string
+  task: string
+  context?: Record<string, unknown>
+}
 
-## Outputs
+AgentOutput {
+  agentRole: string
+  result: unknown        // role-specific structured output
+  metadata?: Record<string, unknown>
+}
+```
 
-`AgentOutput` returned to `src/orchestrator` or `src/workflows`, containing the reasoning result, recommendations, or structured decisions.
+### ThoughtAgent
+
+Implements `AgentRole`. Accepts an injectable `ThoughtAgentClient` for testability.
+`agentId = "thought-agent"`.
+
+Input: `context.thought` (string) — the raw thought to classify.
+Falls back to `input.task` when `context.thought` is absent.
+
+Result type: `ThoughtClassification`.
+
+```
+ThoughtAgent implements AgentRole {
+  agentId: "thought-agent"
+  constructor(client: ThoughtAgentClient)
+  execute(input: AgentInput): Promise<AgentOutput>   // result: ThoughtClassification
+}
+```
+
+### ThoughtClassification
+
+```
+ThoughtClassification {
+  category: string          // "idea" | "task" | "question" | "reference" | "reminder" | "observation"
+  summary: string           // 1-2 sentence summary
+  tags: string[]            // 1-5 lowercase tags
+  confidence: number        // 0-1
+  suggestedTitle: string    // short page title for Notion (under 80 chars)
+}
+```
+
+### ThoughtAgentClient
+
+Injectable interface for the LLM backing. Used to make ThoughtAgent testable without calling the real Claude API.
+
+```
+ThoughtAgentClient {
+  complete(system: string, user: string): Promise<string>
+}
+```
+
+### AnthropicThoughtClient
+
+Concrete implementation of `ThoughtAgentClient` backed by the Anthropic Messages API.
+Model: `claude-haiku-4-5-20251001`.
+
+```
+AnthropicThoughtClient implements ThoughtAgentClient {
+  constructor(apiKey?: string)
+  complete(system: string, user: string): Promise<string>
+}
+```
 
 ## Allowed Dependencies
 
 - `src/core`
 - `src/shared`
+- `@anthropic-ai/sdk` (ThoughtAgent backing only — via dynamic import in AnthropicThoughtClient)
 
 ## Disallowed Dependencies
 
 - `src/triggers`
 - `src/intake`
-- `src/knowledge` (agents reason about knowledge items but do not manage the knowledge layer)
-- `src/runners` (execution is delegated through orchestrator)
+- `src/knowledge`
+- `src/runners`
 - `src/connectors`
 - `src/workflows`
 - `src/governance`
 - `src/storage`
 - `src/outputs`
+- `src/orchestrator`
 
 ## Invariants
 
-- Agents must not execute code, call external APIs, or write to storage directly.
-- Agent roles must remain stateless. State belongs in `src/storage` or `src/orchestrator`.
-- Agent instructions must be readable and auditable. Prompt logic should not be hidden in implementation files.
+- Agents must remain stateless. No shared state between `execute()` calls.
+- Agent instructions (system prompts) must be readable strings in source — not hidden in configuration.
+- `AgentOutput.result` must always be a serializable value (JSON-compatible).
+- `ThoughtAgent` never throws for well-formed input — parse errors from LLM responses are surfaced as thrown errors with descriptive messages.
 
 ## Main Files
 
-No implementation files are defined yet.
+- `port.ts` — `AgentRole`, `AgentInput`, `AgentOutput` interfaces
+- `thought-agent.ts` — `ThoughtAgent`, `ThoughtClassification`, `ThoughtAgentClient`, `AnthropicThoughtClient`
+- `index.ts` — barrel re-exports
 
 ## Change Rules for Agents
 
 1. Read `AGENTS.md`.
 2. Read `docs/context-map.md`.
 3. Read this `INTERFACE.md`.
-4. Read this directory's `README.md`.
-5. Identify whether the change affects public concepts, inputs, outputs, dependencies, or invariants.
-6. Update this file if the public contract changes.
+4. Identify whether the change affects public concepts, inputs, outputs, dependencies, or invariants.
+5. Update this file if the public contract changes.
+6. Apply bottom-up propagation: if `AgentRole` or `AgentInput`/`AgentOutput` change, update `src/orchestrator/INTERFACE.md`.
