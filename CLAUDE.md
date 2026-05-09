@@ -49,6 +49,7 @@ Invoke project skills using slash commands:
 - `/creator-skill-harvester`
 - `/creator-design-context-maintainer`
 - `/creator-context-brief`
+- `/creator-progress-maintainer`
 
 Fallback natural-language invocations for `creator-context-brief`:
 
@@ -56,6 +57,13 @@ Fallback natural-language invocations for `creator-context-brief`:
 - "Generate a CreatorMesh context brief."
 
 `creator-context-brief` is a manual read-only context export skill. It is used to generate a compressed project or goal-specific brief for ChatGPT or another LLM. It should not run the normal development harness or modify files.
+
+Fallback natural-language invocations for `creator-progress-maintainer`:
+
+- "Use creator-progress-maintainer."
+- "Update CreatorMesh project progress."
+
+`creator-progress-maintainer` is a post-change project progress skill. It should be used after meaningful code, documentation, architecture, or skill changes to update the latest project progress document based on repository evidence.
 
 ## After Meaningful Work
 
