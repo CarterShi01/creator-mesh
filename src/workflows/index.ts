@@ -30,3 +30,5 @@ export type {
   WorkflowResumeInput,
   WorkflowRunnerPort,
 } from "./port.js";
+
+export { LocalWorkflowRunner } from "./local-runner.js";

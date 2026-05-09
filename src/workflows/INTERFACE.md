@@ -333,8 +333,9 @@ Implemented:
 - `port.ts` — `WorkflowRunnerPort`, `WorkflowDefinition`, `WorkflowRun`, `WorkflowContext`, `WorkflowStepRecord`, `WorkflowResult`, `WorkflowResumeInput`, `WorkflowPauseState`, `GovernanceCheckpoint`
 - `index.ts` — barrel re-exports
 
+- `local-runner.ts` — `LocalWorkflowRunner` implementing `WorkflowRunnerPort` (phase-1 sequential in-process executor; pause/resume via HumanReviewStep; stub step outputs for agent/connector/runner steps)
+
 Planned (not yet implemented):
-- `local-runner.ts` — `LocalWorkflowRunner` implementing `WorkflowRunnerPort`
 - `definitions/` — concrete `WorkflowDefinition` objects (e.g. `thought-to-note.ts`)
 
 ## Change Rules for Agents
