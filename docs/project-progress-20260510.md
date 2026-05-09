@@ -143,13 +143,14 @@ All other `src/` directories contain no implementation files yet.
 | `tests/integration/README.md` | Present (placeholder) |
 | `tests/e2e/README.md` | Present (placeholder) |
 | `tests/smoke/core/createThought.smoke.test.ts` | Present (5 tests, all passing) |
+| `tests/smoke/core/createMessage.smoke.test.ts` | Present (5 tests, all passing) |
 | `tests/smoke/connectors/notion/normalize.smoke.test.ts` | Present (4 tests, all passing) |
 | `tests/smoke/connectors/notion/errors.smoke.test.ts` | Present (7 tests, all passing) |
 | `tests/smoke/connectors/notion/capabilities.smoke.test.ts` | Present (4 tests, all passing) |
 | `tests/harness/architecture-boundaries.test.ts` | Present (4 tests, all passing) |
 | `tests/harness/docs-presence.test.ts` | Present (30 tests, all passing) |
 | `tests/harness/skills-format.test.ts` | Present (8 tests, all passing) |
-| `npm run verify` | Passing (typecheck + 62 tests across smoke + harness) |
+| `npm run verify` | Passing (typecheck + 67 tests across smoke + harness) |
 
 ### CI and Verification Policy
 
@@ -324,6 +325,12 @@ Slash command invocation was previously reported as "Unknown skill" for `creator
 - `src/connectors/DESIGN.md` — minor update: "First Adapter: Notion" note in Current Assumptions
 - `npm run verify` passes clean: 47 tests
 
+### Connector Interface and Test Parity Cleanup
+
+- `src/connectors/INTERFACE.md` updated: `ConnectorAction.payload?: Record<string, unknown>` added (was missing from the published contract); Main Files section updated from "planned" to "implemented" listing `types.ts`, `port.ts`, `index.ts`, `notion/`
+- `tests/smoke/core/createMessage.smoke.test.ts` added: 5 tests mirroring `createThought` coverage (valid message, trim, default source, empty reject, whitespace reject)
+- `npm run verify` passes 67/67 (was 62; 5 new tests)
+
 ### ConnectorPort and CapabilityRegistry Design
 
 - `src/connectors/DESIGN.md` — major rewrite with full ConnectorPort + CapabilityRegistry design:
@@ -382,11 +389,11 @@ Suggested next steps, roughly in order:
 7. ~~**Design Notion-specific connector adapter**~~ — **Done.** `src/connectors/notion/DESIGN.md` and `src/connectors/notion/INTERFACE.md` created. MVP: search/read/create/append. Key open question: typed `payload` field in `ConnectorAction`.
 8. ~~**Resolve `ConnectorAction` payload design**~~ — **Done.** `payload?: Record<string, unknown>` added to `ConnectorAction`; query, page_id, parent+title all flow through this typed field.
 9. ~~**Implement Notion connector adapter**~~ — **Done.** All 5 files created, type-checked, smoke-tested: `normalize.ts`, `errors.ts`, `capabilities.ts`, `adapter.ts`, `index.ts`.
-10. **Add smoke tests for `createMessage()`** — `createThought()` has 5 smoke tests; `createMessage()` has none. Test parity is expected.
-11. **Design RunnerPort** (`src/runners/DESIGN.md` rewrite) — mirrors ConnectorPort pattern. Required before Claude Code runner design. No implementation.
-12. **Design Claude Code runner** — follows RunnerPort design.
-13. **Add `docs/skill-validation-checklist.md`** — currently missing. Useful before broader harness promotion.
-14. **Update `src/connectors/INTERFACE.md`** — note that `types.ts` and `port.ts` are now implemented, not just designed; note `ConnectorAction.payload` is resolved.
+10. ~~**Add smoke tests for `createMessage()`**~~ — **Done.** 5 smoke tests added; test parity with `createThought()` achieved.
+11. ~~**Update `src/connectors/INTERFACE.md`**~~ — **Done.** `payload?: Record<string, unknown>` added to `ConnectorAction`; Main Files updated from "planned" to "implemented".
+12. **Design RunnerPort** (`src/runners/DESIGN.md` rewrite) — mirrors ConnectorPort pattern. Required before Claude Code runner design. No implementation.
+13. **Design Claude Code runner** — follows RunnerPort design.
+14. **Add `docs/skill-validation-checklist.md`** — currently missing. Useful before broader harness promotion.
 
 ## Known Risks
 
@@ -422,6 +429,6 @@ All 13 `src/` modules now have all three documentation layers: `README.md` (purp
 
 The connector layer is now complete at both design and implementation levels. `ConnectorPort`, `CapabilityRegistry`, all type enumerations, and `NotionConnectorAdapter` are implemented in TypeScript, type-checked clean, and covered by 15 smoke tests. The `ConnectorAction.payload` open question is resolved: structured input (query, page_id, parent+title) flows through `payload: Record<string, unknown>`. The Notion adapter handles all 5 MVP capabilities (search/read/create/append), normalizes Notion SDK responses into internal shapes, maps API errors to structured error codes, and never throws — all errors return as `ConnectorResult.status: "failure"`. The test suite grew from 47 to 62 tests, all green.
 
-The next milestones are: smoke tests for `createMessage()`, RunnerPort design, and updating `src/connectors/INTERFACE.md` to reflect the now-implemented state.
+The connector cleanup is now complete: `src/connectors/INTERFACE.md` reflects the implemented state (including the `payload` field), and `createMessage()` has full smoke test parity with `createThought()`. The test suite stands at 67 tests, all passing.
 
-The first real connector implementation is complete. CreatorMesh now has a working, tested, typed boundary between the Notion API and the rest of the architecture.
+The next milestones are: RunnerPort design, Claude Code runner design, and WorkflowPort design. The foundation is stable and ready for the next port abstraction layer.

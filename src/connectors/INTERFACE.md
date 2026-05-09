@@ -80,6 +80,7 @@ ConnectorAction {
   capability: Capability
   resourceType: string
   resourceId?: string               // known resource reference, if applicable
+  payload?: Record<string, unknown> // structured input (e.g. query, page_id, parent+title)
   payloadSummary?: string           // human-readable summary for audit display
   requestedAt: Date
   approvalResult?: "approved" | "rejected" | "auto-approved"
@@ -162,12 +163,11 @@ All three implement `ConnectorPort`. The backend type is an internal implementat
 
 ## Main Files
 
-No implementation files yet.
-
-Planned:
-- `port.ts` — `ConnectorPort`, `CapabilityRegistry`, `Capability`, `ConnectorAction`, `ConnectorResult`, `ConnectorConfig` type definitions
-- `types.ts` — `CapabilityType`, `PermissionLevel`, `ApprovalRequirement` enumerations
-- `notion/` — Notion connector adapter (Direct API backend)
+Implemented:
+- `types.ts` — `CapabilityType`, `PermissionLevel`, `ApprovalRequirement`, `ApprovalResult`, `ActionStatus`, `ResultStatus` enumerations
+- `port.ts` — `ConnectorPort`, `CapabilityRegistry`, `Capability`, `ConnectorAction`, `ConnectorResult`, `ConnectorConfig` interfaces
+- `index.ts` — barrel re-exports
+- `notion/` — Notion connector adapter (Direct API backend); see `notion/INTERFACE.md`
 
 ## Change Rules for Agents
 
