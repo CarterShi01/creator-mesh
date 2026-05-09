@@ -39,6 +39,24 @@ When useful design reasoning emerges during a session, suggest updating the rele
 
 Use `creator-design-context-maintainer` when asked to preserve design context.
 
+## Skill Invocation
+
+Invoke project skills using slash commands:
+
+- `/creator-context-navigator`
+- `/creator-change-planner`
+- `/creator-interface-maintainer`
+- `/creator-skill-harvester`
+- `/creator-design-context-maintainer`
+- `/creator-context-brief`
+
+Fallback natural-language invocations for `creator-context-brief`:
+
+- "Use creator-context-brief."
+- "Generate a CreatorMesh context brief."
+
+`creator-context-brief` is a manual read-only context export skill. It is used to generate a compressed project or goal-specific brief for ChatGPT or another LLM. It should not run the normal development harness or modify files.
+
 ## After Meaningful Work
 
 After completing a meaningful task, suggest:
