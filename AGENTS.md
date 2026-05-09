@@ -80,6 +80,23 @@ Before claiming a task is complete, report:
 
 Do not claim a change is complete unless verification has passed, or clearly explain why verification could not be run.
 
+## Post-Implementation Skills
+
+After any non-trivial implementation or documentation session, run the following skills in order before writing a completion summary.
+
+| When | Required skills |
+|------|----------------|
+| After any implementation, doc, design, or architecture change | `creator-progress-maintainer` |
+| After any session that may contain a reusable pattern | `creator-skill-harvester` |
+
+These are not optional. Do not write a completion summary until both have been run.
+
+Before claiming a session is complete, confirm:
+1. `creator-progress-maintainer` was run and the progress document was updated.
+2. `creator-skill-harvester` was run and any skill candidates were identified or ruled out.
+
+If a skill cannot be run (e.g. no meaningful change occurred), state that explicitly — do not silently skip.
+
 ## Prohibited Defaults
 
 - Do not read the whole repository unless explicitly asked.
