@@ -33,6 +33,15 @@
 - The first write-back target will be a Notion page (via NotionConnector), once the connector is implemented.
 - Output artifacts are ephemeral — they are not stored in `src/storage` after delivery.
 
+## Write-Back via ConnectorPort (resolved from src/connectors design)
+
+Write-back to external tools now has a defined path: `src/outputs` prepares a `WriteBackPayload`, translates it into a `ConnectorAction` (capability type `create` or `append`, resource type `page` or `block`), and passes it to the appropriate `ConnectorPort` adapter.
+
+Key implications:
+- `src/outputs` depends on `src/connectors` (as already declared), but now depends specifically on `ConnectorPort` and `ConnectorAction` — not on any specific adapter.
+- Outputs must not call `ConnectorPort.execute()` directly if the capability requires approval. In that case, the `ConnectorAction` is handed to `src/orchestrator` for approval handling before execution.
+- The `auditId` returned in `ConnectorResult` should be surfaced to the creator as confirmation of write-back.
+
 ## Open Questions
 
 - How is the `DeliveryTarget` specified — by the workflow, by the creator at runtime, or by a pre-configured routing rule?

@@ -56,12 +56,26 @@ Layer order (foundation to top):
 
 Higher-layer updates should be more abstract and concise — summarize the impact, do not repeat the detail.
 
-### Step 3 — Progress and skill review
+### Step 3 — Progress and skill review (REQUIRED — do not skip)
 
-5. **`creator-progress-maintainer`** — update the latest project progress document based on what was implemented.
-6. **`creator-skill-harvester`** — identify whether the session produced a reusable workflow that should become a skill.
+These two skills are mandatory after every non-trivial session. Do not write a completion summary until both are done.
 
-Include this checklist at the end of every change plan so it is not forgotten.
+5. **`creator-progress-maintainer`** — run this skill and update the project progress document. Required even if the change feels small.
+6. **`creator-skill-harvester`** — run this skill and identify skill candidates. If no reusable pattern was produced, state that explicitly.
+
+### Completion Gate
+
+Before writing any completion summary or end-of-session message, output this confirmation block:
+
+```
+Post-Implementation Checklist:
+✓ Step 1 — Bottom-up docs updated (or: not needed — [reason])
+✓ Step 2 — Cross-module propagation checked (or: not needed — [reason])
+✓ Step 3a — creator-progress-maintainer run and progress updated
+✓ Step 3b — creator-skill-harvester run; candidates: [list or "none"]
+```
+
+Do not write "done", "complete", or a summary until this block is output.
 
 ## Rules
 
@@ -70,3 +84,4 @@ Include this checklist at the end of every change plan so it is not forgotten.
 - Keep the plan short.
 - Ask for approval before broad structural changes.
 - Always include the post-implementation checklist in the plan output.
+- Always output the Completion Gate block before ending a session.

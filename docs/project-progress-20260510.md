@@ -67,6 +67,8 @@ All 13 source modules now have `DESIGN.md`:
 
 Each `DESIGN.md` captures: current design summary, goals, key decisions, tradeoffs, alternatives considered, assumptions, open questions, future evolution, and ChatGPT handoff context. Higher-layer modules are written more abstractly and concisely than lower-layer ones.
 
+`src/connectors/DESIGN.md` and `src/connectors/INTERFACE.md` have since been significantly expanded beyond the initial skeleton — see "ConnectorPort and CapabilityRegistry Design" in Completed Work below.
+
 ### Templates
 
 | File | Status |
@@ -253,6 +255,42 @@ Slash command invocation was previously reported as "Unknown skill" for `creator
   - design context review (intentionally skipped — design was trivial)
   - skill candidate review
 
+### Project Goal Document Expansion
+
+- `docs/project-goal-20260510.md` significantly expanded with ecosystem strategy and architecture boundaries:
+  - New section: **Design Strategy: Own the Core, Reuse the Ecosystem** (what CreatorMesh owns vs. reuses via adapters; ConnectorPort / RunnerPort / WorkflowPort as owned abstractions)
+  - New section: **Ecosystem Reuse Strategy** (strategic first-party adapters, long-tail SaaS via MCP/hubs, Trigger.dev as future durable backend, Mastra/LangGraph as future agent backends, React Flow as future UI-only layer)
+  - New section: **Role of Workflow and Agent Frameworks** (frameworks enter through adapters, not replace internal model)
+  - **What CreatorMesh Is Not** extended with 5 new boundaries (not a SaaS hub, not n8n/Zapier, not low-code canvas first, not a generic agent framework, not a full Notion API wrapper)
+  - **Architectural Direction** updated for Connectors (ConnectorPort + CapabilityRegistry), Runners (RunnerPort), Workflows (WorkflowPort + LocalWorkflowRunner), Governance (permission levels), Storage (extended scope), Outputs (reviewable plans before side effects)
+  - **First Phase Focus** expanded from 6 to 12 items (Port design before implementation, framework deferral decisions)
+  - **Representative Workflows** added: Notion knowledge tree reorganization (7-step workflow)
+  - **Role of Notion** refined with explicit MVP vs. deferred scope
+  - **Role of Claude Code** refined with explicit runner positioning
+  - **Success Criteria** updated with design and adapter goals
+
+### ConnectorPort and CapabilityRegistry Design
+
+- `src/connectors/DESIGN.md` — major rewrite with full ConnectorPort + CapabilityRegistry design:
+  - ConnectorPort: single `execute(ConnectorAction): Promise<ConnectorResult>` entry point + `capabilities(): CapabilityRegistry`
+  - CapabilityRegistry: declared at init time; 9 standard capability types with default permission levels and approval requirements
+  - 9 CapabilityTypes: `read`, `search`, `create`, `update`, `append`, `delete`, `sync`, `subscribe`, `execute`
+  - 4 PermissionLevels: `safe-read` (auto-approved) → `write` (conditional) → `destructive` (always approve) → `external-side-effect` (always approve)
+  - Approval decided by orchestrator before `execute()` — connector only records the decision, does not make it
+  - Every action produces an `AuditRecord` via governance (including auto-approved, failed, and rejected)
+  - 3 connector backend types: Direct API adapter / MCP-compatible adapter / Integration hub adapter
+  - Notion capability mapping table (9 Notion operations → standard capability types)
+  - MVP Notion scope: `search`, `read` (page + block), `create`, `append` — deferred: `update`, `delete`, `sync`, `subscribe`
+- `src/connectors/INTERFACE.md` — complete rewrite with full public type contracts:
+  - `ConnectorPort`, `CapabilityRegistry`, `Capability`, `ConnectorAction`, `ConnectorResult`, `ConnectorConfig`
+  - `CapabilityType`, `PermissionLevel`, `ApprovalRequirement` enumerations
+  - Updated invariants, allowed/disallowed dependencies, planned file structure
+- `src/connectors/README.md` — updated with Port Pattern section explaining ConnectorPort + CapabilityRegistry
+- `src/governance/DESIGN.md` — propagation note: ConnectorAction as defined audit category; `approvalResult` flow; `auditId` generation
+- `src/outputs/DESIGN.md` — propagation note: write-back path through ConnectorPort; approval handling before execute
+- `src/workflows/DESIGN.md` — propagation note: ConnectorAction as concrete WorkflowStep output; HumanReviewStep insertion rules
+- `npm run verify` passes clean: 47 tests
+
 ### Full DESIGN.md Coverage and Bottom-Up Update Rules
 
 - `DESIGN.md` created for all 13 `src/` modules:
@@ -285,10 +323,12 @@ Suggested next steps, roughly in order:
 3. ~~**Create `tsconfig.json`**~~ — **Done.**
 4. ~~**Add minimal tests**~~ — **Done.** Smoke tests for `createThought()` pass; six-layer test structure documented.
 5. ~~**Create `DESIGN.md` for all modules**~~ — **Done.** All 13 `src/` modules now have DESIGN.md.
-6. **Add smoke tests for `createMessage()`** — `createThought()` has 5 smoke tests; `createMessage()` has none. Test parity is expected.
-7. **Design Notion connector** — `DESIGN.md` skeleton is in place in `src/connectors/DESIGN.md`; detailed Notion-specific design not yet started. Start with a Notion-specific DESIGN.md or sub-section, not implementation.
-8. **Design Claude Code runner** — `DESIGN.md` skeleton is in place in `src/runners/DESIGN.md`; detailed Claude Code runner design not yet started.
-9. **Add `docs/skill-validation-checklist.md`** — currently missing. Useful before broader harness promotion.
+6. ~~**Design ConnectorPort and CapabilityRegistry**~~ — **Done.** Full design in `src/connectors/DESIGN.md` and `src/connectors/INTERFACE.md`.
+7. **Add smoke tests for `createMessage()`** — `createThought()` has 5 smoke tests; `createMessage()` has none. Test parity is expected.
+8. **Design Notion-specific connector adapter** — ConnectorPort abstraction is now defined. Next step: `src/connectors/notion/DESIGN.md` mapping Notion SDK operations to the declared MVP capability set (search, read page/block, create, append). Do not implement before this design is approved.
+9. **Design RunnerPort** — `src/runners/DESIGN.md` skeleton exists. Next: detailed RunnerPort interface design, mirroring the ConnectorPort pattern.
+10. **Design Claude Code runner** — follows RunnerPort design.
+11. **Add `docs/skill-validation-checklist.md`** — currently missing. Useful before broader harness promotion.
 
 ## Known Risks
 
@@ -322,6 +362,8 @@ Both core primitives (`Thought` and `Message`) are implemented and tested. The s
 
 All 13 `src/` modules now have all three documentation layers: `README.md` (purpose and boundaries), `DESIGN.md` (design reasoning and decisions), and `INTERFACE.md` (public contract). Three skills have been updated with an explicit bottom-up propagation rule — documentation updates flow from implementation file upward through the module, then propagate to dependent higher-layer modules in decreasing specificity.
 
-The next milestones are: smoke tests for `createMessage()`, and detailed connector/runner design — starting with Notion as the first knowledge connector and Claude Code as the first development runner.
+The ConnectorPort and CapabilityRegistry design is now complete: a normalized 9-capability interface, 4-level permission model, mandatory audit trail for all connector actions, and a Notion capability mapping table. The project goal document has been substantially expanded with ecosystem strategy, Port abstractions, and framework deferral decisions.
 
-Product functionality does not yet exist. The key progress is a disciplined development system, a complete three-layer documentation structure across all modules, and a verified runtime foundation that can support long-term, low-cost, high-quality AI-assisted development.
+The next milestones are: Notion-specific connector adapter design, RunnerPort design, and smoke tests for `createMessage()`.
+
+Product functionality does not yet exist. The key progress is a disciplined development system, a complete three-layer documentation structure across all modules, a verified runtime foundation, and a well-defined connector abstraction layer that prevents Notion API coupling from entering the architecture.

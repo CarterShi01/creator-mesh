@@ -33,6 +33,16 @@
 - Workflow definitions will be TypeScript objects at v1, not external configuration files.
 - All workflow runs will be persisted as `WorkflowRun` records in `src/storage`.
 
+## ConnectorAction in Workflows (resolved from src/connectors design)
+
+`ConnectorAction` is now a defined concept. A `WorkflowStep` that interacts with an external system produces a `ConnectorAction` and passes it through the orchestrator for approval before execution.
+
+Key implications:
+- `ConnectorAction` (from `src/connectors`) is the concrete form of `ConnectorAction` listed in the workflow concepts above.
+- A `HumanReviewStep` may be inserted before any workflow step that produces a `ConnectorAction` with `approvalRequirement: "always"` or `"conditional"`.
+- The `auditId` from `ConnectorResult` should be recorded in the `WorkflowRun` step history for traceability.
+- Workflows compose `ConnectorPort` calls via the orchestrator — they do not call `ConnectorPort.execute()` directly.
+
 ## Open Questions
 
 - Should workflow definitions be code (TypeScript) or data (JSON/YAML)? Code is type-safe and composable; data allows non-developer editing and future GUI authoring.
