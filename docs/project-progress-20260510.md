@@ -123,6 +123,16 @@ All other `src/` directories contain no implementation files yet.
 | `tests/harness/skills-format.test.ts` | Present (8 tests, all passing) |
 | `npm run verify` | Passing (typecheck + 47 tests across smoke + harness) |
 
+### CI and Verification Policy
+
+| Item | Status |
+|---|---|
+| `.github/workflows/ci.yml` | Present |
+| `AGENTS.md` — Verification Policy section | Present |
+| `CLAUDE.md` — Verification After Edits section | Present |
+| `docs/testing-strategy.md` — AI-era verification workflow | Present |
+| `docs/claude-code-hooks.md` | Present (placeholder strategy, not yet configured) |
+
 ## Completed Work
 
 ### Project Initialization
@@ -183,6 +193,14 @@ Skill invocation guide present at `docs/skill-invocation.md`.
 Slash command invocation validated in-session for `creator-context-brief`.
 
 Slash command invocation was previously reported as "Unknown skill" for `creator-context-navigator`. Natural-language fallback works. Root cause not fully resolved.
+
+### CI and AI-Coding Verification Policy
+
+- `AGENTS.md` updated with Verification Policy section: decision table mapping change type to minimum verification command; reporting requirement before declaring a task complete
+- `CLAUDE.md` updated with Verification After Edits section: run deterministic commands, not self-assessment; keep changes small and verifiable
+- `docs/testing-strategy.md` updated with AI-era verification workflow section: layered model (Claude local → hooks → PR CI → human review → release gate); roles and responsibilities per layer; hook strategy status documented
+- `docs/claude-code-hooks.md` created: documents intended future hook triggers and commands without implementing them; explains why hooks must stay lightweight; explains why full verification belongs at task completion and CI
+- `.github/workflows/ci.yml` created: runs on `pull_request` and `push` to `master`; uses Node 22, `npm ci`, `npm run verify`
 
 ### Harness Validation Layer
 
@@ -282,7 +300,7 @@ CreatorMesh has completed its initial foundation-building phase.
 
 The quality and cost harness is in place: reading order, documentation layers, project-level skills, context briefs, and progress tracking.
 
-Both core primitives (`Thought` and `Message`) are implemented and tested. The smoke and harness test layers are active: 47 tests across architecture boundary checks, documentation presence checks, skill format checks, and `createThought()` smoke tests — all passing.
+Both core primitives (`Thought` and `Message`) are implemented and tested. The smoke and harness test layers are active: 47 tests all passing. CI is now in place via GitHub Actions. The verification policy is documented in `AGENTS.md` and `CLAUDE.md` — Claude Code must run deterministic verification before declaring any task complete.
 
 The next milestones are connector and runner design — starting with Notion as the first knowledge connector and Claude Code as the first development runner.
 

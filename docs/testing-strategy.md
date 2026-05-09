@@ -115,10 +115,39 @@ Without a harness test, these violations pass `npm run verify:quick` undetected.
 - Dependency boundary rules for modules beyond `core`
 - Progress document freshness checks
 
-## AI-Era Testing Notes
+## AI-Era Verification Workflow
 
-Claude Code can generate tests, but:
+CreatorMesh uses a layered verification model. Each layer has a distinct role and audience.
+
+### Layer model
+
+| Layer | Who runs it | When | Tool |
+|---|---|---|---|
+| Claude local verification | Claude Code | After every edit | `npm run verify:quick` or `npm run verify` |
+| Claude Code hooks | Claude Code (automated) | On file save or session end | Lightweight npm scripts (future) |
+| PR CI | GitHub Actions | On every pull request | `npm run verify` |
+| Human review | Developer | Before merge | Code review + CI signal |
+| Release gate | Developer | Before deploy | Full suite + manual checks |
+
+### What each layer is responsible for
+
+**Claude local verification** is the first line of defense. Claude must run a verification command and report results before declaring a task complete. This catches errors before they reach the PR.
+
+**Claude Code hooks** are optional lightweight triggers that run verification automatically during a session (e.g., after file edits). They reduce friction but are not a substitute for deliberate task-level verification. Hooks should remain fast — no full test suites.
+
+**PR CI** is the final deterministic merge gate. Claude Code does not replace CI. Even if Claude ran verification locally, CI must pass independently before a PR can be merged. CI is authoritative.
+
+**Human review** adds judgment that automated tools cannot: architectural fitness, intent alignment, and long-term maintainability.
+
+### Hook strategy (current status: documented, not implemented)
+
+Claude Code hooks can run scripts automatically when files change. The intended future hooks are documented in `docs/claude-code-hooks.md`.
+
+Hooks should remain lightweight. Full verification belongs at task completion and CI, not at every keystroke.
+
+### AI-Era Testing Notes
+
 - Tests must be deterministic and machine-verifiable.
-- Claude Code should run `npm run verify:quick` after every code change and report results.
-- A change is not complete until verify:quick passes.
-- Harness tests, when implemented, will enforce architecture rules that Claude Code is currently responsible for following manually.
+- Claude Code must run `npm run verify:quick` (minimum) after every code change and report results.
+- A change is not complete until the relevant verification command passes.
+- Harness tests encode architecture rules that Claude Code is otherwise responsible for following manually. When a rule is in the harness, it is enforced automatically.

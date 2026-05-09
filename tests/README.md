@@ -6,12 +6,12 @@ This directory contains the CreatorMesh test suite.
 
 | Layer | Directory | Purpose | Status |
 |---|---|---|---|
-| Smoke | `tests/smoke/` | Verifies that the most important code paths basically run | Active |
-| Unit | `tests/unit/` | Verifies detailed function-level behavior | Planned |
-| Contract | `tests/contract/` | Verifies public module contracts and exported interfaces | Planned |
-| Harness | `tests/harness/` | Verifies architecture rules, documentation presence, skill format, and AI collaboration constraints | Active |
-| Integration | `tests/integration/` | Verifies interaction between modules | Planned |
-| End-to-End | `tests/e2e/` | Verifies full user-facing workflows | Planned |
+| Smoke | `tests/smoke/` | Verifies that the most important code paths basically run | Active (minimal) |
+| Unit | `tests/unit/` | Verifies detailed function-level behavior | Placeholder |
+| Contract | `tests/contract/` | Verifies public module contracts and exported interfaces | Placeholder |
+| Harness | `tests/harness/` | Verifies architecture rules, documentation presence, skill format, and AI collaboration constraints | Active (minimal) |
+| Integration | `tests/integration/` | Verifies interaction between modules | Placeholder |
+| End-to-End | `tests/e2e/` | Verifies full user-facing workflows | Placeholder |
 
 ## Current State
 

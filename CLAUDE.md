@@ -65,6 +65,17 @@ Fallback natural-language invocations for `creator-progress-maintainer`:
 
 `creator-progress-maintainer` is a post-change project progress skill. It should be used after meaningful code, documentation, architecture, or skill changes to update the latest project progress document based on repository evidence.
 
+## Verification After Edits
+
+After any code edit, run the relevant verification command. Do not rely only on reasoning.
+
+- Prefer deterministic commands over self-assessment.
+- Keep changes small and verifiable.
+- Use `npm run verify:quick` for most source changes.
+- Use `npm run verify` when harness, docs, or cross-module changes are involved.
+
+See `AGENTS.md` Verification Policy for the full decision table.
+
 ## After Meaningful Work
 
 After completing a meaningful task, suggest:
