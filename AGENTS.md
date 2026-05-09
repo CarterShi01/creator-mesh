@@ -63,6 +63,23 @@ For non-trivial design or architecture work, read and maintain the relevant `DES
 
 When a Claude Code or ChatGPT session produces useful design reasoning, summarize it into the relevant `DESIGN.md` instead of leaving it only in conversation history.
 
+## Verification Policy
+
+After any implementation change, run the smallest relevant verification command before finishing.
+
+| Change type | Minimum verification |
+|---|---|
+| TypeScript source edits | `npm run verify:quick` |
+| Architecture, docs, skills, or harness changes | `npm run verify:harness` then `npm run verify` |
+| Any change crossing module boundaries | `npm run verify` |
+
+Before claiming a task is complete, report:
+1. Which command was run.
+2. Whether it passed.
+3. If it failed, what was fixed before passing.
+
+Do not claim a change is complete unless verification has passed, or clearly explain why verification could not be run.
+
 ## Prohibited Defaults
 
 - Do not read the whole repository unless explicitly asked.
