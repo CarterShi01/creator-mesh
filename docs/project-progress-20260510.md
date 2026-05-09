@@ -100,7 +100,7 @@ All other `src/` directories contain no implementation files yet.
 
 | Item | Status |
 |---|---|
-| `tsconfig.json` | Missing |
+| `tsconfig.json` | Present |
 | `node_modules` | Missing (dependencies not installed) |
 | Tests | Missing |
 
