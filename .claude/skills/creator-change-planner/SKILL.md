@@ -13,7 +13,7 @@ Use this skill before implementing any non-trivial change.
 2. Read AGENTS.md.
 3. Read docs/context-map.md.
 4. Identify target modules.
-5. Read target module README.md and INTERFACE.md.
+5. Read target module README.md, DESIGN.md if it exists, and INTERFACE.md if it exists.
 6. Do not read implementation files unless needed to prepare the plan.
 7. Produce a concise change plan.
 
