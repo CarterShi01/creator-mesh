@@ -96,13 +96,29 @@ No module currently has a `DESIGN.md`. None have been created yet. This is inten
 
 All other `src/` directories contain no implementation files yet.
 
-### TypeScript Project Configuration
+### TypeScript Project Configuration and Testing
 
 | Item | Status |
 |---|---|
 | `tsconfig.json` | Present |
-| `node_modules` | Missing (dependencies not installed) |
-| Tests | Missing |
+| `tsconfig.test.json` | Present |
+| `vitest.config.ts` | Present |
+| `node_modules` | Present (installed) |
+| `docs/testing-strategy.md` | Present |
+
+### Test Infrastructure
+
+| Item | Status |
+|---|---|
+| `tests/README.md` | Present |
+| `tests/smoke/README.md` | Present |
+| `tests/unit/README.md` | Present (placeholder) |
+| `tests/contract/README.md` | Present (placeholder) |
+| `tests/harness/README.md` | Present (placeholder) |
+| `tests/integration/README.md` | Present (placeholder) |
+| `tests/e2e/README.md` | Present (placeholder) |
+| `tests/smoke/core/createThought.smoke.test.ts` | Present (5 tests, all passing) |
+| `npm run verify` | Passing (typecheck + all tests) |
 
 ## Completed Work
 
@@ -165,6 +181,23 @@ Slash command invocation validated in-session for `creator-context-brief`.
 
 Slash command invocation was previously reported as "Unknown skill" for `creator-context-navigator`. Natural-language fallback works. Root cause not fully resolved.
 
+### Minimal Testing Foundation
+
+- `vitest` added as devDependency; `tsconfig.test.json` and `vitest.config.ts` configured
+- Six test layer directories created under `tests/`: smoke, unit, contract, harness, integration, e2e
+- Each directory has a `README.md` describing its intended scope and status
+- Only the `smoke` layer is active; all others are intentional placeholders
+- `tests/smoke/core/createThought.smoke.test.ts` written with 5 tests covering:
+  - returns valid Thought with id, content, createdAt, source
+  - content is trimmed
+  - default source is `"manual"`
+  - empty content is rejected
+  - whitespace-only content is rejected
+- `docs/testing-strategy.md` written documenting the AI-era testing approach and six-layer plan
+- Five npm scripts in place: `typecheck`, `test`, `test:smoke`, `verify:quick`, `verify`
+- `npm run verify` passes clean: 0 TypeScript errors, 5/5 tests green
+- `node` 26.0.0 installed via Homebrew; `npm install` completed (52 packages)
+
 ### Early Core Primitives
 
 - `Thought` domain primitive implemented in `src/core/thought.ts`
@@ -202,8 +235,8 @@ Suggested next steps, roughly in order:
 
 1. **Validate skill invocation** — confirm slash command invocation works for all 7 skills, or document known limitations and natural-language fallbacks.
 2. ~~**Add `Message` domain primitive**~~ — **Done.**
-3. **Create `tsconfig.json`** — the project has no TypeScript configuration. Required before real build or test workflows.
-4. **Add minimal tests** — at minimum, a smoke test for `createThought()` to validate the runtime.
+3. ~~**Create `tsconfig.json`**~~ — **Done.**
+4. ~~**Add minimal tests**~~ — **Done.** Smoke tests for `createThought()` pass; six-layer test structure documented.
 5. **Design Notion connector** — only after core primitives and context workflow are stable. Start with a DESIGN.md, not implementation.
 6. **Design Claude Code runner** — only after `Message` is stable and the harness is validated.
 7. **Add `docs/skill-validation-checklist.md`** — currently missing. Useful before broader harness promotion.
@@ -217,7 +250,6 @@ Suggested next steps, roughly in order:
 - Skill slash command invocation may still fail in some session contexts — natural language fallback must stay reliable
 - Creating too many skills before repeated patterns are proven
 - Adding Notion or external integrations before domain primitives stabilize
-- `node_modules` not installed — no build or test validation is currently possible
 
 ## Current Strategy
 
@@ -233,12 +265,12 @@ Suggested next steps, roughly in order:
 
 ## Progress Summary
 
-CreatorMesh is currently moving from project positioning into foundation implementation.
+CreatorMesh has completed its initial foundation-building phase.
 
-The quality and cost harness is now in place: reading order, documentation layers, project-level skills, context briefs, and progress tracking.
+The quality and cost harness is in place: reading order, documentation layers, project-level skills, context briefs, and progress tracking.
 
-The first core primitive (`Thought`) is implemented and was used to validate the harness end-to-end.
+Both core primitives (`Thought` and `Message`) are implemented and tested. The minimal testing foundation is established: six-layer test structure documented, smoke tests passing, `npm run verify` clean.
 
-The next milestone is the `Message` primitive, followed by the first connector or runner design.
+The next milestones are connector and runner design — starting with Notion as the first knowledge connector and Claude Code as the first development runner.
 
-Product functionality does not yet exist. The key progress is a disciplined development system that can support long-term, low-cost, high-quality AI-assisted development.
+Product functionality does not yet exist. The key progress is a disciplined development system and a verified runtime foundation that can support long-term, low-cost, high-quality AI-assisted development.
