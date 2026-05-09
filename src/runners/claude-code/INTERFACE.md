@@ -125,16 +125,16 @@ The adapter never throws. All errors are returned as `RunnerResult.status: "fail
 
 ## Main Files
 
-No implementation files exist yet.
-
-Planned file structure:
+Implementation files (MVP):
 
 - `adapter.ts` — `ClaudeCodeRunnerAdapter` implementing `RunnerPort`
 - `registry.ts` — `ClaudeCodeRunnerRegistry` with MVP capabilities
-- `invoke.ts` — subprocess invocation logic (internal; not exported)
-- `artifacts.ts` — artifact detection logic (internal; not exported)
-- `errors.ts` — `ClaudeCodeErrorCode` type and error classification (internal; not exported)
-- `index.ts` — barrel re-exports: `ClaudeCodeRunnerAdapter`, `ClaudeCodeRunnerRegistry`, `ClaudeCodeRunnerConfig`
+- `invoke.ts` — `SubprocessInvoker` interface + `ChildProcessInvoker` implementation (injectable for testability)
+- `errors.ts` — `ClaudeCodeErrorCode` type and `classifyInvokeError()` function
+- `index.ts` — barrel re-exports: `ClaudeCodeRunnerAdapter`, `ClaudeCodeRunnerRegistry`, `ChildProcessInvoker`, `classifyInvokeError`
+
+Deferred files (not in MVP):
+- `artifacts.ts` — artifact detection logic via file snapshot diffing
 
 ## Change Rules for Agents
 
