@@ -11,6 +11,14 @@ import type {
   WorkflowOutput,
 } from "./types.js";
 
+export interface StepExecutor {
+  executeStep(
+    step: WorkflowStep,
+    workflowInput: WorkflowInput,
+    stepOutputs: Record<string, unknown>
+  ): Promise<unknown>;
+}
+
 export interface GovernanceCheckpoint {
   stepId?: string;
   stepType?: WorkflowStepType;

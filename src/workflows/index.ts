@@ -29,6 +29,7 @@ export type {
   WorkflowResult,
   WorkflowResumeInput,
   WorkflowRunnerPort,
+  StepExecutor,
 } from "./port.js";
 
 export { LocalWorkflowRunner } from "./local-runner.js";
