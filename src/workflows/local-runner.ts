@@ -6,6 +6,7 @@ import type {
   WorkflowContext,
   WorkflowStepRecord,
   WorkflowResumeInput,
+  StepExecutor,
 } from "./port.js";
 import type { WorkflowInput, WorkflowStep, HumanReviewStep } from "./types.js";
 
@@ -20,9 +21,13 @@ type RunStatus = {
 export class LocalWorkflowRunner implements WorkflowRunnerPort {
   readonly runnerId = "local";
 
-  // In-memory stores — no external storage in phase 1
   private readonly runs = new Map<string, WorkflowRun>();
   private readonly definitions = new Map<string, WorkflowDefinition>();
+  private readonly stepExecutor?: StepExecutor;
+
+  constructor(stepExecutor?: StepExecutor) {
+    this.stepExecutor = stepExecutor;
+  }
 
   async execute(
     definition: WorkflowDefinition,
@@ -182,13 +187,27 @@ export class LocalWorkflowRunner implements WorkflowRunnerPort {
         };
       }
 
-      // Phase-1 stub: non-review steps return placeholder output.
-      // Real delegation to orchestrator/agents/connectors/runners comes in later phases.
-      const stubOutput = this._stubOutput(step);
-      record.output = stubOutput;
+      let stepOutput: unknown;
+      if (this.stepExecutor) {
+        try {
+          stepOutput = await this.stepExecutor.executeStep(
+            step,
+            run.input,
+            run.context.stepOutputs
+          );
+        } catch (err) {
+          record.status = "failed";
+          record.error = err instanceof Error ? err.message : String(err);
+          record.completedAt = new Date();
+          return this._failRun(run, record.error);
+        }
+      } else {
+        stepOutput = this._stubOutput(step);
+      }
+      record.output = stepOutput;
       record.status = "completed";
       record.completedAt = new Date();
-      run.context.stepOutputs[step.stepId] = stubOutput;
+      run.context.stepOutputs[step.stepId] = stepOutput;
 
       const nextStepId = step.onSuccess;
       if (nextStepId === "complete") return this._completeRun(run);
