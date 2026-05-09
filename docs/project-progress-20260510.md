@@ -114,11 +114,14 @@ All other `src/` directories contain no implementation files yet.
 | `tests/smoke/README.md` | Present |
 | `tests/unit/README.md` | Present (placeholder) |
 | `tests/contract/README.md` | Present (placeholder) |
-| `tests/harness/README.md` | Present (placeholder) |
+| `tests/harness/README.md` | Present (active) |
 | `tests/integration/README.md` | Present (placeholder) |
 | `tests/e2e/README.md` | Present (placeholder) |
 | `tests/smoke/core/createThought.smoke.test.ts` | Present (5 tests, all passing) |
-| `npm run verify` | Passing (typecheck + all tests) |
+| `tests/harness/architecture-boundaries.test.ts` | Present (4 tests, all passing) |
+| `tests/harness/docs-presence.test.ts` | Present (30 tests, all passing) |
+| `tests/harness/skills-format.test.ts` | Present (8 tests, all passing) |
+| `npm run verify` | Passing (typecheck + 47 tests across smoke + harness) |
 
 ## Completed Work
 
@@ -180,6 +183,16 @@ Skill invocation guide present at `docs/skill-invocation.md`.
 Slash command invocation validated in-session for `creator-context-brief`.
 
 Slash command invocation was previously reported as "Unknown skill" for `creator-context-navigator`. Natural-language fallback works. Root cause not fully resolved.
+
+### Harness Validation Layer
+
+- `tests/harness/architecture-boundaries.test.ts`: verifies `src/core` does not import from any other `src/*` module (4 tests)
+- `tests/harness/docs-presence.test.ts`: verifies required root docs (`AGENTS.md`, `README.md`, `docs/architecture.md`, `docs/context-map.md`) and per-module `README.md` + `INTERFACE.md` for all 13 `src/` modules (30 tests)
+- `tests/harness/skills-format.test.ts`: verifies each `.claude/skills/*/` directory contains `SKILL.md` (8 tests, covers all 7 current skills)
+- `tests/harness/README.md` updated from placeholder to active documentation
+- `docs/testing-strategy.md` updated with "Layer 2: Harness Validation" section
+- `package.json` updated with `test:harness` and `verify:harness` scripts
+- `npm run verify:harness` passes clean; `npm run verify` passes clean (47 tests total)
 
 ### Minimal Testing Foundation
 
@@ -269,7 +282,7 @@ CreatorMesh has completed its initial foundation-building phase.
 
 The quality and cost harness is in place: reading order, documentation layers, project-level skills, context briefs, and progress tracking.
 
-Both core primitives (`Thought` and `Message`) are implemented and tested. The minimal testing foundation is established: six-layer test structure documented, smoke tests passing, `npm run verify` clean.
+Both core primitives (`Thought` and `Message`) are implemented and tested. The smoke and harness test layers are active: 47 tests across architecture boundary checks, documentation presence checks, skill format checks, and `createThought()` smoke tests — all passing.
 
 The next milestones are connector and runner design — starting with Notion as the first knowledge connector and Claude Code as the first development runner.
 

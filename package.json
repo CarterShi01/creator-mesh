@@ -9,6 +9,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.test.json",
     "test": "vitest run",
     "test:smoke": "vitest run tests/smoke",
+    "test:harness": "vitest run tests/harness",
+    "verify:harness": "npm run typecheck && npm run test:harness",
     "verify:quick": "npm run typecheck && npm run test:smoke",
     "verify": "npm run typecheck && npm run test"
   },
