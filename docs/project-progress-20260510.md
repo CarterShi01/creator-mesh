@@ -269,6 +269,26 @@ Slash command invocation was previously reported as "Unknown skill" for `creator
   - **Role of Claude Code** refined with explicit runner positioning
   - **Success Criteria** updated with design and adapter goals
 
+### Notion Connector Adapter Design
+
+- `src/connectors/notion/DESIGN.md` — new file; full Notion adapter design:
+  - `NotionConnectorAdapter` implementing `ConnectorPort` via Notion SDK
+  - `NotionConnectorConfig`: API key via `NOTION_API_KEY` env var; no OAuth at v1
+  - MVP capability registry: 5 capabilities (`search/page`, `read/page`, `read/block`, `create/page`, `append/block`)
+  - Capability → Notion SDK dispatch table (5 mappings)
+  - Normalized result shapes: `NotionPageData`, `NotionBlockData[]`, `NotionSearchData`, `NotionCreateData`
+  - Pagination strategy: internal for block reads; cursor-exposed for search
+  - Error taxonomy: 6 structured error codes (`notion.auth.invalid`, `notion.permission.denied`, `notion.resource.not_found`, `notion.conflict`, `notion.rate_limited`, `notion.provider.error`, `notion.capability.unsupported`)
+  - Deferred scope (update, delete, sync, subscribe, database query, OAuth, rich text) with explicit reasons
+  - Key open question: how structured input (query, page_id, parent) flows into `ConnectorAction` — typed `payload` field may be needed
+- `src/connectors/notion/INTERFACE.md` — new file; public contract:
+  - `NotionConnectorAdapter`, `NotionConnectorConfig`, `NotionCapabilityRegistry`
+  - All normalized data shapes as typed contracts
+  - Error code table
+  - Planned file structure (`adapter.ts`, `capabilities.ts`, `normalize.ts`, `errors.ts`)
+- `src/connectors/DESIGN.md` — minor update: "First Adapter: Notion" note in Current Assumptions
+- `npm run verify` passes clean: 47 tests
+
 ### ConnectorPort and CapabilityRegistry Design
 
 - `src/connectors/DESIGN.md` — major rewrite with full ConnectorPort + CapabilityRegistry design:
@@ -324,11 +344,12 @@ Suggested next steps, roughly in order:
 4. ~~**Add minimal tests**~~ — **Done.** Smoke tests for `createThought()` pass; six-layer test structure documented.
 5. ~~**Create `DESIGN.md` for all modules**~~ — **Done.** All 13 `src/` modules now have DESIGN.md.
 6. ~~**Design ConnectorPort and CapabilityRegistry**~~ — **Done.** Full design in `src/connectors/DESIGN.md` and `src/connectors/INTERFACE.md`.
-7. **Add smoke tests for `createMessage()`** — `createThought()` has 5 smoke tests; `createMessage()` has none. Test parity is expected.
-8. **Design Notion-specific connector adapter** — ConnectorPort abstraction is now defined. Next step: `src/connectors/notion/DESIGN.md` mapping Notion SDK operations to the declared MVP capability set (search, read page/block, create, append). Do not implement before this design is approved.
-9. **Design RunnerPort** — `src/runners/DESIGN.md` skeleton exists. Next: detailed RunnerPort interface design, mirroring the ConnectorPort pattern.
+7. ~~**Design Notion-specific connector adapter**~~ — **Done.** `src/connectors/notion/DESIGN.md` and `src/connectors/notion/INTERFACE.md` created. MVP: search/read/create/append. Key open question: typed `payload` field in `ConnectorAction`.
+8. **Add smoke tests for `createMessage()`** — `createThought()` has 5 smoke tests; `createMessage()` has none. Test parity is expected.
+9. **Design RunnerPort** (`src/runners/DESIGN.md` rewrite) — mirrors ConnectorPort pattern. Required before Claude Code runner design. No implementation.
 10. **Design Claude Code runner** — follows RunnerPort design.
-11. **Add `docs/skill-validation-checklist.md`** — currently missing. Useful before broader harness promotion.
+11. **Resolve `ConnectorAction` payload design** — current `payloadSummary: string` is insufficient for structured inputs (query, page_id, parent+title). A typed `payload` field may be needed; decision affects both `src/connectors/INTERFACE.md` and `src/connectors/notion/INTERFACE.md`.
+12. **Add `docs/skill-validation-checklist.md`** — currently missing. Useful before broader harness promotion.
 
 ## Known Risks
 
@@ -362,8 +383,8 @@ Both core primitives (`Thought` and `Message`) are implemented and tested. The s
 
 All 13 `src/` modules now have all three documentation layers: `README.md` (purpose and boundaries), `DESIGN.md` (design reasoning and decisions), and `INTERFACE.md` (public contract). Three skills have been updated with an explicit bottom-up propagation rule — documentation updates flow from implementation file upward through the module, then propagate to dependent higher-layer modules in decreasing specificity.
 
-The ConnectorPort and CapabilityRegistry design is now complete: a normalized 9-capability interface, 4-level permission model, mandatory audit trail for all connector actions, and a Notion capability mapping table. The project goal document has been substantially expanded with ecosystem strategy, Port abstractions, and framework deferral decisions.
+The connector layer design is now complete at two levels: ConnectorPort/CapabilityRegistry (the abstract port) and NotionConnectorAdapter (the first reference adapter). The Notion MVP capability set is defined (search/read/create/append), normalized data shapes are specified, error taxonomy is documented, and deferred scope is explicitly bounded.
 
-The next milestones are: Notion-specific connector adapter design, RunnerPort design, and smoke tests for `createMessage()`.
+The next milestones are: RunnerPort design, smoke tests for `createMessage()`, and resolving the `ConnectorAction` typed payload open question.
 
 Product functionality does not yet exist. The key progress is a disciplined development system, a complete three-layer documentation structure across all modules, a verified runtime foundation, and a well-defined connector abstraction layer that prevents Notion API coupling from entering the architecture.
