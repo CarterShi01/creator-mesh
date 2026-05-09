@@ -92,7 +92,7 @@ No module currently has a `DESIGN.md`. None have been created yet. This is inten
 | `src/core/index.ts` — barrel re-export | Present |
 | `src/core/INTERFACE.md` — updated with Thought contract | Present |
 | `src/core/DESIGN.md` | Not created — intentionally skipped |
-| `src/core` — `Message` primitive | Missing |
+| `src/core` — `Message` primitive | Present |
 
 All other `src/` directories contain no implementation files yet.
 
@@ -165,14 +165,18 @@ Slash command invocation validated in-session for `creator-context-brief`.
 
 Slash command invocation was previously reported as "Unknown skill" for `creator-context-navigator`. Natural-language fallback works. Root cause not fully resolved.
 
-### Early Core Primitive
+### Early Core Primitives
 
 - `Thought` domain primitive implemented in `src/core/thought.ts`
 - `ThoughtSource` type defined as `"manual"` (extensible string literal union)
 - `Thought` interface has four fields: `id`, `content`, `createdAt`, `source`
 - `createThought()` trims content, rejects empty strings, generates UUID via `crypto.randomUUID()`, defaults `createdAt` and `source`
-- `src/core/index.ts` created as barrel re-export
-- `src/core/INTERFACE.md` updated with full Thought contract and invariants
+- `Message` domain primitive implemented in `src/core/message.ts`
+- `MessageSource` type defined as `"manual"` (extensible for future external sources)
+- `Message` interface mirrors `Thought`: `id`, `content`, `createdAt`, `source`
+- `createMessage()` follows identical pattern to `createThought()`
+- `src/core/index.ts` updated to barrel re-export both primitives
+- `src/core/INTERFACE.md` updated with full `Message` contract and invariants
 - The `Thought` implementation validated the quality and cost harness end-to-end:
   - context navigation before editing
   - planning before implementation
@@ -197,7 +201,7 @@ The current focus is to prepare CreatorMesh for the first real product-developme
 Suggested next steps, roughly in order:
 
 1. **Validate skill invocation** — confirm slash command invocation works for all 7 skills, or document known limitations and natural-language fallbacks.
-2. **Add `Message` domain primitive** — the natural next step after `Thought` is stable. Same scope and harness as `Thought`.
+2. ~~**Add `Message` domain primitive**~~ — **Done.**
 3. **Create `tsconfig.json`** — the project has no TypeScript configuration. Required before real build or test workflows.
 4. **Add minimal tests** — at minimum, a smoke test for `createThought()` to validate the runtime.
 5. **Design Notion connector** — only after core primitives and context workflow are stable. Start with a DESIGN.md, not implementation.
