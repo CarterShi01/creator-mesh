@@ -42,9 +42,9 @@ const writeNotionStep: ConnectorStep = {
   capabilityType: "create",
   resourceType: "page",
   inputMapping: {
-    title: "$steps.classify.structuredThought",
+    title: "$steps.classify.suggestedTitle",
     parent: "$input.notionParentId",
-    content: "$steps.classify.structuredThought",
+    content: "$steps.classify.summary",
   },
   outputKey: "notionPage",
   onSuccess: "complete",
