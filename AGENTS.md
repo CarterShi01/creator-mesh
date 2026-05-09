@@ -18,8 +18,9 @@ Before reading any implementation file, read in this order:
 2. `docs/context-map.md` — if it exists
 3. `docs/architecture.md` — architectural layers and design direction
 4. Target directory `README.md` — purpose and boundaries of the relevant module
-5. Target directory `INTERFACE.md` — if it exists
-6. Only then: specific implementation files needed for the task
+5. Target directory `DESIGN.md` — if it exists
+6. Target directory `INTERFACE.md` — if it exists
+7. Only then: specific implementation files needed for the task
 
 Do not skip to implementation files before completing this reading order.
 
@@ -53,6 +54,14 @@ When adding a new module or making a significant change to an existing one, upda
 5. **Scripts before token-heavy reasoning.** Use a script to extract what you need rather than loading large files.
 6. **Human approval before expensive or risky actions.** Pause and confirm before large refactors, deletions, or cross-boundary changes.
 7. **Every expensive session should produce reusable knowledge.** After meaningful work, suggest what should be documented, summarized, or turned into a skill.
+
+## Design Context Rule
+
+For non-trivial design or architecture work, read and maintain the relevant `DESIGN.md`.
+
+`DESIGN.md` captures the reasoning behind current design decisions, tradeoffs, assumptions, and open questions.
+
+When a Claude Code or ChatGPT session produces useful design reasoning, summarize it into the relevant `DESIGN.md` instead of leaving it only in conversation history.
 
 ## Prohibited Defaults
 
