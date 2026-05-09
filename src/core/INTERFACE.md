@@ -1,0 +1,54 @@
+# Interface: src/core
+
+## Purpose
+
+`core` defines the stable domain primitives of CreatorMesh. It is the foundational type layer that all other modules may depend on.
+
+## Public Concepts
+
+- `Thought` — an internally generated idea, note, reflection, or insight
+- `Message` — an externally triggered input such as a request, feedback, or opportunity
+- `Trigger` — a signal that starts a flow
+- `CaptureItem` — a normalized representation of a raw input after intake
+- `KnowledgeItem` — a structured knowledge asset produced from inputs
+- `AgentTask` — a unit of work assigned to an agent role
+- `WorkflowRun` — a record of an end-to-end workflow execution
+- `ApprovalRequest` — a request for human review before a significant action
+- `OutputArtifact` — a final result produced for the creator or a connected tool
+
+## Inputs
+
+None. `core` is a foundational layer. It does not receive inputs from other CreatorMesh modules.
+
+## Outputs
+
+Type definitions and interfaces used by all other layers.
+
+## Allowed Dependencies
+
+None. `core` must not depend on any other CreatorMesh module.
+
+## Disallowed Dependencies
+
+All other `src/` directories.
+
+External libraries should only be used in `core` if strictly required for type definitions, and only with approval.
+
+## Invariants
+
+- `core` must not import from any other `src/` directory.
+- `core` must not contain business logic, agent prompts, or tool-specific code.
+- Types defined in `core` should change slowly and deliberately. Breaking changes require cross-layer review.
+
+## Main Files
+
+No implementation files are defined yet.
+
+## Change Rules for Agents
+
+1. Read `AGENTS.md`.
+2. Read `docs/context-map.md`.
+3. Read this `INTERFACE.md`.
+4. Read this directory's `README.md`.
+5. Identify whether the change affects public concepts, inputs, outputs, dependencies, or invariants.
+6. Update this file if the public contract changes.
