@@ -1,0 +1,235 @@
+import { describe, it, expect, vi } from "vitest";
+import { Orchestrator } from "../../../src/orchestrator/orchestrator.js";
+import type { AgentRole, AgentInput } from "../../../src/agents/port.js";
+import type { ConnectorPort, ConnectorAction, ConnectorResult } from "../../../src/connectors/port.js";
+import type { RunnerPort, RunnerAction, RunnerResult } from "../../../src/runners/port.js";
+import type { AgentStep, ConnectorStep, RunnerStep } from "../../../src/workflows/types.js";
+
+function makeAgentStep(overrides: Partial<AgentStep> = {}): AgentStep {
+  return {
+    stepId: "classify",
+    name: "Classify",
+    type: "agent",
+    agentRole: "thought-agent",
+    description: "Classify the thought",
+    inputMapping: { thought: "$input.thought" },
+    outputKey: "classify",
+    onSuccess: "complete",
+    onFailure: "fail",
+    ...overrides,
+  };
+}
+
+function makeConnectorStep(overrides: Partial<ConnectorStep> = {}): ConnectorStep {
+  return {
+    stepId: "write-notion",
+    name: "Write Notion",
+    type: "connector",
+    connectorId: "notion",
+    capabilityType: "create",
+    resourceType: "page",
+    description: "Create a Notion page",
+    inputMapping: { title: "$steps.classify.title" },
+    outputKey: "write-notion",
+    requiresApproval: true,
+    onSuccess: "complete",
+    onFailure: "fail",
+    ...overrides,
+  };
+}
+
+function makeRunnerStep(overrides: Partial<RunnerStep> = {}): RunnerStep {
+  return {
+    stepId: "run-test",
+    name: "Run Tests",
+    type: "runner",
+    runnerId: "claude-code",
+    taskType: "test",
+    description: "Run the test suite",
+    inputMapping: {},
+    outputKey: "run-test",
+    onSuccess: "complete",
+    onFailure: "fail",
+    ...overrides,
+  };
+}
+
+function makeMockAgent(result: unknown = { category: "idea" }): AgentRole {
+  return {
+    agentId: "thought-agent",
+    execute: vi.fn().mockResolvedValue({ agentRole: "thought-agent", result }),
+  };
+}
+
+function makeMockConnector(data: unknown = { pageId: "abc123" }): ConnectorPort {
+  const capability = {
+    id: "notion.create",
+    type: "create" as const,
+    resourceType: "page",
+    permissionLevel: "write" as const,
+    approvalRequirement: "always" as const,
+    reversible: false,
+    description: "Create a page",
+  };
+  return {
+    connectorId: "notion",
+    capabilities: () => ({
+      connectorId: "notion",
+      capabilities: [capability],
+      supports: () => true,
+      get: () => capability,
+    }),
+    execute: vi.fn().mockResolvedValue({
+      connectorId: "notion",
+      action: {} as ConnectorAction,
+      status: "success",
+      data,
+      completedAt: new Date(),
+      auditId: "audit-1",
+    } satisfies ConnectorResult),
+  };
+}
+
+function makeMockRunner(output: unknown = "test passed"): RunnerPort {
+  return {
+    runnerId: "claude-code",
+    registry: () => ({
+      runnerId: "claude-code",
+      capabilities: [],
+      supports: () => true,
+      get: () => undefined,
+    }),
+    execute: vi.fn().mockResolvedValue({
+      runnerId: "claude-code",
+      action: {} as RunnerAction,
+      runId: "run-1",
+      status: "success",
+      output,
+      auditId: "audit-2",
+    } satisfies RunnerResult),
+  };
+}
+
+describe("Orchestrator.executeStep — agent steps", () => {
+  it("dispatches to the registered AgentRole and returns result", async () => {
+    const agent = makeMockAgent({ category: "idea", summary: "Test idea" });
+    const orch = new Orchestrator(
+      new Map([["thought-agent", agent]]),
+      new Map(),
+      new Map()
+    );
+    const step = makeAgentStep();
+    const output = await orch.executeStep(step, { thought: "A distributed systems idea" }, {});
+    expect(output).toEqual({ category: "idea", summary: "Test idea" });
+    expect(agent.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ agentRole: "thought-agent", context: { thought: "A distributed systems idea" } })
+    );
+  });
+
+  it("throws when agent role is not registered", async () => {
+    const orch = new Orchestrator(new Map(), new Map(), new Map());
+    await expect(
+      orch.executeStep(makeAgentStep(), {}, {})
+    ).rejects.toThrow('agent role not registered: "thought-agent"');
+  });
+});
+
+describe("Orchestrator.executeStep — connector steps", () => {
+  it("dispatches to the registered ConnectorPort and returns data", async () => {
+    const connector = makeMockConnector({ pageId: "xyz789" });
+    const orch = new Orchestrator(new Map(), new Map([["notion", connector]]), new Map());
+    const step = makeConnectorStep();
+    const output = await orch.executeStep(
+      step,
+      {},
+      { classify: { title: "My Idea Page" } }
+    );
+    expect(output).toEqual({ pageId: "xyz789" });
+    expect(connector.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ connectorId: "notion", resourceType: "page" })
+    );
+  });
+
+  it("throws when connector is not registered", async () => {
+    const orch = new Orchestrator(new Map(), new Map(), new Map());
+    await expect(
+      orch.executeStep(makeConnectorStep(), {}, {})
+    ).rejects.toThrow('connector not registered: "notion"');
+  });
+
+  it("throws when connector returns failure", async () => {
+    const connector = makeMockConnector();
+    (connector.execute as ReturnType<typeof vi.fn>).mockResolvedValue({
+      connectorId: "notion",
+      action: {} as ConnectorAction,
+      status: "failure",
+      error: "API rate limit",
+      completedAt: new Date(),
+      auditId: "audit-err",
+    });
+    const orch = new Orchestrator(new Map(), new Map([["notion", connector]]), new Map());
+    await expect(
+      orch.executeStep(makeConnectorStep(), {}, { classify: { title: "Test" } })
+    ).rejects.toThrow("API rate limit");
+  });
+});
+
+describe("Orchestrator.executeStep — runner steps", () => {
+  it("dispatches to the registered RunnerPort and returns output", async () => {
+    const runner = makeMockRunner("all tests passed");
+    const orch = new Orchestrator(new Map(), new Map(), new Map([["claude-code", runner]]));
+    const output = await orch.executeStep(makeRunnerStep(), {}, {});
+    expect(output).toBe("all tests passed");
+  });
+
+  it("throws when runner is not registered", async () => {
+    const orch = new Orchestrator(new Map(), new Map(), new Map());
+    await expect(
+      orch.executeStep(makeRunnerStep(), {}, {})
+    ).rejects.toThrow('runner not registered: "claude-code"');
+  });
+});
+
+describe("Orchestrator — input mapping resolution", () => {
+  it("resolves $input.* references from workflowInput", async () => {
+    const agent = makeMockAgent({});
+    const orch = new Orchestrator(
+      new Map([["thought-agent", agent]]),
+      new Map(),
+      new Map()
+    );
+    await orch.executeStep(
+      makeAgentStep({ inputMapping: { thought: "$input.rawThought" } }),
+      { rawThought: "hello world" },
+      {}
+    );
+    expect(agent.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ context: { thought: "hello world" } })
+    );
+  });
+
+  it("resolves $steps.*.* references from stepOutputs", async () => {
+    const agent = makeMockAgent({});
+    const orch = new Orchestrator(
+      new Map([["thought-agent", agent]]),
+      new Map(),
+      new Map()
+    );
+    await orch.executeStep(
+      makeAgentStep({ inputMapping: { title: "$steps.classify.title" } }),
+      {},
+      { classify: { title: "Deep Work" } }
+    );
+    expect(agent.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ context: { title: "Deep Work" } })
+    );
+  });
+});
+
+describe("Orchestrator — unsupported step type", () => {
+  it("throws for knowledge step type", async () => {
+    const orch = new Orchestrator(new Map(), new Map(), new Map());
+    const step = { type: "knowledge", stepId: "k1", name: "k", description: "d", onSuccess: "complete", onFailure: "fail" } as unknown as AgentStep;
+    await expect(orch.executeStep(step, {}, {})).rejects.toThrow('unsupported step type "knowledge"');
+  });
+});
