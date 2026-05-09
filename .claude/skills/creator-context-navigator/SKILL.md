@@ -1,6 +1,6 @@
 ---
 name: creator-context-navigator
-description: Use when starting any CreatorMesh coding, architecture, documentation, or file modification task. Guides Claude to read project rules, context maps, directory README files, and INTERFACE files before reading implementation code.
+description: Use when starting any CreatorMesh coding, architecture, documentation, or file modification task. Guides Claude to read project rules, context maps, directory README files, DESIGN files, and INTERFACE files before reading implementation code.
 ---
 
 # Creator Context Navigator
@@ -16,8 +16,9 @@ The goal is to reduce context cost by reading compact architecture and interface
 3. Read docs/architecture.md.
 4. Identify the target source directory.
 5. Read the target directory README.md.
-6. Read the target directory INTERFACE.md.
-7. Only then read specific implementation files needed for the task.
+6. Read the target directory DESIGN.md if it exists.
+7. Read the target directory INTERFACE.md if it exists.
+8. Only then read specific implementation files needed for the task.
 
 ## Output Before Editing
 
