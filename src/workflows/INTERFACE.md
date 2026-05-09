@@ -328,14 +328,13 @@ WorkflowResumeInput {
 
 ## Main Files
 
-No implementation files exist yet.
-
-Planned file structure:
-
-- `types.ts` — `WorkflowStepType`, `WorkflowRunStatus`, and all step type interfaces
-- `port.ts` — `WorkflowRunnerPort`, `WorkflowDefinition`, `WorkflowRun`, `WorkflowContext`, `WorkflowResult`, `WorkflowResumeInput`, `GovernanceCheckpoint`, `StepInputMapping`
-- `local-runner.ts` — `LocalWorkflowRunner` implementing `WorkflowRunnerPort`
+Implemented:
+- `types.ts` — `WorkflowStepType`, `WorkflowRunStatus`, `WorkflowStepStatus`, all step type interfaces (`AgentStep`, `ConnectorStep`, `RunnerStep`, `KnowledgeStep`, `HumanReviewStep`, `StorageStep`), `WorkflowStep` union
+- `port.ts` — `WorkflowRunnerPort`, `WorkflowDefinition`, `WorkflowRun`, `WorkflowContext`, `WorkflowStepRecord`, `WorkflowResult`, `WorkflowResumeInput`, `WorkflowPauseState`, `GovernanceCheckpoint`
 - `index.ts` — barrel re-exports
+
+Planned (not yet implemented):
+- `local-runner.ts` — `LocalWorkflowRunner` implementing `WorkflowRunnerPort`
 - `definitions/` — concrete `WorkflowDefinition` objects (e.g. `thought-to-note.ts`)
 
 ## Change Rules for Agents
