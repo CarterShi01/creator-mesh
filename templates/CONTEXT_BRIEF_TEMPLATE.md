@@ -19,6 +19,9 @@
 
 ## 7. Current Known State
 
-## 8. What the Next LLM Should Help With
+## 8. Recommended Next Tasks or Next LLM Help
+
+<!-- If goal is empty: list recommended next tasks with name, why it's next, scope, risk, harness suitability -->
+<!-- If goal is provided: write a practical instruction for the next LLM to continue work on that goal -->
 
 ## 9. Source Files Used

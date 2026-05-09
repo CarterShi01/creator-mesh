@@ -1,6 +1,6 @@
 ---
 name: creator-context-brief
-description: Use when the user needs a compressed CreatorMesh project context brief for ChatGPT or another LLM. Supports optional goal and compression parameters to focus and control the length of the exported context.
+description: Use when the user needs a compressed CreatorMesh project context brief for ChatGPT or another LLM. Supports optional goal and compression parameters. When goal is empty, generates a whole-project brief with next-task recommendations from the latest project goal and progress. When goal is provided, generates a goal-focused brief treating goal as the target requirement.
 ---
 
 # Creator Context Brief
@@ -28,16 +28,16 @@ The user may provide two parameters.
 
 Optional.
 
-If empty, generate a whole-project context brief.
+**If empty:** generate a whole-project context brief based on the latest project goal and project progress documents. Include recommended next tasks.
 
-If provided, generate a goal-focused brief.
+**If provided:** treat goal as the target requirement the user wants to implement or analyze. Generate a goal-focused brief concentrated on modules and design context relevant to that goal.
 
 Examples:
 
-- goal: ""
-- goal: "Add a minimal Message domain primitive"
-- goal: "Design the Notion connector"
-- goal: "Review the context-budget harness"
+- goal: "" → whole-project brief with next-task recommendations
+- goal: "Add a minimal Message domain primitive" → goal-focused brief for that feature
+- goal: "Design the Notion connector" → goal-focused brief for that design task
+- goal: "Review the context-budget harness" → goal-focused brief for that review
 
 ### compression
 
@@ -60,29 +60,43 @@ If goal is provided:
 - Preserve details that help the next LLM reason about the goal.
 - Summarize unrelated modules briefly.
 
+If goal is empty:
+
+- Apply compression broadly to the whole-project brief.
+- Next-task recommendations should remain clear enough to act on regardless of compression level.
+
 ## Reading Strategy
 
 Do not read implementation files by default.
 
 Prefer documentation files first.
 
-Always consider reading:
+**When goal is empty, always read:**
 
-- README.md
-- docs/vision.md
-- docs/architecture.md
-- docs/project-structure.md
-- docs/context-map.md
-- docs/context-architecture.md
-- docs/design-context.md
+- `docs/project-goal-*.md` (latest version)
+- `docs/project-progress-*.md` (latest version)
+- `docs/architecture.md`
+- `docs/context-map.md`
+- `README.md`
 
-If the goal points to a specific module, read that module's:
+Also consider reading:
 
-- README.md
-- DESIGN.md, if it exists
-- INTERFACE.md
+- `docs/vision.md`
+- `docs/project-structure.md`
+- `docs/context-architecture.md`
+- `docs/design-context.md`
 
-If the goal is empty, summarize the whole project using project-level documentation and only compact module summaries.
+**When goal is provided, read:**
+
+- `docs/architecture.md`
+- `docs/context-map.md`
+- Target module `README.md`
+- Target module `DESIGN.md`, if it exists
+- Target module `INTERFACE.md`
+
+Also read the latest project progress for current known state:
+
+- `docs/project-progress-*.md` (latest version)
 
 If implementation details seem necessary, ask before reading source files.
 
@@ -93,6 +107,7 @@ Treat compression as compression aggressiveness.
 For whole-project briefs:
 
 - Apply the requested compression broadly.
+- Next-task recommendations must remain actionable even at high compression.
 
 For goal-focused briefs:
 
@@ -110,6 +125,8 @@ Recommended behavior:
 ## Output Format
 
 Use this format:
+
+---
 
 # CreatorMesh Context Brief
 
@@ -130,9 +147,9 @@ Summarize the current architecture layers and key principles.
 
 ## 4. Relevant Context for Current Goal
 
-If a goal was provided, explain the goal-relevant modules, concepts, files, and design constraints.
+If goal is provided: explain goal-relevant modules, concepts, files, and design constraints.
 
-If no goal was provided, summarize the most important project-wide context.
+If goal is empty: summarize the most important project-wide context drawn from the latest project goal document.
 
 ## 5. Module Background
 
@@ -142,6 +159,10 @@ For goal-focused briefs:
 
 - Relevant modules should get more detail.
 - Unrelated modules should be compressed heavily.
+
+For whole-project briefs:
+
+- Summarize the most active or significant modules based on current progress.
 
 ## 6. Design Constraints and Rules
 
@@ -160,15 +181,39 @@ Examples:
 
 Summarize what currently exists and what does not exist yet.
 
-## 8. What the Next LLM Should Help With
+Draw from the latest project progress document when goal is empty.
 
-Write a short instruction that the user can give to ChatGPT or another LLM.
+Draw from the relevant module state when goal is provided.
+
+## 8. Recommended Next Tasks or Next LLM Help
+
+**When goal is empty:**
+
+Recommend several possible next tasks based on the latest project goal and progress documents.
+
+For each recommended task, include:
+
+- Task name
+- Why it is next
+- Expected scope (small / medium / large)
+- Risk level (low / medium / high)
+- Whether it is suitable for harness validation (yes / no / partial)
+
+Do not recommend tasks that are already completed.
+
+Do not invent capabilities that do not exist.
+
+**When goal is provided:**
+
+Write a short instruction that the user can give to ChatGPT or another LLM to continue work on that goal.
 
 This section should be practical and goal-aware.
 
 ## 9. Source Files Used
 
 List files read or used to generate the brief.
+
+---
 
 ## Rules
 
@@ -182,7 +227,10 @@ List files read or used to generate the brief.
 - Do not include secrets.
 - Do not include long raw excerpts.
 - Optimize for handoff to ChatGPT or another LLM.
+- When goal is empty, ground next-task recommendations in the latest progress document.
 
 ## Validation
 
 A good context brief should allow a new ChatGPT session to understand the project or the current goal without reading the full repository.
+
+When goal is empty, a good brief should also give the user a clear sense of what to work on next.
