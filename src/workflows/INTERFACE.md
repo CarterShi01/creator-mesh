@@ -335,8 +335,7 @@ Implemented:
 
 - `local-runner.ts` — `LocalWorkflowRunner` implementing `WorkflowRunnerPort` (phase-1 sequential in-process executor; pause/resume via HumanReviewStep; stub step outputs for agent/connector/runner steps)
 
-Planned (not yet implemented):
-- `definitions/` — concrete `WorkflowDefinition` objects (e.g. `thought-to-note.ts`)
+- `definitions/thought-to-note.ts` — `thoughtToNoteWorkflow` definition (classify → human-review → write-notion with always-approve governance checkpoint)
 
 ## Change Rules for Agents
 

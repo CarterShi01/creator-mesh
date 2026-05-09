@@ -32,3 +32,5 @@ export type {
 } from "./port.js";
 
 export { LocalWorkflowRunner } from "./local-runner.js";
+
+export { thoughtToNoteWorkflow } from "./definitions/thought-to-note.js";
