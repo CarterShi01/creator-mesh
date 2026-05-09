@@ -197,13 +197,12 @@ All four backend types implement `RunnerPort`. The backend type is an internal i
 
 ## Main Files
 
-No implementation files exist yet.
-
-Planned file structure:
-
+Implemented:
+- `types.ts` — `RunnerTaskType`, `RunnerPermissionLevel`, `ApprovalRequirement`, `RunnerResultStatus`, `RunnerActionStatus`, `ApprovalResult` enumerations
 - `port.ts` — `RunnerPort`, `RunnerRegistry`, `RunnerCapability`, `RunnerAction`, `RunnerResult`, `RunnerArtifact`, `RunnerConfig` interfaces
-- `types.ts` — `RunnerTaskType`, `RunnerPermissionLevel`, `ApprovalRequirement` enumerations
 - `index.ts` — barrel re-exports
+
+Planned (not yet implemented):
 - `claude-code/` — Claude Code runner adapter (first reference runner); see `claude-code/INTERFACE.md`
 
 ## Change Rules for Agents
