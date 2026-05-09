@@ -34,7 +34,31 @@ Use this skill after:
 5. Review the design reasoning from the current session.
 6. Decide whether a `DESIGN.md` update is needed.
 7. If needed, update the relevant `DESIGN.md` using the standard template.
-8. If no update is needed, explain why.
+8. Apply the bottom-up propagation check (see below).
+9. If no update is needed, explain why.
+
+## Bottom-Up Propagation Rule
+
+Documentation updates flow from the most specific level upward. Each level is more abstract than the one below.
+
+Update order within a module (specific → abstract):
+1. Implementation file (most specific, concrete)
+2. `INTERFACE.md` — public contract; updated when inputs, outputs, or invariants change
+3. `DESIGN.md` — design reasoning; updated when decisions, tradeoffs, or assumptions change
+4. `README.md` — purpose and boundaries; updated only when the module's role changes significantly
+
+Update order across modules (foundation → top):
+1. `src/core`, `src/shared` — foundational; changes propagate widely
+2. `src/triggers`, `src/intake`, `src/agents`, `src/runners`, `src/connectors`, `src/storage`, `src/governance`
+3. `src/knowledge`, `src/orchestrator`, `src/outputs`
+4. `src/workflows` — highest-level; most abstract and most concise
+
+When a lower-level module's design changes, ask:
+- Does any module at a higher layer have a design assumption that depended on the old design?
+- If yes, does that module's `DESIGN.md` need a corresponding update?
+- Higher-layer updates should be more abstract: summarize the impact, do not repeat the detail.
+
+Propagation stops when the change does not affect a higher module's design assumptions, open questions, or handoff context.
 
 ## DESIGN.md Sections
 

@@ -61,7 +61,11 @@ All 13 source modules have both `README.md` and `INTERFACE.md`:
 
 `src/core`, `src/triggers`, `src/intake`, `src/knowledge`, `src/orchestrator`, `src/agents`, `src/runners`, `src/connectors`, `src/workflows`, `src/governance`, `src/storage`, `src/outputs`, `src/shared`
 
-No module currently has a `DESIGN.md`. None have been created yet. This is intentional — Thought v1 design was too simple to warrant one.
+All 13 source modules now have `DESIGN.md`:
+
+`src/core`, `src/triggers`, `src/intake`, `src/knowledge`, `src/orchestrator`, `src/agents`, `src/runners`, `src/connectors`, `src/workflows`, `src/governance`, `src/storage`, `src/outputs`, `src/shared`
+
+Each `DESIGN.md` captures: current design summary, goals, key decisions, tradeoffs, alternatives considered, assumptions, open questions, future evolution, and ChatGPT handoff context. Higher-layer modules are written more abstractly and concisely than lower-layer ones.
 
 ### Templates
 
@@ -75,12 +79,12 @@ No module currently has a `DESIGN.md`. None have been created yet. This is inten
 | Skill | Status |
 |---|---|
 | `creator-context-navigator` | Present (slash command invocation previously returned "Unknown skill"; natural-language fallback observed to work) |
-| `creator-change-planner` | Present (invocation unvalidated) |
-| `creator-interface-maintainer` | Present (invocation unvalidated) |
+| `creator-change-planner` | Present; updated — post-implementation checklist restructured with bottom-up propagation steps |
+| `creator-interface-maintainer` | Present; updated — bottom-up propagation rule and layer ordering added |
 | `creator-skill-harvester` | Present (invocation unvalidated) |
-| `creator-design-context-maintainer` | Present (invocation unvalidated) |
+| `creator-design-context-maintainer` | Present; updated — within-module and cross-module bottom-up propagation rules added |
 | `creator-context-brief` | Present (slash command invocation validated in session) |
-| `creator-progress-maintainer` | Present (new; invocation unvalidated) |
+| `creator-progress-maintainer` | Present; slash command invocation validated in session |
 
 ### Core Primitive Implementation
 
@@ -91,7 +95,7 @@ No module currently has a `DESIGN.md`. None have been created yet. This is inten
 | `src/core/thought.ts` — `createThought()` function | Present |
 | `src/core/index.ts` — barrel re-export | Present |
 | `src/core/INTERFACE.md` — updated with Thought contract | Present |
-| `src/core/DESIGN.md` | Not created — intentionally skipped |
+| `src/core/DESIGN.md` | Present — retroactively created; captures Thought/Message mirror decision and zero-dependency invariant |
 | `src/core` — `Message` primitive | Present |
 
 All other `src/` directories contain no implementation files yet.
@@ -249,6 +253,18 @@ Slash command invocation was previously reported as "Unknown skill" for `creator
   - design context review (intentionally skipped — design was trivial)
   - skill candidate review
 
+### Full DESIGN.md Coverage and Bottom-Up Update Rules
+
+- `DESIGN.md` created for all 13 `src/` modules:
+  `src/core`, `src/triggers`, `src/intake`, `src/knowledge`, `src/orchestrator`, `src/agents`, `src/runners`, `src/connectors`, `src/workflows`, `src/governance`, `src/storage`, `src/outputs`, `src/shared`
+- Each `DESIGN.md` follows the standard template: design summary, goals, key decisions, tradeoffs, alternatives, assumptions, open questions, future evolution, ChatGPT handoff context
+- Higher-layer modules (e.g., `workflows`, `orchestrator`) are written more abstractly and concisely than lower-layer modules (e.g., `core`, `shared`)
+- Three skills updated with explicit bottom-up propagation rules:
+  - `creator-interface-maintainer` — propagation check after INTERFACE.md update; layer ordering from foundation to top
+  - `creator-design-context-maintainer` — within-module update order (implementation → INTERFACE → DESIGN → README) and cross-module propagation order
+  - `creator-change-planner` — post-implementation checklist restructured into three explicit steps: within-module bottom-up, cross-module propagation, progress/skill review
+- `npm run verify` passes clean after all changes: 47 tests (typecheck + smoke + harness)
+
 ## Current Focus
 
 The current focus is to prepare CreatorMesh for the first real product-development loop.
@@ -264,13 +280,15 @@ The current focus is to prepare CreatorMesh for the first real product-developme
 
 Suggested next steps, roughly in order:
 
-1. **Validate skill invocation** — confirm slash command invocation works for all 7 skills, or document known limitations and natural-language fallbacks.
+1. **Validate skill invocation** — confirm slash command invocation works for all 7 skills, or document known limitations and natural-language fallbacks. `creator-context-brief` and `creator-progress-maintainer` validated; others unconfirmed.
 2. ~~**Add `Message` domain primitive**~~ — **Done.**
 3. ~~**Create `tsconfig.json`**~~ — **Done.**
 4. ~~**Add minimal tests**~~ — **Done.** Smoke tests for `createThought()` pass; six-layer test structure documented.
-5. **Design Notion connector** — only after core primitives and context workflow are stable. Start with a DESIGN.md, not implementation.
-6. **Design Claude Code runner** — only after `Message` is stable and the harness is validated.
-7. **Add `docs/skill-validation-checklist.md`** — currently missing. Useful before broader harness promotion.
+5. ~~**Create `DESIGN.md` for all modules**~~ — **Done.** All 13 `src/` modules now have DESIGN.md.
+6. **Add smoke tests for `createMessage()`** — `createThought()` has 5 smoke tests; `createMessage()` has none. Test parity is expected.
+7. **Design Notion connector** — `DESIGN.md` skeleton is in place in `src/connectors/DESIGN.md`; detailed Notion-specific design not yet started. Start with a Notion-specific DESIGN.md or sub-section, not implementation.
+8. **Design Claude Code runner** — `DESIGN.md` skeleton is in place in `src/runners/DESIGN.md`; detailed Claude Code runner design not yet started.
+9. **Add `docs/skill-validation-checklist.md`** — currently missing. Useful before broader harness promotion.
 
 ## Known Risks
 
@@ -300,8 +318,10 @@ CreatorMesh has completed its initial foundation-building phase.
 
 The quality and cost harness is in place: reading order, documentation layers, project-level skills, context briefs, and progress tracking.
 
-Both core primitives (`Thought` and `Message`) are implemented and tested. The smoke and harness test layers are active: 47 tests all passing. CI is now in place via GitHub Actions. The verification policy is documented in `AGENTS.md` and `CLAUDE.md` — Claude Code must run deterministic verification before declaring any task complete.
+Both core primitives (`Thought` and `Message`) are implemented and tested. The smoke and harness test layers are active: 47 tests all passing. CI is in place via GitHub Actions. The verification policy is documented in `AGENTS.md` and `CLAUDE.md`.
 
-The next milestones are connector and runner design — starting with Notion as the first knowledge connector and Claude Code as the first development runner.
+All 13 `src/` modules now have all three documentation layers: `README.md` (purpose and boundaries), `DESIGN.md` (design reasoning and decisions), and `INTERFACE.md` (public contract). Three skills have been updated with an explicit bottom-up propagation rule — documentation updates flow from implementation file upward through the module, then propagate to dependent higher-layer modules in decreasing specificity.
 
-Product functionality does not yet exist. The key progress is a disciplined development system and a verified runtime foundation that can support long-term, low-cost, high-quality AI-assisted development.
+The next milestones are: smoke tests for `createMessage()`, and detailed connector/runner design — starting with Notion as the first knowledge connector and Claude Code as the first development runner.
+
+Product functionality does not yet exist. The key progress is a disciplined development system, a complete three-layer documentation structure across all modules, and a verified runtime foundation that can support long-term, low-cost, high-quality AI-assisted development.
