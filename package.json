@@ -5,6 +5,17 @@
   "scripts": {
     "dev": "tsx src/index.ts",
     "build": "tsc",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit -p tsconfig.test.json",
+    "test": "vitest run",
+    "test:smoke": "vitest run tests/smoke",
+    "verify:quick": "npm run typecheck && npm run test:smoke",
+    "verify": "npm run typecheck && npm run test"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^2.0.0"
   }
 }
