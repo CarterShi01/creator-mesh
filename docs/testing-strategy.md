@@ -81,6 +81,40 @@ The current goal is to:
 2. Establish the verification workflow.
 3. Give future sessions a clear place to add tests as modules are implemented.
 
+## Layer 2: Harness Validation
+
+### Why harness validation exists
+
+CreatorMesh relies on AI agents following project rules: reading order, interface-first design, zero-dependency invariants, documentation presence, and skill format. These rules are written in `AGENTS.md` and `CLAUDE.md`, but words in a markdown file are not enforced automatically.
+
+The harness layer exists to make project rules machine-verifiable. When a rule is in the harness, it fails a test rather than silently drifting.
+
+### Why AI-generated code needs deterministic rule checks
+
+Claude Code can generate correct-looking code that violates an architecture boundary. For example:
+- A `src/core` file that imports from `src/shared`
+- A module added without `README.md` or `INTERFACE.md`
+- A skill directory missing its `SKILL.md`
+
+Without a harness test, these violations pass `npm run verify:quick` undetected. With harness tests, they fail deterministically on the next `npm run verify`.
+
+### Currently implemented checks
+
+| Test file | Rule enforced |
+|---|---|
+| `architecture-boundaries.test.ts` | `src/core` must not import from any other `src/*` module |
+| `docs-presence.test.ts` | `AGENTS.md`, `README.md`, `docs/architecture.md`, `docs/context-map.md` must exist; each `src/` module must have `README.md` and `INTERFACE.md` |
+| `skills-format.test.ts` | Each `.claude/skills/*/` directory must contain `SKILL.md`; test is a no-op if `.claude/skills` is absent |
+
+### Placeholder checks (not yet implemented)
+
+- `INTERFACE.md` content sync validation
+- `DESIGN.md` format and presence rules
+- Skill YAML frontmatter validation
+- Context brief format validation
+- Dependency boundary rules for modules beyond `core`
+- Progress document freshness checks
+
 ## AI-Era Testing Notes
 
 Claude Code can generate tests, but:

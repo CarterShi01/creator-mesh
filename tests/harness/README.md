@@ -1,25 +1,41 @@
 # Harness Tests
 
-Harness tests verify architecture rules, documentation presence, skill format, and AI collaboration constraints.
+Harness tests validate CreatorMesh's AI collaboration rules and architecture boundaries.
 
-**Status: Planned. No harness tests exist yet.**
+These are not business logic tests. They encode project rules that Claude Code and other agents are expected to follow manually — and verify them deterministically.
 
-## Intended Scope
-
-- Verify that every `src/` module has a `README.md` and `INTERFACE.md`.
-- Verify that every `.claude/skills/*/SKILL.md` has valid YAML frontmatter with `name` and `description`.
-- Verify that `core` does not import from other `src/` modules.
-- Verify that documentation files are not empty stubs.
+**Status: Active (minimal first layer).**
 
 ## Why This Layer Exists
 
-CreatorMesh uses a documentation-first, context-budget-first development discipline.
+CreatorMesh is built using a context-budget-first, documentation-first development discipline enforced by AI agents. Without machine-verifiable checks, those rules can quietly drift.
 
-The harness layer is where these architectural rules become machine-verifiable rather than relying only on human review or Claude Code's judgment.
+The harness layer converts project rules into assertions that fail loudly.
 
-## When to Add
+## Current Checks
 
-Add harness tests when:
-- The documentation structure is stable enough to validate programmatically.
-- A skill format standard is finalized.
-- Architecture boundary rules are ready to be enforced automatically.
+| File | What it verifies |
+|---|---|
+| `architecture-boundaries.test.ts` | `src/core` does not import from any other `src/*` module |
+| `docs-presence.test.ts` | Required root docs and per-module `README.md` / `INTERFACE.md` exist |
+| `skills-format.test.ts` | Each `.claude/skills/*/` directory contains a `SKILL.md` file |
+
+## What These Checks Do Not Cover Yet
+
+These checks are intentionally minimal. Future checks may include:
+
+- `INTERFACE.md` content sync validation (does implementation match the contract?)
+- `DESIGN.md` validation for modules with non-trivial design reasoning
+- Skill metadata validation (required YAML frontmatter fields)
+- Context brief format validation
+- Progress document presence and freshness checks
+- Dependency boundary rules for all modules beyond `core`
+- Tool-agnostic boundary enforcement across the full `src/` tree
+
+## Running Harness Tests
+
+```bash
+npm run test:harness     # harness tests only
+npm run verify:harness   # typecheck + harness tests
+npm run verify           # typecheck + all tests (includes harness)
+```
