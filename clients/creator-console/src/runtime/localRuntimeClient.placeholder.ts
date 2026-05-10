@@ -8,7 +8,7 @@
 //   UI → WorkflowClient (workflowClient.ts)
 //      → LocalRuntimeClient (this file, future impl)
 //         → LocalWorkflowRunner (src/workflows/local-runner.ts)
-//            → Orchestrator (src/orchestrator/orchestrator.ts)
+//            → Runtime (src/runtime/runtime.ts)
 //               → ThoughtAgent (src/agents/thought-agent.ts)
 //               → GovernanceEvaluator (src/governance/evaluator.ts)
 //               → NotionConnectorAdapter (src/connectors/notion/adapter.ts)
@@ -73,7 +73,7 @@
 //   [ ] NOTION_API_KEY credential available and tested
 //   [ ] ANTHROPIC_API_KEY credential available and tested
 //   [ ] LocalWorkflowRunner.execute() + resume() smoke tests passing
-//   [ ] GovernanceEvaluator wired into Orchestrator (done — see governance/evaluator.ts)
+//   [ ] GovernanceEvaluator wired into Runtime (done — see governance/evaluator.ts)
 //   [ ] HTTP API server added (e.g. Express or Hono) to serve as runtime bridge
 //       OR Tauri backend IPC channel established for desktop-only mode
 //   [ ] WorkflowClient factory updated to detect 'local' mode

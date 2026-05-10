@@ -28,8 +28,8 @@ CreatorMesh is organized into the following conceptual layers:
 3. Knowledge
    Callable soft knowledge — skills, principles, domain context, and structured knowledge assets available to agents and workflows.
 
-4. Orchestrator
-   Coordinates routing, step dispatch, state transitions, and human approval checkpoints. Decides how things move through the system without defining what they are.
+4. Runtime
+   Executes and dispatches work safely. Receives already-framed execution work from workflows and creation-facing flows, dispatches steps to agents, runners, and connectors, applies governance checks before side effects, and supports pause/resume behavior. Does not own the CreatorMesh worldview or methodological core; `creation` does.
 
 5. Agents
    Domain-specific reasoning roles. Execute within workflow steps and produce structured outputs.
@@ -69,15 +69,19 @@ CreatorMesh should be:
 
 ## Core Distinction
 
-`triggers` and `orchestrator` are intentionally separate.
+`triggers`, `creation`, and `runtime` are intentionally separate.
 
 `triggers` defines the stable input primitives and represents input signals entering the system.
 
-`orchestrator` coordinates what happens next when the system processes an input.
+`creation` is the methodological core — it interprets intent, frames quests, constructs objects, maps relations, and tracks artifacts.
+
+`runtime` is the execution loop layer — it dispatches already-framed work safely, enforces governance policies, and supports pause/resume.
 
 In short:
 
 - `triggers` defines what things are and where they come from.
-- `orchestrator` decides how things move.
+- `creation` interprets intent and frames the work.
+- `runtime` executes and dispatches work safely.
+- `governance` provides policies; `runtime` invokes governance before side effects.
 
 The project should start small, but its structure should allow it to grow into a broader personal workbench for thoughts, messages, knowledge, planning, execution, and product creation.

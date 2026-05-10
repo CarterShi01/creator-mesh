@@ -7,7 +7,7 @@ const TRIGGERS_DIR = join(ROOT, "src", "triggers");
 
 // Modules that src/triggers must not import from (higher-level layers)
 const HIGHER_LEVEL_MODULES = [
-  "creation", "knowledge", "orchestrator", "agents", "runners",
+  "creation", "knowledge", "runtime", "agents", "runners",
   "connectors", "workflows", "governance", "storage", "outputs",
 ];
 

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { LocalWorkflowRunner } from "../../../src/workflows/local-runner.js";
-import { Orchestrator } from "../../../src/orchestrator/orchestrator.js";
+import { Runtime } from "../../../src/runtime/runtime.js";
 import { ThoughtAgent } from "../../../src/agents/thought-agent.js";
 import { thoughtToNoteWorkflow } from "../../../src/workflows/definitions/thought-to-note.js";
 import type { ThoughtAgentClient, ThoughtClassification } from "../../../src/agents/thought-agent.js";
@@ -55,13 +55,13 @@ describe("ThoughtToNoteWorkflow — end-to-end with real dispatch", () => {
     const notionConnector = makeMockNotionConnector();
     const thoughtAgent = new ThoughtAgent(thoughtClient);
 
-    const orchestrator = new Orchestrator(
+    const runtime = new Runtime(
       new Map([["thought-agent", thoughtAgent]]),
       new Map([["notion", notionConnector]]),
       new Map()
     );
 
-    const runner = new LocalWorkflowRunner(orchestrator);
+    const runner = new LocalWorkflowRunner(runtime);
     return { runner, thoughtClient, notionConnector };
   }
 

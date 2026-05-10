@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { Orchestrator } from "../../../src/orchestrator/orchestrator.js";
+import { Runtime } from "../../../src/runtime/runtime.js";
 import { GovernanceEvaluator } from "../../../src/governance/index.js";
 import type { AgentRole, AgentInput } from "../../../src/agents/port.js";
 import type { ConnectorPort, ConnectorAction, ConnectorResult } from "../../../src/connectors/port.js";
@@ -113,16 +113,16 @@ function makeMockRunner(output: unknown = "test passed"): RunnerPort {
   };
 }
 
-describe("Orchestrator.executeStep — agent steps", () => {
+describe("Runtime.executeStep — agent steps", () => {
   it("dispatches to the registered AgentRole and returns result", async () => {
     const agent = makeMockAgent({ category: "idea", summary: "Test idea" });
-    const orch = new Orchestrator(
+    const runtime = new Runtime(
       new Map([["thought-agent", agent]]),
       new Map(),
       new Map()
     );
     const step = makeAgentStep();
-    const output = await orch.executeStep(step, { thought: "A distributed systems idea" }, {});
+    const output = await runtime.executeStep(step, { thought: "A distributed systems idea" }, {});
     expect(output).toEqual({ category: "idea", summary: "Test idea" });
     expect(agent.execute).toHaveBeenCalledWith(
       expect.objectContaining({ agentRole: "thought-agent", context: { thought: "A distributed systems idea" } })
@@ -130,19 +130,19 @@ describe("Orchestrator.executeStep — agent steps", () => {
   });
 
   it("throws when agent role is not registered", async () => {
-    const orch = new Orchestrator(new Map(), new Map(), new Map());
+    const runtime = new Runtime(new Map(), new Map(), new Map());
     await expect(
-      orch.executeStep(makeAgentStep(), {}, {})
+      runtime.executeStep(makeAgentStep(), {}, {})
     ).rejects.toThrow('agent role not registered: "thought-agent"');
   });
 });
 
-describe("Orchestrator.executeStep — connector steps", () => {
+describe("Runtime.executeStep — connector steps", () => {
   it("dispatches to the registered ConnectorPort and returns data", async () => {
     const connector = makeMockConnector({ pageId: "xyz789" });
-    const orch = new Orchestrator(new Map(), new Map([["notion", connector]]), new Map());
+    const runtime = new Runtime(new Map(), new Map([["notion", connector]]), new Map());
     const step = makeConnectorStep();
-    const output = await orch.executeStep(
+    const output = await runtime.executeStep(
       step,
       {},
       { classify: { title: "My Idea Page" } }
@@ -154,9 +154,9 @@ describe("Orchestrator.executeStep — connector steps", () => {
   });
 
   it("throws when connector is not registered", async () => {
-    const orch = new Orchestrator(new Map(), new Map(), new Map());
+    const runtime = new Runtime(new Map(), new Map(), new Map());
     await expect(
-      orch.executeStep(makeConnectorStep(), {}, {})
+      runtime.executeStep(makeConnectorStep(), {}, {})
     ).rejects.toThrow('connector not registered: "notion"');
   });
 
@@ -170,38 +170,38 @@ describe("Orchestrator.executeStep — connector steps", () => {
       completedAt: new Date(),
       auditId: "audit-err",
     });
-    const orch = new Orchestrator(new Map(), new Map([["notion", connector]]), new Map());
+    const runtime = new Runtime(new Map(), new Map([["notion", connector]]), new Map());
     await expect(
-      orch.executeStep(makeConnectorStep(), {}, { classify: { title: "Test" } })
+      runtime.executeStep(makeConnectorStep(), {}, { classify: { title: "Test" } })
     ).rejects.toThrow("API rate limit");
   });
 });
 
-describe("Orchestrator.executeStep — runner steps", () => {
+describe("Runtime.executeStep — runner steps", () => {
   it("dispatches to the registered RunnerPort and returns output", async () => {
     const runner = makeMockRunner("all tests passed");
-    const orch = new Orchestrator(new Map(), new Map(), new Map([["claude-code", runner]]));
-    const output = await orch.executeStep(makeRunnerStep(), {}, {});
+    const runtime = new Runtime(new Map(), new Map(), new Map([["claude-code", runner]]));
+    const output = await runtime.executeStep(makeRunnerStep(), {}, {});
     expect(output).toBe("all tests passed");
   });
 
   it("throws when runner is not registered", async () => {
-    const orch = new Orchestrator(new Map(), new Map(), new Map());
+    const runtime = new Runtime(new Map(), new Map(), new Map());
     await expect(
-      orch.executeStep(makeRunnerStep(), {}, {})
+      runtime.executeStep(makeRunnerStep(), {}, {})
     ).rejects.toThrow('runner not registered: "claude-code"');
   });
 });
 
-describe("Orchestrator — input mapping resolution", () => {
+describe("Runtime — input mapping resolution", () => {
   it("resolves $input.* references from workflowInput", async () => {
     const agent = makeMockAgent({});
-    const orch = new Orchestrator(
+    const runtime = new Runtime(
       new Map([["thought-agent", agent]]),
       new Map(),
       new Map()
     );
-    await orch.executeStep(
+    await runtime.executeStep(
       makeAgentStep({ inputMapping: { thought: "$input.rawThought" } }),
       { rawThought: "hello world" },
       {}
@@ -213,12 +213,12 @@ describe("Orchestrator — input mapping resolution", () => {
 
   it("resolves $steps.*.* references from stepOutputs", async () => {
     const agent = makeMockAgent({});
-    const orch = new Orchestrator(
+    const runtime = new Runtime(
       new Map([["thought-agent", agent]]),
       new Map(),
       new Map()
     );
-    await orch.executeStep(
+    await runtime.executeStep(
       makeAgentStep({ inputMapping: { title: "$steps.classify.title" } }),
       {},
       { classify: { title: "Deep Work" } }
@@ -229,11 +229,11 @@ describe("Orchestrator — input mapping resolution", () => {
   });
 });
 
-describe("Orchestrator — unsupported step type", () => {
+describe("Runtime — unsupported step type", () => {
   it("throws for knowledge step type", async () => {
-    const orch = new Orchestrator(new Map(), new Map(), new Map());
+    const runtime = new Runtime(new Map(), new Map(), new Map());
     const step = { type: "knowledge", stepId: "k1", name: "k", description: "d", onSuccess: "complete", onFailure: "fail" } as unknown as AgentStep;
-    await expect(orch.executeStep(step, {}, {})).rejects.toThrow('unsupported step type "knowledge"');
+    await expect(runtime.executeStep(step, {}, {})).rejects.toThrow('unsupported step type "knowledge"');
   });
 });
 
@@ -310,12 +310,12 @@ function makeRunnerWithPermission(
 
 const governance = new GovernanceEvaluator();
 
-describe("Orchestrator — governance: connector steps", () => {
+describe("Runtime — governance: connector steps", () => {
   it("auto-approves safe-read connector step (no prior human review needed)", async () => {
     const connector = makeConnectorWithPermission("safe-read");
     const step = makeConnectorStep({ capabilityType: "read" });
-    const orch = new Orchestrator(new Map(), new Map([["notion", connector]]), new Map(), governance);
-    const output = await orch.executeStep(step, {}, {});
+    const runtime = new Runtime(new Map(), new Map([["notion", connector]]), new Map(), governance);
+    const output = await runtime.executeStep(step, {}, {});
     expect(output).toEqual({ id: "page-1" });
     expect(connector.execute).toHaveBeenCalled();
   });
@@ -323,9 +323,9 @@ describe("Orchestrator — governance: connector steps", () => {
   it("blocks write connector step when no prior human review", async () => {
     const connector = makeConnectorWithPermission("write");
     const step = makeConnectorStep();
-    const orch = new Orchestrator(new Map(), new Map([["notion", connector]]), new Map(), governance);
+    const runtime = new Runtime(new Map(), new Map([["notion", connector]]), new Map(), governance);
     await expect(
-      orch.executeStep(step, {}, {})
+      runtime.executeStep(step, {}, {})
     ).rejects.toThrow(/Governance blocked connector step.*require explicit human approval/);
     expect(connector.execute).not.toHaveBeenCalled();
   });
@@ -333,9 +333,9 @@ describe("Orchestrator — governance: connector steps", () => {
   it("denies destructive connector step even with prior human review", async () => {
     const connector = makeConnectorWithPermission("destructive");
     const step = makeConnectorStep({ capabilityType: "delete" });
-    const orch = new Orchestrator(new Map(), new Map([["notion", connector]]), new Map(), governance);
+    const runtime = new Runtime(new Map(), new Map([["notion", connector]]), new Map(), governance);
     await expect(
-      orch.executeStep(step, {}, { "review-step": { decision: "accept" } })
+      runtime.executeStep(step, {}, { "review-step": { decision: "accept" } })
     ).rejects.toThrow(/Governance denied connector step.*destructive.*denied by default/);
     expect(connector.execute).not.toHaveBeenCalled();
   });
@@ -343,9 +343,8 @@ describe("Orchestrator — governance: connector steps", () => {
   it("auto-approves write connector step when prior human-review accepted", async () => {
     const connector = makeConnectorWithPermission("write");
     const step = makeConnectorStep();
-    const orch = new Orchestrator(new Map(), new Map([["notion", connector]]), new Map(), governance);
-    // Simulate a prior HumanReviewStep whose output is { decision: "accept" }
-    const output = await orch.executeStep(step, {}, {
+    const runtime = new Runtime(new Map(), new Map([["notion", connector]]), new Map(), governance);
+    const output = await runtime.executeStep(step, {}, {
       "review-classification": { decision: "accept" },
     });
     expect(output).toEqual({ id: "page-1" });
@@ -355,20 +354,20 @@ describe("Orchestrator — governance: connector steps", () => {
   it("blocks write connector step when prior human-review rejected", async () => {
     const connector = makeConnectorWithPermission("write");
     const step = makeConnectorStep();
-    const orch = new Orchestrator(new Map(), new Map([["notion", connector]]), new Map(), governance);
+    const runtime = new Runtime(new Map(), new Map([["notion", connector]]), new Map(), governance);
     await expect(
-      orch.executeStep(step, {}, { "review-step": { decision: "reject" } })
+      runtime.executeStep(step, {}, { "review-step": { decision: "reject" } })
     ).rejects.toThrow(/Governance blocked/);
     expect(connector.execute).not.toHaveBeenCalled();
   });
 });
 
-describe("Orchestrator — governance: runner steps", () => {
+describe("Runtime — governance: runner steps", () => {
   it("auto-approves safe-read runner step", async () => {
     const runner = makeRunnerWithPermission("safe-read", "read");
     const step = makeRunnerStep({ taskType: "read" });
-    const orch = new Orchestrator(new Map(), new Map(), new Map([["claude-code", runner]]), governance);
-    const output = await orch.executeStep(step, {}, {});
+    const runtime = new Runtime(new Map(), new Map(), new Map([["claude-code", runner]]), governance);
+    const output = await runtime.executeStep(step, {}, {});
     expect(output).toBe("done");
     expect(runner.execute).toHaveBeenCalled();
   });
@@ -376,9 +375,9 @@ describe("Orchestrator — governance: runner steps", () => {
   it("blocks write runner step without prior human review", async () => {
     const runner = makeRunnerWithPermission("write", "write");
     const step = makeRunnerStep({ taskType: "write" });
-    const orch = new Orchestrator(new Map(), new Map(), new Map([["claude-code", runner]]), governance);
+    const runtime = new Runtime(new Map(), new Map(), new Map([["claude-code", runner]]), governance);
     await expect(
-      orch.executeStep(step, {}, {})
+      runtime.executeStep(step, {}, {})
     ).rejects.toThrow(/Governance blocked runner step.*require explicit human approval/);
     expect(runner.execute).not.toHaveBeenCalled();
   });
@@ -386,19 +385,19 @@ describe("Orchestrator — governance: runner steps", () => {
   it("auto-approves write runner step after human-review accepted", async () => {
     const runner = makeRunnerWithPermission("write", "write");
     const step = makeRunnerStep({ taskType: "write" });
-    const orch = new Orchestrator(new Map(), new Map(), new Map([["claude-code", runner]]), governance);
-    const output = await orch.executeStep(step, {}, {
+    const runtime = new Runtime(new Map(), new Map(), new Map([["claude-code", runner]]), governance);
+    const output = await runtime.executeStep(step, {}, {
       "human-review": { decision: "accept" },
     });
     expect(output).toBe("done");
   });
 });
 
-describe("Orchestrator — governance: backward compat (no GovernanceEvaluator)", () => {
+describe("Runtime — governance: backward compat (no GovernanceEvaluator)", () => {
   it("existing write connector step still passes when governance is not provided", async () => {
     const connector = makeMockConnector({ pageId: "xyz789" });
-    const orch = new Orchestrator(new Map(), new Map([["notion", connector]]), new Map());
-    const output = await orch.executeStep(makeConnectorStep(), {}, { classify: { title: "My Idea Page" } });
+    const runtime = new Runtime(new Map(), new Map([["notion", connector]]), new Map());
+    const output = await runtime.executeStep(makeConnectorStep(), {}, { classify: { title: "My Idea Page" } });
     expect(output).toEqual({ pageId: "xyz789" });
   });
 });

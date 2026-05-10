@@ -2,7 +2,7 @@ import { createInterface } from "readline/promises";
 import { stdin as input, stdout as output } from "process";
 
 import { LocalWorkflowRunner } from "./workflows/local-runner.js";
-import { Orchestrator } from "./orchestrator/orchestrator.js";
+import { Runtime } from "./runtime/runtime.js";
 import { ThoughtAgent, AnthropicThoughtClient } from "./agents/thought-agent.js";
 import type { ThoughtClassification } from "./agents/thought-agent.js";
 import { NotionConnectorAdapter } from "./connectors/notion/adapter.js";
@@ -55,13 +55,13 @@ async function main() {
     apiKey: notionApiKey,
   });
 
-  const orchestrator = new Orchestrator(
+  const runtime = new Runtime(
     new Map([["thought-agent", thoughtAgent]]),
     new Map([["notion", notionConnector]]),
     new Map()
   );
 
-  const runner = new LocalWorkflowRunner(orchestrator);
+  const runner = new LocalWorkflowRunner(runtime);
 
   console.log("\nClassifying thought...");
   let result = await runner.execute(thoughtToNoteWorkflow, { thought, notionParentId });

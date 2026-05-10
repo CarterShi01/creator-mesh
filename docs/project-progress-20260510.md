@@ -4,27 +4,27 @@ Version: 20260510
 
 ## Current Phase
 
-CreatorMesh has completed the first end-to-end workflow execution phase, has a minimal runtime governance layer, a fully functional web console (PWA-ready, Tauri shell scaffolded), and has now completed the **Phase 4 Governed Runtime Bridge MVP** — the console UI is fully decoupled from mock implementation via a `WorkflowClient` abstraction backed by a governed `MockRuntimeClient` and `RunLedger`.
+CreatorMesh has completed the first end-to-end workflow execution phase, has a minimal runtime governance layer, a fully functional web console (PWA-ready, Tauri shell scaffolded), and has now completed **Phases 4–7 of the console client**:
 
-All core adapters are implemented and wired together:
+- **Phase 4** — Governed Runtime Bridge (complete): `WorkflowClient` abstraction, `MockRuntimeClient`, `RunLedger`, `GovernancePanel`, `RuntimeHealthPanel`, `RunHistoryPanel`.
+- **Phase 5** — Session Bridge / Remote Control MVP (complete): multi-surface session model (`SessionClient` interface, `MockSessionBridge`, `SessionStore`), `DesktopHostPanel`, `MobileRemotePanel`, `SessionEventLog`, `ConnectedSurfacesPanel`, in-process remote command dispatch.
+- **Phase 6** — Architecture Consolidation (complete): unified `surface/` module (`SurfaceKind`, `SurfaceInfo`, `SurfaceCapabilities`), `RuntimeClient` pure interface separated from factory, mock implementations moved to `runtime/mock/`, barrel index files for `runtime/` and `session/`, backward-compat shims preserved in `platform/`.
+- **Phase 7** — Console Test Infrastructure (complete): `vitest` + `jsdom` added to devDependencies, `vitest.config.ts` with jsdom environment, `test/test:watch/verify` scripts. **76 tests passing** across 4 test files: `RunLedger` (12), `MockRuntimeClient` (24), `SessionStore` (21), `MockSessionBridge` (19). `npm run verify` (typecheck + test) passing clean.
+
+All core backend adapters are implemented and wired together:
 - ConnectorPort: designed + implemented (NotionConnectorAdapter)
 - RunnerPort: designed + implemented (ClaudeCodeRunnerAdapter with injectable SubprocessInvoker)
 - WorkflowRunnerPort: designed + implemented (LocalWorkflowRunner with optional StepExecutor)
-- Orchestrator: implemented (dispatches AgentStep / ConnectorStep / RunnerStep via registered adapters; optional GovernanceEvaluator enforces permission checks before connector/runner execution)
+- Runtime: implemented (dispatches AgentStep / ConnectorStep / RunnerStep via registered adapters; optional GovernanceEvaluator enforces permission checks before connector/runner execution) — formerly named Orchestrator
 - ThoughtAgent: implemented (stateless reasoning role backed by Anthropic API; injectable client)
-- ThoughtToNoteWorkflow: wired end-to-end (ThoughtAgent → HumanReview → NotionConnector via Orchestrator)
+- ThoughtToNoteWorkflow: wired end-to-end (ThoughtAgent → HumanReview → NotionConnector via Runtime)
 - GovernanceEvaluator: implemented (MVP conservative policy: safe-read auto-approved, destructive denied, write/execute/external-side-effect gated on prior HumanReview acceptance)
 
-The console client is now a PWA-ready installable web app with a Tauri v2 desktop shell scaffolded. The Tauri build is blocked by missing Rust/Cargo on the current machine — all web/PWA work is complete and validated.
-
-The Phase 4 Governed Runtime Bridge is complete: `WorkflowClient` abstraction, `MockRuntimeClient` (governed, 5-step simulation, 3 governance decisions per run), `RunLedger` (in-memory run/governance/event store), `RuntimeHealthPanel`, `GovernancePanel`, `RunHistoryPanel`. All UI components now read from `RuntimeRun` types — zero direct mock imports remain in the component tree.
-
-The next phase is focused on:
+The next phase (Phase 8 — LocalRuntimeClient Integration) is focused on:
+- Implementing `LocalRuntimeClient` (see `src/runtime/localRuntimeClient.placeholder.ts`) to wire the console to the real backend via HTTP (Option A) or Tauri IPC (Option B)
+- Adding a minimal HTTP server (`server/` directory) to serve as the runtime bridge for Option A
 - Installing Rust to activate the Tauri desktop build
-- Implementing `LocalRuntimeClient` (see `localRuntimeClient.placeholder.ts`) to wire LocalWorkflowRunner
 - Real integration testing with actual API credentials (Anthropic + Notion)
-- Adding remaining workflow steps or a second workflow
-- Strengthening governance: AuditRecord persistence, full ApprovalPolicy configuration
 
 ## Current Development Principle
 
@@ -52,8 +52,9 @@ Inspected on 20260510.
 
 | File | Status |
 |---|---|
-| `clients/creator-console/package.json` | Present (scripts: dev, build, preview, typecheck, tauri:dev, tauri:build) |
+| `clients/creator-console/package.json` | Present (scripts: dev, build, preview, typecheck, **test, test:watch, verify**, tauri:dev, tauri:build) |
 | `clients/creator-console/vite.config.ts` | Present (VitePWA + react plugin) |
+| `clients/creator-console/vitest.config.ts` | Present (jsdom environment, setupFiles: src/test-setup.ts) |
 | `clients/creator-console/index.html` | Present (manifest link, theme-color, apple meta tags) |
 | `clients/creator-console/public/manifest.webmanifest` | Present (PWA manifest) |
 | `clients/creator-console/public/icons/` | Present (icon-192.svg, icon-512.svg, apple-touch-icon.svg) |
@@ -61,11 +62,35 @@ Inspected on 20260510.
 | `clients/creator-console/src/model/types.ts` | Present |
 | `clients/creator-console/src/model/seedExamples.ts` | Present |
 | `clients/creator-console/src/model/mockWorkflow.ts` | Present |
+| `clients/creator-console/src/runtime/client.ts` | Present (pure RuntimeClient interface, no factory) |
 | `clients/creator-console/src/runtime/types.ts` | Present (25 Runtime API types mapping to real CreatorMesh backend concepts) |
-| `clients/creator-console/src/runtime/workflowClient.ts` | Present (WorkflowClient interface + createWorkflowClient factory) |
-| `clients/creator-console/src/runtime/runLedger.ts` | Present (in-memory RunLedger: runs, governance decisions, events) |
-| `clients/creator-console/src/runtime/mockRuntimeClient.ts` | Present (MockRuntimeClient: 5-step governed simulation, 3 governance decisions/run) |
+| `clients/creator-console/src/runtime/workflowClient.ts` | Present (singleton factory: getRuntimeClient, createWorkflowClient, resetRuntimeClient) |
+| `clients/creator-console/src/runtime/index.ts` | Present (barrel re-export of all runtime public API) |
+| `clients/creator-console/src/runtime/mock/mockClient.ts` | Present (MockRuntimeClient: 5-step governed simulation, 3 governance decisions/run) |
+| `clients/creator-console/src/runtime/mock/runLedger.ts` | Present (in-memory RunLedger: runs, governance decisions, events) |
+| `clients/creator-console/src/runtime/mock/__tests__/runLedger.test.ts` | Present (12 tests, passing) |
+| `clients/creator-console/src/runtime/mock/__tests__/mockClient.test.ts` | Present (24 tests, passing) |
+| `clients/creator-console/src/runtime/mockRuntimeClient.ts` | Present (backward-compat shim → mock/mockClient.ts) |
+| `clients/creator-console/src/runtime/runLedger.ts` | Present (backward-compat shim → mock/runLedger.ts) |
 | `clients/creator-console/src/runtime/localRuntimeClient.placeholder.ts` | Present (full integration plan: HTTP Option A + Tauri IPC Option B) |
+| `clients/creator-console/src/session/client.ts` | Present (pure SessionClient interface) |
+| `clients/creator-console/src/session/types.ts` | Present (SessionId, SurfaceKind, RemoteControlCommand, PairingState, etc.) |
+| `clients/creator-console/src/session/sessionStore.ts` | Present (in-memory store: sessions, surfaces, events, pairing lifecycle; includes resetStore() for tests) |
+| `clients/creator-console/src/session/mockSessionBridge.ts` | Present (MockSessionBridge: in-process command dispatch via shared RuntimeClient) |
+| `clients/creator-console/src/session/index.ts` | Present (barrel re-export) |
+| `clients/creator-console/src/session/__tests__/sessionStore.test.ts` | Present (21 tests, passing) |
+| `clients/creator-console/src/session/__tests__/mockSessionBridge.test.ts` | Present (19 tests, passing) |
+| `clients/creator-console/src/surface/types.ts` | Present (canonical SurfaceKind: web/pwa/tauri/capacitor/unknown, SurfaceInfo, SurfaceCapabilities) |
+| `clients/creator-console/src/surface/detector.ts` | Present (detectSurface, detectSurfaceKind, isDesktopSurface, isMobileSurface) |
+| `clients/creator-console/src/surface/tauriBridge.ts` | Present (getAppVersion, getPlatformLabel, getDesktopCapabilities) |
+| `clients/creator-console/src/surface/capacitorBridge.ts` | Present (stub for future Capacitor) |
+| `clients/creator-console/src/surface/index.ts` | Present (barrel re-export) |
+| `clients/creator-console/src/test-setup.ts` | Present (window.matchMedia stub for jsdom) |
+| `clients/creator-console/src/components/session/DesktopHostPanel.tsx` | Present (host mode: session ID, pairing code, connected surfaces) |
+| `clients/creator-console/src/components/session/MobileRemotePanel.tsx` | Present (controller mode: pairing input, remote action buttons) |
+| `clients/creator-console/src/components/session/SessionEventLog.tsx` | Present (timestamped event audit log) |
+| `clients/creator-console/src/components/session/ConnectedSurfacesPanel.tsx` | Present (surface list: kind, role, status, last seen) |
+| `clients/creator-console/docs/session-bridge-architecture.md` | Present (Phase A→E roadmap, security principles, file map, recommended next steps) |
 | `clients/creator-console/src/components/Header.tsx` | Present (shows PwaStatus + platform badge) |
 | `clients/creator-console/src/components/Layout.tsx` | Present |
 | `clients/creator-console/src/components/StatusBadge.tsx` | Present (uses RuntimeStepStatus from runtime/types) |
@@ -93,7 +118,8 @@ Inspected on 20260510.
 | `clients/creator-console/DESIGN.md` | Present (Phase 4 runtime bridge architecture, WorkflowClient decision, RunLedger rationale) |
 | `clients/creator-console/docs/desktop-runbook.md` | Present (Tauri prerequisites, commands, artifact locations, troubleshooting) |
 | `clients/creator-console/dist/` | Present (built — includes sw.js, workbox assets) |
-| `npm run build` (creator-console) | Passing (158.9KB JS, 9.97KB CSS, sw.js + workbox generated) |
+| `npm run build` (creator-console) | Passing (184KB JS, sw.js + workbox generated) |
+| `npm run verify` (creator-console) | **Passing — typecheck + 76 tests (4 test files)** |
 | `npm run tauri:build` | Blocked — Rust/Cargo not installed on current machine |
 
 ### Documentation Files
@@ -115,15 +141,13 @@ Inspected on 20260510.
 
 ### Module Documentation
 
-All 13 source modules have both `README.md` and `INTERFACE.md`:
+All current source modules have both `README.md` and `INTERFACE.md`:
 
-`src/core`, `src/triggers`, `src/intake`, `src/knowledge`, `src/orchestrator`, `src/agents`, `src/runners`, `src/connectors`, `src/workflows`, `src/governance`, `src/storage`, `src/outputs`, `src/shared`
+`src/triggers`, `src/creation`, `src/knowledge`, `src/runtime`, `src/agents`, `src/runners`, `src/connectors`, `src/workflows`, `src/governance`, `src/storage`, `src/outputs`, `src/shared`
 
-All 13 source modules now have `DESIGN.md`:
+(Note: `src/orchestrator` was renamed to `src/runtime` on 2026-05-11. `src/core` and `src/intake` were merged into `src/triggers` in the cm-arch-step-07 consolidation. The harness docs-presence test dynamically scans the src directory and passes with 28 tests.)
 
-`src/core`, `src/triggers`, `src/intake`, `src/knowledge`, `src/orchestrator`, `src/agents`, `src/runners`, `src/connectors`, `src/workflows`, `src/governance`, `src/storage`, `src/outputs`, `src/shared`
-
-Each `DESIGN.md` captures: current design summary, goals, key decisions, tradeoffs, alternatives considered, assumptions, open questions, future evolution, and ChatGPT handoff context. Higher-layer modules are written more abstractly and concisely than lower-layer ones.
+All current source modules have `DESIGN.md`. Each `DESIGN.md` captures: current design summary, goals, key decisions, tradeoffs, alternatives considered, assumptions, open questions, future evolution, and ChatGPT handoff context.
 
 `src/connectors/DESIGN.md` and `src/connectors/INTERFACE.md` have since been significantly expanded beyond the initial skeleton — see "ConnectorPort and CapabilityRegistry Design" in Completed Work below.
 
@@ -488,19 +512,18 @@ Slash command invocation was previously reported as "Unknown skill" for `creator
 
 ## Current Focus
 
-The current focus is implementing `LocalRuntimeClient` to connect the console to the real backend, Tauri desktop build activation, and real integration validation.
+The current focus is implementing `LocalRuntimeClient` (Phase 8) to connect the console to the real backend. The test infrastructure is now in place — the mock boundary is fully verified before wiring a real backend.
 
-1. **Implement `LocalRuntimeClient`** — follow the plan in `src/runtime/localRuntimeClient.placeholder.ts` to wire `WorkflowClient` to `LocalWorkflowRunner` via HTTP (Option A) or Tauri IPC (Option B).
-2. **Install Rust/Cargo** to activate the Tauri macOS desktop build (`npm run tauri:build` will produce the .app once Rust is available).
-3. Test ThoughtToNoteWorkflow with real Anthropic API and Notion API credentials.
-4. ~~Implement approval enforcement in Orchestrator~~ — **Done.**
-5. ~~Build Phase 1 Responsive Web Console MVP~~ — **Done.**
-6. ~~Add PWA manifest, service worker, and platform boundary~~ — **Done.** Phase 2 complete.
-7. ~~Scaffold Tauri v2 desktop shell~~ — **Done.** Phase 3 scaffolded; awaiting Rust to build.
-8. ~~Governed Runtime Bridge MVP~~ — **Done.** Phase 4 complete. WorkflowClient abstraction, MockRuntimeClient, RunLedger, GovernancePanel, RuntimeHealthPanel, RunHistoryPanel all merged.
+1. **Implement `LocalRuntimeClient`** — follow the plan in `src/runtime/localRuntimeClient.placeholder.ts` to wire `WorkflowClient` to `LocalWorkflowRunner` via HTTP (Option A) or Tauri IPC (Option B). Prerequisites: NOTION_API_KEY, ANTHROPIC_API_KEY, LocalWorkflowRunner smoke tests passing.
+2. **Add minimal HTTP server** (`server/` directory) — `POST /api/runs`, `POST /api/runs/:id/resume`, `GET /api/runs/:id`, `GET /api/health` — as the Option A integration bridge.
+3. **Install Rust/Cargo** to activate the Tauri macOS desktop build (`npm run tauri:build` → `.app` bundle).
+4. Test ThoughtToNoteWorkflow with real Anthropic API and Notion API credentials.
+5. ~~Add vitest test infrastructure to creator-console~~ — **Done.** Phase 7 complete.
+6. ~~Session Bridge / Remote Control MVP~~ — **Done.** Phase 5 complete. SessionClient, MockSessionBridge, SessionStore, 4 session UI panels, in-process command dispatch.
+7. ~~Architecture Consolidation~~ — **Done.** Phase 6 complete. Unified surface/, RuntimeClient pure interface, mock/ subdirectory, barrel indexes.
+8. ~~Governed Runtime Bridge MVP~~ — **Done.** Phase 4 complete.
 9. Design and implement a second workflow or extend ThoughtToNoteWorkflow with richer output mapping.
-10. Strengthen docs-presence harness to verify new implementation files are tracked.
-11. Keep project progress accurate after each meaningful session.
+10. Keep project progress accurate after each meaningful session.
 
 ## Next Recommended Work
 
@@ -536,7 +559,7 @@ Suggested next steps, roughly in order:
 18. ~~**Implement LocalWorkflowRunner**~~ — **Done.** `src/workflows/local-runner.ts` implemented with pause/resume/cancel/status lifecycle. HumanReviewStep pauses run; WorkflowResumeInput resumes. 10 smoke tests. Test suite: 95 tests.
 19. ~~**Implement ThoughtToNoteWorkflow**~~ — **Done.** `src/workflows/definitions/thought-to-note.ts` implemented: classify (AgentStep) → review-classification (HumanReviewStep) → write-notion (ConnectorStep, requiresApproval, always-approve GovernanceCheckpoint). 13 smoke tests. Test suite: 108 tests.
 20. ~~**Implement ClaudeCodeRunnerAdapter**~~ — **Done.** `src/runners/claude-code/`: `errors.ts`, `registry.ts`, `invoke.ts` (SubprocessInvoker interface + ChildProcessInvoker), `adapter.ts`, `index.ts`. Injectable SubprocessInvoker for testability. Adapter never throws; all errors return structured RunnerResult.status="failure". 15 smoke tests. Test suite: 109 tests.
-21. ~~**Design + implement minimal Orchestrator**~~ — **Done.** `src/orchestrator/orchestrator.ts`: Orchestrator class implements StepExecutor; dispatches agent/connector/runner steps to registered adapters; resolves `$input.*` and `$steps.*.*` input mappings. `StepExecutor` interface added to `src/workflows/port.ts`. `AgentRole` interface added to `src/agents/port.ts`. 10 smoke tests. Test suite: 100 tests.
+21. ~~**Design + implement minimal Orchestrator → now Runtime**~~ — **Done.** `src/runtime/runtime.ts`: `Runtime` class implements `StepExecutor`; dispatches agent/connector/runner steps to registered adapters; resolves `$input.*` and `$steps.*.*` input mappings. `StepExecutor` interface added to `src/workflows/port.ts`. `AgentRole` interface added to `src/agents/port.ts`. Originally at `src/orchestrator/orchestrator.ts` as `Orchestrator`; renamed to `src/runtime/runtime.ts` as `Runtime` on 2026-05-11. 19 smoke tests.
 22. ~~**Design + implement ThoughtAgent**~~ — **Done.** `src/agents/thought-agent.ts`: ThoughtAgent implements AgentRole; injectable ThoughtAgentClient for testability; AnthropicThoughtClient backed by claude-haiku-4-5-20251001; returns ThoughtClassification (category, summary, tags, confidence, suggestedTitle). @anthropic-ai/sdk installed. 9 smoke tests. Test suite: 109 tests.
 23. ~~**Wire ThoughtToNoteWorkflow end-to-end**~~ — **Done.** LocalWorkflowRunner accepts optional StepExecutor constructor arg; when present, non-HumanReview steps dispatch to Orchestrator. Fixed thought-to-note inputMapping to reference classify.suggestedTitle and classify.summary. 9 end-to-end smoke tests validate full path: ThoughtAgent → HumanReview pause → NotionConnector write. Test suite: 109 tests total.
 
@@ -609,6 +632,29 @@ Upgraded the console client to PWA-ready and Tauri desktop shell (10 additional 
 
 Added `src/creation` as a domain-layer placeholder for long-running creation state. Updated architecture and context-map references from 13 to 14 modules. Introduced `LongArc`, `CreationAsset`, `DecisionRecord`, `ArtifactRef`, `ProgressSnapshot`, and `ContextBrief` as documented interface concepts. No runtime workflow, connector, runner, collaboration, or contribution mechanics were implemented.
 
+### Architecture Rename: src/orchestrator → src/runtime
+
+Renamed the `src/orchestrator` module to `src/runtime` to reflect the realigned product model where `creation` owns the methodological core (worldview, intent framing, quest construction) and `runtime` owns execution infrastructure (dispatch, governance enforcement, step sequencing).
+
+Changes:
+- `src/orchestrator/orchestrator.ts` → `src/runtime/runtime.ts`; `Orchestrator` class renamed to `Runtime`
+- `src/orchestrator/index.ts` → `src/runtime/index.ts`
+- `src/orchestrator/README.md` → `src/runtime/README.md` — rewritten with new runtime wording
+- `src/orchestrator/DESIGN.md` → `src/runtime/DESIGN.md` — rewritten; includes Deferred / Not Yet Implemented section (session manager, context builder, LLM loop, tool invocation gateway, context compression, event log, run recovery, cross-surface continuity)
+- `src/orchestrator/INTERFACE.md` → `src/runtime/INTERFACE.md` — updated with Runtime class and execution-infrastructure framing
+- `src/orchestrator/` directory removed
+- `tests/smoke/orchestrator/` directory removed; `tests/smoke/runtime/runtime.smoke.test.ts` created
+- `tests/smoke/workflows/workflowE2E.smoke.test.ts` — import updated to `src/runtime/runtime.js`; variable renamed from `orchestrator` to `runtime`
+- `tests/harness/architecture-boundaries.test.ts` — `"orchestrator"` replaced with `"runtime"` in HIGHER_LEVEL_MODULES list
+- `src/cli.ts` — import updated; variable renamed from `orchestrator` to `runtime`
+- `clients/creator-console/src/runtime/localRuntimeClient.placeholder.ts` — comment updated
+- `docs/architecture.md` — layer 4 rewritten from "Orchestrator" to "Runtime"; Core Distinction section updated
+- `docs/context-map.md` — source map entry updated from `src/orchestrator` to `src/runtime`
+
+No new runtime/session/context/LLM loop features were implemented. All deferred future capabilities are documented in `src/runtime/DESIGN.md` but not implemented.
+
+`npm run verify` passes clean: **244 tests (21 test files), all passing.**
+
 ### Minimal Governance / Safety Execution MVP
 
 Implemented the first runtime governance layer:
@@ -619,15 +665,15 @@ Implemented the first runtime governance layer:
   - `destructive` → denied (always)
   - `write` / `execute` / `external-side-effect` → auto-approved if prior HumanReviewStep accepted; requires-approval otherwise
 - `src/governance/index.ts` — barrel re-exports
-- `src/orchestrator/orchestrator.ts` — optional 4th constructor argument `governance?: GovernanceEvaluator`; `_hasAcceptedHumanReview()` helper inspects `stepOutputs` for `{ decision: "accept" }` output from prior HumanReviewStep; governance check runs before ConnectorStep and RunnerStep dispatch — the connector/runner `execute()` is never called if governance denies or blocks
+- `src/runtime/runtime.ts` — optional 4th constructor argument `governance?: GovernanceEvaluator`; `_hasAcceptedHumanReview()` helper inspects `stepOutputs` for `{ decision: "accept" }` output from prior HumanReviewStep; governance check runs before ConnectorStep and RunnerStep dispatch — the connector/runner `execute()` is never called if governance denies or blocks
 - `src/governance/INTERFACE.md` — updated: GovernanceEvaluator, GovernanceDecision, GovernancePermissionLevel documented; planned concepts (ApprovalRequest, AuditRecord, etc.) preserved as planned
-- `src/orchestrator/INTERFACE.md` — updated: governance moved from disallowed to allowed dependency; GovernanceEvaluator injection documented; invariants updated with governance-before-execution rule and backward-compat guarantee
+- `src/runtime/INTERFACE.md` — updated: governance moved from disallowed to allowed dependency; GovernanceEvaluator injection documented; invariants updated with governance-before-execution rule and backward-compat guarantee
 
 Tests added:
 - `tests/smoke/governance/governance-evaluator.smoke.test.ts` — 10 unit tests covering all 6 permission levels and prior-review logic
-- 9 new integration tests in `tests/smoke/orchestrator/orchestrator.smoke.test.ts` covering: safe-read auto-approved, write blocked, destructive denied, write approved after prior HumanReview, write runner blocked, write runner approved, backward compat without governance
+- 9 governance integration tests in `tests/smoke/runtime/runtime.smoke.test.ts` covering: safe-read auto-approved, write blocked, destructive denied, write approved after prior HumanReview, write runner blocked, write runner approved, backward compat without governance
 
-Test suite: 172 tests (was 151), all passing. `npm run verify` clean.
+`npm run verify` clean.
 
 ## Known Risks
 
@@ -653,16 +699,20 @@ Test suite: 172 tests (was 151), all passing. `npm run verify` clean.
 
 ## Progress Summary
 
-CreatorMesh has completed its initial foundation-building phase and has advanced through four phases of console client work.
+CreatorMesh has completed its initial foundation-building phase and has advanced through seven phases of console client work.
 
 The quality and cost harness is in place: reading order, documentation layers, project-level skills, context briefs, and progress tracking.
 
-The backend layer is complete: ConnectorPort + NotionConnectorAdapter, RunnerPort + ClaudeCodeRunnerAdapter, WorkflowRunnerPort + LocalWorkflowRunner, ThoughtToNoteWorkflow end-to-end, GovernanceEvaluator enforcing MVP conservative policy in Orchestrator. 172 tests passing.
+The backend layer is complete: ConnectorPort + NotionConnectorAdapter, RunnerPort + ClaudeCodeRunnerAdapter, WorkflowRunnerPort + LocalWorkflowRunner, ThoughtToNoteWorkflow end-to-end, GovernanceEvaluator enforcing MVP conservative policy in Runtime. The `src/orchestrator` module has been renamed to `src/runtime`; `Orchestrator` class renamed to `Runtime`. **244 root-package tests passing (21 test files).**
 
-The console client has progressed through four phases:
-- **Phase 1** — Responsive Web Console MVP: full mock flow, 3-column layout, build passing.
-- **Phase 2** — PWA: manifest.webmanifest, vite-plugin-pwa, PwaStatus, platform detection, sw.js. Build passing.
-- **Phase 3** — Tauri Desktop Shell: scaffolded (src-tauri/, native commands, desktop bridge). **Build blocked on Rust/Cargo.** Unblock: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh && source ~/.cargo/env && cd clients/creator-console && npm run tauri:build`
-- **Phase 4** — Governed Runtime Bridge: `WorkflowClient` abstraction, `MockRuntimeClient` (5-step governed simulation, 3 governance decisions/run), `RunLedger` (in-memory audit store), `GovernancePanel`, `RuntimeHealthPanel`, `RunHistoryPanel`. All UI components read from `RuntimeRun` types. Zero direct mock imports remain in the component tree. Build passing.
+The console client has progressed through seven phases — all building toward the same goal: match Claude Code's architecture abstraction (local runtime host + lightweight controller surfaces + governed API boundary):
 
-The next integration milestone (Phase 5) is implementing `LocalRuntimeClient` — follow `src/runtime/localRuntimeClient.placeholder.ts` for the full plan. Switching runtimes requires only changing the `createWorkflowClient()` factory argument.
+- **Phase 1** — Responsive Web Console MVP: full mock flow, 3-column layout. Build passing.
+- **Phase 2** — PWA: manifest.webmanifest, vite-plugin-pwa, PwaStatus, sw.js. Build passing.
+- **Phase 3** — Tauri Desktop Shell: scaffolded (src-tauri/, native commands, desktop bridge). **Build blocked on Rust/Cargo.**
+- **Phase 4** — Governed Runtime Bridge: `RuntimeClient` interface, `MockRuntimeClient` (5-step governed simulation), `RunLedger` (in-memory audit store), `GovernancePanel`, `RuntimeHealthPanel`, `RunHistoryPanel`. Zero direct mock imports in component tree.
+- **Phase 5** — Session Bridge / Remote Control MVP: `SessionClient` interface, `MockSessionBridge` (in-process command dispatch), `SessionStore`, 4 session UI panels (DesktopHostPanel, MobileRemotePanel, SessionEventLog, ConnectedSurfacesPanel). Architecture doc: Phase A→E roadmap.
+- **Phase 6** — Architecture Consolidation: unified `surface/` module, `RuntimeClient` pure interface in `client.ts`, mock implementations in `runtime/mock/`, barrel indexes for `runtime/` and `session/`, backward-compat shims in `platform/`.
+- **Phase 7** — Console Test Infrastructure: vitest + jsdom, `vitest.config.ts`, `test-setup.ts` (matchMedia stub), `verify` script. **76 tests across 4 files: RunLedger (12), MockRuntimeClient (24), SessionStore (21), MockSessionBridge (19). All passing.**
+
+The next integration milestone (**Phase 8 — LocalRuntimeClient**) is implementing `LocalRuntimeClient` — follow `src/runtime/localRuntimeClient.placeholder.ts` for the full plan. Switching runtimes requires only changing the `getRuntimeClient()` factory to return `LocalRuntimeClient` instead of `MockRuntimeClient`. The React component tree does not change.

@@ -6,7 +6,7 @@ import type { WorkflowStep, WorkflowInput, StepInputMapping } from "../workflows
 import type { AgentStep, ConnectorStep, RunnerStep } from "../workflows/types.js";
 import type { GovernanceEvaluator } from "../governance/index.js";
 
-export class Orchestrator implements StepExecutor {
+export class Runtime implements StepExecutor {
   constructor(
     private readonly agentRoles: Map<string, AgentRole>,
     private readonly connectors: Map<string, ConnectorPort>,
@@ -27,7 +27,7 @@ export class Orchestrator implements StepExecutor {
       case "runner":
         return this._executeRunnerStep(step, workflowInput, stepOutputs);
       default:
-        throw new Error(`Orchestrator: unsupported step type "${step.type}"`);
+        throw new Error(`Runtime: unsupported step type "${step.type}"`);
     }
   }
 
@@ -74,7 +74,7 @@ export class Orchestrator implements StepExecutor {
   ): Promise<unknown> {
     const agent = this.agentRoles.get(step.agentRole);
     if (!agent) {
-      throw new Error(`Orchestrator: agent role not registered: "${step.agentRole}"`);
+      throw new Error(`Runtime: agent role not registered: "${step.agentRole}"`);
     }
     const context = this._resolveInputs(step.inputMapping, workflowInput, stepOutputs);
     const output = await agent.execute({
@@ -92,12 +92,12 @@ export class Orchestrator implements StepExecutor {
   ): Promise<unknown> {
     const connector = this.connectors.get(step.connectorId);
     if (!connector) {
-      throw new Error(`Orchestrator: connector not registered: "${step.connectorId}"`);
+      throw new Error(`Runtime: connector not registered: "${step.connectorId}"`);
     }
     const capability = connector.capabilities().get(step.capabilityType, step.resourceType);
     if (!capability) {
       throw new Error(
-        `Orchestrator: connector "${step.connectorId}" does not support ${step.capabilityType}/${step.resourceType}`
+        `Runtime: connector "${step.connectorId}" does not support ${step.capabilityType}/${step.resourceType}`
       );
     }
 
@@ -141,7 +141,7 @@ export class Orchestrator implements StepExecutor {
   ): Promise<unknown> {
     const runner = this.runners.get(step.runnerId);
     if (!runner) {
-      throw new Error(`Orchestrator: runner not registered: "${step.runnerId}"`);
+      throw new Error(`Runtime: runner not registered: "${step.runnerId}"`);
     }
 
     if (this.governance) {

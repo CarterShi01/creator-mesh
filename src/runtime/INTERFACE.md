@@ -1,18 +1,18 @@
-# Interface: src/orchestrator
+# Interface: src/runtime
 
 ## Purpose
 
-`orchestrator` is the control layer of CreatorMesh. It coordinates agents, runners, connectors, and governance checkpoints to execute workflow steps. It delegates domain work to registered adapters — it does not reason, call external APIs, or manage storage directly.
+`runtime` is the execution loop layer of CreatorMesh. It receives already-framed execution work, dispatches steps to agents, runners, and connectors, applies governance checks before side effects, and supports pause/resume behavior. It does not own the CreatorMesh worldview or methodological core; `src/creation` does.
 
 ## Public Concepts
 
-### Orchestrator
+### Runtime
 
-**`Orchestrator`**
+**`Runtime`**
 Implements `StepExecutor` from `src/workflows`. Accepts registries of agents, connectors, and runners at construction. Optionally accepts a `GovernanceEvaluator` as a 4th parameter to enforce permission-level checks before ConnectorStep and RunnerStep dispatch.
 
 ```
-Orchestrator implements StepExecutor {
+Runtime implements StepExecutor {
   constructor(
     agentRoles: Map<string, AgentRole>,
     connectors: Map<string, ConnectorPort>,
@@ -69,7 +69,6 @@ Input mapping references follow a `$input.*` / `$steps.*.*` convention:
 
 ## Allowed Dependencies
 
-- `src/triggers`
 - `src/shared`
 - `src/agents` (AgentRole interface)
 - `src/connectors` (ConnectorPort interface)
@@ -79,22 +78,23 @@ Input mapping references follow a `$input.*` / `$steps.*.*` convention:
 
 ## Disallowed Dependencies
 
-- `src/triggers`
+- `src/triggers` (runtime receives already-normalized inputs)
 - `src/intake`
 - `src/storage`
 - `src/outputs`
+- `src/creation` (runtime is execution infrastructure, not worldview)
 
 ## Invariants
 
-- **Coordinator only**: Orchestrator selects and delegates — it does not perform domain logic itself.
-- **Never throws for missing registrations silently**: if an agent, connector, or runner is not registered, Orchestrator throws a descriptive error.
-- **Connector failures propagate**: if a ConnectorResult.status is "failure", Orchestrator throws so LocalWorkflowRunner can mark the step as failed.
+- **Execution infrastructure only**: Runtime selects and delegates — it does not perform domain logic, worldview reasoning, or quest/object construction.
+- **Never throws for missing registrations silently**: if an agent, connector, or runner is not registered, Runtime throws a descriptive error.
+- **Connector failures propagate**: if a ConnectorResult.status is "failure", Runtime throws so LocalWorkflowRunner can mark the step as failed.
 - **Governance check before execution**: when a GovernanceEvaluator is provided, it is called before every ConnectorStep and RunnerStep. A `denied` or `requires-approval` decision throws before `execute()` is called — the connector/runner never receives the request.
 - **Governance is backward-compatible**: the 4th constructor argument is optional. Existing callers that omit it receive unchanged behavior.
 
 ## Main Files
 
-- `orchestrator.ts` — `Orchestrator` class implementing `StepExecutor`; optional `GovernanceEvaluator` injection; `_hasAcceptedHumanReview()` helper reads `stepOutputs` for `{ decision: "accept" }` outputs from prior HumanReviewStep
+- `runtime.ts` — `Runtime` class implementing `StepExecutor`; optional `GovernanceEvaluator` injection; `_hasAcceptedHumanReview()` helper reads `stepOutputs` for `{ decision: "accept" }` outputs from prior HumanReviewStep
 - `index.ts` — barrel re-exports
 
 ## Change Rules for Agents
