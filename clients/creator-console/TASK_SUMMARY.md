@@ -162,3 +162,37 @@ dist/assets/*.js       155+ kB
   - Command: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
   - Then: source ~/.cargo/env && cd clients/creator-console && npm run tauri:build
   - Expected output: src-tauri/target/release/bundle/macos/CreatorMesh Console.app
+
+### Task 10 — Final Docs and Runbook (COMPLETE)
+- Branch: cm-console-desktop-task-10
+- Updated: README.md — full runbook for web dev, build, PWA preview, Tauri dev, Tauri build
+- Updated: TASK_SUMMARY.md — all branches, status, blockers, roadmap
+- Build: PASSED
+
+---
+
+## All Branches Merged
+
+| Branch | Purpose | Status |
+|---|---|---|
+| cm-console-desktop-task-01 | Baseline audit | merged |
+| cm-console-desktop-task-02 | PWA manifest | merged |
+| cm-console-desktop-task-03 | Service worker | merged |
+| cm-console-desktop-task-04 | PWA status UX | merged |
+| cm-console-desktop-task-05 | Platform boundary | merged |
+| cm-console-desktop-task-06 | Tauri v2 shell init | merged |
+| cm-console-desktop-task-07 | macOS desktop identity | merged |
+| cm-console-desktop-task-08 | Tauri command bridge | merged |
+| cm-console-desktop-task-09 | macOS build attempt | merged |
+| cm-console-desktop-task-10 | Final docs and runbook | merged |
+
+---
+
+## Future Roadmap
+
+1. **Install Rust** and run `npm run tauri:build` to produce the macOS .app bundle
+2. **Integrate governed API boundary** — POST /api/runs replacing createMockRun
+3. **Connect LocalWorkflowRunner** through backend API
+4. **Add RunLedger storage** — persist run history
+5. **Enable controlled local runner management** in Desktop shell
+6. **Evaluate Capacitor/React Native** only after desktop/web workflow stabilizes
