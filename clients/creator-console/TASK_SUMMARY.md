@@ -280,3 +280,34 @@ dist/assets/*.js       155+ kB
 - README.md: runtime architecture section added
 - No direct mock model imports remain in UI components
 - Build: PASSED
+
+---
+
+## Phase 5: Session Bridge / Remote Control MVP
+
+### Task 01 — Audit App Shells and Runtime Boundary (COMPLETE)
+- Branch: cm-session-bridge-task-01
+- Build: PASSED
+
+**Current surface status:**
+- Web/PWA: fully functional (manifest, service worker, platform detection)
+- Mac Desktop (Tauri): shell scaffolded (src-tauri/), Rust not installed — build blocked
+- Mobile (Capacitor): NOT present — no capacitor.config.* found; no @capacitor/* dependencies
+
+**Runtime boundary status:**
+- WorkflowClient interface: present (src/runtime/workflowClient.ts)
+- MockRuntimeClient: present (src/runtime/mockRuntimeClient.ts)
+- RunLedger: present (src/runtime/runLedger.ts)
+- RuntimeRun/RuntimeHealth types: present (src/runtime/types.ts)
+- LocalRuntimeClient: placeholder only (src/runtime/localRuntimeClient.placeholder.ts)
+
+**Platform detection:**
+- PlatformKind: web | pwa | tauri | unknown (src/platform/platform.ts)
+- Tauri detection: window.__TAURI__ present
+- No Capacitor detection yet
+
+**Session Bridge insertion points:**
+- Add src/session/ for domain model and store
+- Add src/components/session/ for DesktopHostPanel, MobileRemotePanel, SessionEventLog, ConnectedSurfacesPanel
+- Extend PlatformKind to include mobile-ios | mobile-android
+- Wire session bridge commands through WorkflowClient
