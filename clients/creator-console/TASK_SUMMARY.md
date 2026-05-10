@@ -196,3 +196,37 @@ dist/assets/*.js       155+ kB
 4. **Add RunLedger storage** — persist run history
 5. **Enable controlled local runner management** in Desktop shell
 6. **Evaluate Capacitor/React Native** only after desktop/web workflow stabilizes
+
+---
+
+## Phase 4: Governed Runtime Bridge + RunLedger MVP
+
+### Task 01 — Architecture Audit (COMPLETE)
+- Branch: cm-runtime-bridge-task-01
+- Build: PASSED
+
+**Current architecture (mock-coupled):**
+- `App.tsx` directly imports `createMockRun`, `acceptRun`, `rejectRun`, `requestChanges` from `model/mockWorkflow.ts`
+- All components (`HumanReviewPanel`, `RunTimeline`, `ResultPanel`, `WorkflowPreview`) accept `MockRun | null` from model layer
+- No abstraction between UI and mock runtime behavior
+- `model/types.ts`: `MockRun`, `MockClassification`, `MockReview`, `MockResult`, `MockWorkflowStep`
+- `model/mockWorkflow.ts`: all state machine logic (4 exported functions)
+
+**Mock coupling points:**
+1. `App.tsx:3-4` — direct imports from `model/mockWorkflow.ts`
+2. `App.tsx` state: `run: MockRun | null`
+3. `HumanReviewPanel` — reads `run.classification`, `run.review`, `run.status`
+4. `RunTimeline` — reads `run.steps[]`
+5. `ResultPanel` — reads `run.result`, `run.status`
+6. `WorkflowPreview` — reads `run.steps[]`, `run.status`
+
+**Migration plan:**
+1. Add `src/runtime/types.ts` — stable Runtime API types (Task 02)
+2. Add `src/runtime/workflowClient.ts` — WorkflowClient interface + factory (Task 03)
+3. Add `src/runtime/runLedger.ts` — in-memory RunLedger with events (Task 04)
+4. Add `src/runtime/mockRuntimeClient.ts` — mock impl behind WorkflowClient (Task 05)
+5. Refactor `App.tsx` to use WorkflowClient, components read RuntimeRun (Task 06)
+6. Add RuntimeHealthPanel + GovernancePanel (Task 07)
+7. Add RunHistoryPanel from ledger (Task 08)
+8. Add future LocalWorkflowRunner integration placeholder (Task 09)
+9. Final cleanup + README update (Task 10)
