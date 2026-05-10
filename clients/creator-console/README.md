@@ -193,6 +193,44 @@ All integration must go through a governed API boundary — never call adapters 
 
 ---
 
+## Session Bridge / Remote Control (Phase 5)
+
+### How to Use Desktop Host Mode
+
+1. Run `npm run dev` and open the browser
+2. In the right column, click **▼ Show Session Bridge / Remote Control**
+3. In the **Desktop Host** panel, click **Create Host Session**
+4. Click **Start Pairing** — a 6-character code appears
+5. Leave the pairing code visible
+
+### How to Use Mobile Remote Control Preview
+
+In the same browser window (or a second tab):
+
+1. In the **Remote Control Preview** panel, enter the 6-character pairing code
+2. Click **Connect**
+3. Click **▶ Start Mock Workflow** — the workflow starts and updates the main panels
+4. When the run pauses for human review, click **✓ Accept Review**, **✗ Reject**, or **⟳ Request Changes**
+5. The Session Event Log and Connected Surfaces panel update in real time
+
+### What Session Bridge Is (Phase 5)
+
+- In-memory mock transport — all in the same browser process
+- No real networking, no WebSocket, no HTTP server
+- Demonstrates the multi-surface session model: Host + Controller + Event Log
+- All commands go through the shared `WorkflowClient` and `RunLedger`
+
+### What Session Bridge Is Not (Yet)
+
+- Not a real remote control from a second device
+- Not a LAN or cloud relay
+- Not a real Capacitor mobile app
+- Not connected to real workflow execution
+
+See [`docs/session-bridge-architecture.md`](./docs/session-bridge-architecture.md) for the full Phase A → E roadmap.
+
+---
+
 ## Roadmap
 
 ### Phase 1 — Responsive Web Console (complete)
@@ -216,14 +254,29 @@ All integration must go through a governed API boundary — never call adapters 
 - Window: 1280×820, min 900×640, identifier: com.creatormesh.console
 - **To activate:** install Rust, then `npm run tauri:build`
 
-### Phase 4 — Backend Integration
-- Connect LocalWorkflowRunner via governed HTTP API
-- Subscribe to Orchestrator run events
-- Enable RunLedger storage
-- Add controlled local runner management in Desktop shell
+### Phase 4 — Governed Runtime Bridge (complete)
+- `WorkflowClient` abstraction — decouples UI from runtime
+- `MockRuntimeClient` — governed 5-step simulation with 3 governance decisions/run
+- `RunLedger` — in-memory audit store for runs, decisions, events
+- `GovernancePanel`, `RuntimeHealthPanel`, `RunHistoryPanel`
 
-### Phase 5 — Mobile (future evaluation)
-- Evaluate Capacitor or React Native only after desktop/web workflow stabilizes
+### Phase 5 — Session Bridge / Remote Control MVP (complete)
+- Session domain model: `SessionId`, `SurfaceKind`, `SurfaceRole`, `RemoteControlCommand`
+- `SessionStore` — in-memory sessions, surfaces, events, pairing lifecycle
+- `MockSessionBridge` — in-process command dispatch; shared `WorkflowClient`
+- `DesktopHostPanel` — host mode with pairing code display
+- `MobileRemotePanel` — controller mode with remote action buttons
+- `SessionEventLog` + `ConnectedSurfacesPanel`
+- Architecture doc: `docs/session-bridge-architecture.md` (Phase A → E)
+
+### Phase 6 — LocalRuntimeClient Integration
+- Implement `LocalRuntimeClient` (see `src/runtime/localRuntimeClient.placeholder.ts`)
+- Add local HTTP server to Tauri backend
+- Wire GovernanceEvaluator server-side
+
+### Phase 7 — Mobile Shell (future evaluation)
+- Add Capacitor (`npm install @capacitor/core @capacitor/cli && npx cap init`)
+- Evaluate LAN pairing bridge (Phase C in `docs/session-bridge-architecture.md`)
 - Push notification integration for mobile review prompts
 
 ---
