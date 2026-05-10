@@ -1,7 +1,7 @@
-import type { StepStatus } from '../model/types'
+import type { RuntimeStepStatus } from '../runtime/types'
 
 interface StatusBadgeProps {
-  status: StepStatus | 'idle'
+  status: RuntimeStepStatus | 'idle'
   size?: 'sm' | 'md'
 }
 
