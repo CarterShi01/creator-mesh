@@ -8,6 +8,7 @@ import WorkflowPreview from './components/WorkflowPreview'
 import HumanReviewPanel from './components/HumanReviewPanel'
 import RunTimeline from './components/RunTimeline'
 import ResultPanel from './components/ResultPanel'
+import { DesktopStatus } from './components/DesktopStatus'
 
 export default function App() {
   const [run, setRun] = useState<MockRun | null>(null)
@@ -51,6 +52,7 @@ export default function App() {
       }
       timeline={
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing)' }}>
+          <DesktopStatus />
           <RunTimeline run={run} />
           <ResultPanel run={run} />
         </div>
