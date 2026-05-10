@@ -1,36 +1,39 @@
 # Triggers
 
-The `triggers` directory contains input entry points for CreatorMesh.
+`src/triggers` is the interaction boundary of CreatorMesh. It receives internally generated thoughts, externally triggered messages, user actions, external events, and system signals, then represents them as stable input primitives for downstream creation, knowledge, workflow, and execution layers. It does not interpret user intent, construct creator objects, execute workflows, or call external systems.
 
-CreatorMesh is trigger-first. The system starts from inputs, especially Thoughts and Messages.
+This module was formed by merging `src/core` and `src/intake` into `src/triggers`. It now owns:
 
-A trigger represents something that starts a flow.
-
-Trigger categories may include:
-
-- Self capture: a creator records a thought, note, idea, or reflection.
-- External message: a message, request, feedback, opportunity, or task arrives from the outside world.
-- Scheduled trigger: a daily review, weekly planning, or periodic reflection starts.
-- System event: a tool or workflow changes state.
+- The stable input domain primitives (`Thought`, `Message`)
+- Factory functions that enforce input invariants (`createThought`, `createMessage`)
+- Trigger signal types and normalized input types (to be added as the boundary expands)
 
 ## What belongs here
 
-- Trigger definitions
-- Trigger source abstractions
-- Trigger adapters
-- Event payload entry points
-- Code that receives or represents the initial signal that something should happen
+- Stable input domain primitives (Thought, Message)
+- Factory functions for constructing and validating input primitives
+- Trigger signal definitions (ThoughtTrigger, MessageTrigger, ScheduledTrigger, SystemEventTrigger)
+- Input normalization types and lightweight helpers
+- Trigger source abstractions (ThoughtSource, MessageSource, TriggerSource)
 
 ## What does not belong here
 
-- Long-term knowledge modeling
+- Quest interpretation or creator object construction
 - Agent reasoning logic
-- Final output generation
-- Tool-specific business workflows
+- Workflow execution
+- Long-term knowledge modeling
 - Storage implementation details
+- Tool-specific integration code (connector or runner SDKs)
+- Final output generation
 
 ## Role in the architecture
 
-`triggers` is the first layer of the system.
+`triggers` is the entry point of the system. All inputs enter CreatorMesh through this layer.
 
-It receives or represents the initial signal and passes raw input toward the intake layer for normalization.
+It defines what a Thought is, what a Message is, and how they are created with enforced invariants. It does not decide what to do with them — that is the responsibility of `creation` and `orchestrator`.
+
+## Zero-dependency invariant
+
+`src/triggers` must not import from higher-level modules: `creation`, `knowledge`, `workflows`, `orchestrator`, `agents`, `runners`, `connectors`, `governance`, `storage`, or `outputs`.
+
+It may import from `src/shared` if strictly necessary. Ideally it remains self-contained.

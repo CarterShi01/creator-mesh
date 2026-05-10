@@ -24,11 +24,9 @@ Before reading any implementation file, read in this order:
 
 | Directory | Purpose |
 |-----------|---------|
-| `src/core` | Stable domain primitives and internal concepts |
-| `src/triggers` | Input signals that start flows |
-| `src/intake` | Normalization of raw inputs |
+| `src/triggers` | Interaction boundary — stable input primitives (Thought, Message), trigger signal types, input normalization. Formerly split across `src/core`, `src/triggers`, `src/intake`. |
 | `src/creation` | Long-running creation domain state (LongArc, CreationAsset, DecisionRecord, ArtifactRef, ProgressSnapshot, ContextBrief) |
-| `src/knowledge` | Structured knowledge assets |
+| `src/knowledge` | Callable soft knowledge assets |
 | `src/orchestrator` | Flow coordination and routing |
 | `src/agents` | Agent roles and reasoning contracts |
 | `src/runners` | Execution engines and runner adapters |

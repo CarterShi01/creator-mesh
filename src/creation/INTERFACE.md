@@ -143,7 +143,7 @@ Future versions may introduce contribution and collaboration-specific records. T
 
 ## Allowed Dependencies
 
-- `src/core`
+- `src/triggers`
 - `src/shared`
 - `src/storage` (for persistence of creation records)
 

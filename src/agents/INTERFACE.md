@@ -85,7 +85,7 @@ AnthropicThoughtClient implements ThoughtAgentClient {
 
 ## Allowed Dependencies
 
-- `src/core`
+- `src/triggers`
 - `src/shared`
 - `@anthropic-ai/sdk` (ThoughtAgent backing only — via dynamic import in AnthropicThoughtClient)
 

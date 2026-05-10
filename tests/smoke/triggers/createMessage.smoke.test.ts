@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { createMessage } from "../../../src/core/index.js";
+import { createMessage } from "../../../src/triggers/index.js";
 
 describe("createMessage", () => {
   it("returns a Message with id, content, createdAt, and source", () => {

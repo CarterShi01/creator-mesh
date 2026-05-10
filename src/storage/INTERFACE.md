@@ -30,7 +30,7 @@ Persisted records retrieved by:
 
 ## Allowed Dependencies
 
-- `src/core`
+- `src/triggers`
 - `src/shared`
 
 ## Disallowed Dependencies

@@ -2,23 +2,17 @@
 
 This document explains the main source directories of CreatorMesh.
 
-## `src/core`
-
-Stable domain primitives and interfaces.
-
-This directory defines the basic objects of CreatorMesh, such as thoughts, messages, triggers, workflow runs, approval requests, and output artifacts.
-
 ## `src/triggers`
 
-Input entry points such as thoughts, messages, scheduled triggers, and system events.
+The interaction boundary of CreatorMesh.
 
-This directory represents the first signal that something should happen.
+This directory owns stable input primitives (Thought, Message), factory functions, trigger signal types, and input normalization. It is the single entry point for all inputs into the system. Formed by merging the former `src/core`, `src/triggers`, and `src/intake` directories.
 
-## `src/intake`
+## `src/creation`
 
-Normalization and lightweight classification of raw inputs.
+Long-running creation domain state.
 
-This directory converts messy real-world input into internal capture items.
+This directory owns LongArc, CreationAsset, DecisionRecord, ArtifactRef, ProgressSnapshot, and ContextBrief — durable records that track what a unit of creative work is over time.
 
 ## `src/knowledge`
 
@@ -46,7 +40,7 @@ This directory lets CreatorMesh execute tasks without binding the system to one 
 
 ## `src/connectors`
 
-External tool integrations such as Notion, GitHub, OpenClaw, Email, Calendar, XMind, browser tools, and file systems.
+External tool integrations such as Notion, GitHub, Email, Calendar, and other knowledge systems.
 
 This directory keeps external tool integration separate from the core architecture.
 
@@ -54,7 +48,7 @@ This directory keeps external tool integration separate from the core architectu
 
 End-to-end transformations from inputs to outputs.
 
-This directory defines use-case-level flows such as thought-to-note, message-to-action, idea-to-project, or cognitive tree maintenance.
+This directory defines stable, creator-approved workflows such as thought-to-note, message-to-action, and idea-to-project.
 
 ## `src/governance`
 

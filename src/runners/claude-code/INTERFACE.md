@@ -104,7 +104,7 @@ The adapter never throws. All errors are returned as `RunnerResult.status: "fail
 
 ## Allowed Dependencies
 
-- `src/core`
+- `src/triggers`
 - `src/shared`
 - Node.js `child_process` (for subprocess invocation)
 - Node.js `fs` (for artifact detection via file snapshot)

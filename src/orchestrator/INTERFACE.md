@@ -69,7 +69,7 @@ Input mapping references follow a `$input.*` / `$steps.*.*` convention:
 
 ## Allowed Dependencies
 
-- `src/core`
+- `src/triggers`
 - `src/shared`
 - `src/agents` (AgentRole interface)
 - `src/connectors` (ConnectorPort interface)

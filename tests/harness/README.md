@@ -16,7 +16,7 @@ The harness layer converts project rules into assertions that fail loudly.
 
 | File | What it verifies |
 |---|---|
-| `architecture-boundaries.test.ts` | `src/core` does not import from any other `src/*` module |
+| `architecture-boundaries.test.ts` | `src/triggers` does not import from higher-level `src/*` modules (input-boundary invariant) |
 | `docs-presence.test.ts` | Required root docs and per-module `README.md` / `INTERFACE.md` exist |
 | `skills-format.test.ts` | Each `.claude/skills/*/` directory contains a `SKILL.md` file |
 

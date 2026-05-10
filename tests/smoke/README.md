@@ -15,11 +15,12 @@ They are fast, dependency-light, and run on every verify:quick.
 
 | File | Tests |
 |---|---|
-| `core/createThought.smoke.test.ts` | createThought() basic behavior |
+| `triggers/createThought.smoke.test.ts` | createThought() basic behavior |
+| `triggers/createMessage.smoke.test.ts` | createMessage() basic behavior |
 
 ## Adding Smoke Tests
 
 A smoke test belongs here when:
 - A new domain primitive is implemented.
-- A new public function is added to `src/core`.
+- A new public function is added to `src/triggers`.
 - A new module crosses the boundary from stub to implementation.

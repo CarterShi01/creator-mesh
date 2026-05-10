@@ -34,7 +34,7 @@
 
 ## Open Questions
 
-- Should `Result<T>` be a first-class type in `src/core` (as a cross-cutting concern) or stay in `shared`? Given that `shared` cannot import `core`, there is no circular risk either way.
+- Should `Result<T>` be a first-class type in `src/triggers` (as a cross-cutting concern) or stay in `shared`? Given that `shared` cannot import `core`, there is no circular risk either way.
 - Is a structured `Logger` needed before any other module is implemented, or should logging be added lazily?
 
 ## Future Evolution
@@ -44,4 +44,4 @@
 
 ## ChatGPT Handoff Context
 
-`src/shared` is an empty utility layer with zero `src/` dependencies. Planned utilities include Logger, AppError, Result<T>, ConfigHelper, DateUtils. Nothing is implemented yet. The rule: add a utility here only if two or more modules need it. Do not import `src/core` or any other `src/` module.
+`src/shared` is an empty utility layer with zero `src/` dependencies. Planned utilities include Logger, AppError, Result<T>, ConfigHelper, DateUtils. Nothing is implemented yet. The rule: add a utility here only if two or more modules need it. Do not import `src/triggers` or any other `src/` module.

@@ -3,18 +3,18 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOT = process.cwd();
-const CORE_DIR = join(ROOT, "src", "core");
+const TRIGGERS_DIR = join(ROOT, "src", "triggers");
 
-const OTHER_SRC_MODULES = [
-  "agents", "connectors", "creation", "governance", "intake", "knowledge",
-  "orchestrator", "outputs", "runners", "shared", "storage",
-  "triggers", "workflows",
+// Modules that src/triggers must not import from (higher-level layers)
+const HIGHER_LEVEL_MODULES = [
+  "creation", "knowledge", "orchestrator", "agents", "runners",
+  "connectors", "workflows", "governance", "storage", "outputs",
 ];
 
-function getCoreFiles(): string[] {
-  return readdirSync(CORE_DIR)
+function getTriggersFiles(): string[] {
+  return readdirSync(TRIGGERS_DIR)
     .filter((f) => f.endsWith(".ts"))
-    .map((f) => join(CORE_DIR, f));
+    .map((f) => join(TRIGGERS_DIR, f));
 }
 
 function extractImportPaths(content: string): string[] {
@@ -27,22 +27,22 @@ function extractImportPaths(content: string): string[] {
   return results;
 }
 
-describe("architecture boundaries: src/core", () => {
-  const coreFiles = getCoreFiles();
+describe("architecture boundaries: src/triggers input-boundary invariant", () => {
+  const triggersFiles = getTriggersFiles();
 
-  it("src/core contains TypeScript files to check", () => {
-    expect(coreFiles.length).toBeGreaterThan(0);
+  it("src/triggers contains TypeScript files to check", () => {
+    expect(triggersFiles.length).toBeGreaterThan(0);
   });
 
-  for (const filePath of coreFiles) {
+  for (const filePath of triggersFiles) {
     const fileName = filePath.split("/").pop()!;
 
-    it(`${fileName} does not import from other src modules`, () => {
+    it(`${fileName} does not import from higher-level src modules`, () => {
       const content = readFileSync(filePath, "utf-8");
       const imports = extractImportPaths(content);
 
       for (const imp of imports) {
-        for (const mod of OTHER_SRC_MODULES) {
+        for (const mod of HIGHER_LEVEL_MODULES) {
           const forbidden =
             imp === `../${mod}` ||
             imp.startsWith(`../${mod}/`);

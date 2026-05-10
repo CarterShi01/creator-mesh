@@ -127,7 +127,7 @@ ConnectorConfig {
 
 ## Allowed Dependencies
 
-- `src/core`
+- `src/triggers`
 - `src/shared`
 
 ## Disallowed Dependencies

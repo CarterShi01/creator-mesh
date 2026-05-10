@@ -301,7 +301,7 @@ WorkflowResumeInput {
 
 ## Allowed Dependencies
 
-- `src/core`
+- `src/triggers`
 - `src/shared`
 - `src/orchestrator`
 - `src/agents`

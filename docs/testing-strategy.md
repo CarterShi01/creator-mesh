@@ -43,7 +43,7 @@ Verifies architecture rules, documentation presence, skill format, and AI collab
 
 - Checks that every module has README.md and INTERFACE.md.
 - Checks that skills have valid frontmatter.
-- Checks that `core` does not import from other modules.
+- Checks that `triggers` does not import from higher-level modules.
 - Turns architecture rules into machine-verifiable assertions.
 
 ### integration (planned)
@@ -92,7 +92,7 @@ The harness layer exists to make project rules machine-verifiable. When a rule i
 ### Why AI-generated code needs deterministic rule checks
 
 Claude Code can generate correct-looking code that violates an architecture boundary. For example:
-- A `src/core` file that imports from `src/shared`
+- A `src/triggers` file that imports from a higher-level module
 - A module added without `README.md` or `INTERFACE.md`
 - A skill directory missing its `SKILL.md`
 
@@ -102,7 +102,7 @@ Without a harness test, these violations pass `npm run verify:quick` undetected.
 
 | Test file | Rule enforced |
 |---|---|
-| `architecture-boundaries.test.ts` | `src/core` must not import from any other `src/*` module |
+| `architecture-boundaries.test.ts` | `src/triggers` must not import from higher-level `src/*` modules (input-boundary invariant) |
 | `docs-presence.test.ts` | `AGENTS.md`, `README.md`, `docs/architecture.md`, `docs/context-map.md` must exist; each `src/` module must have `README.md` and `INTERFACE.md` |
 | `skills-format.test.ts` | Each `.claude/skills/*/` directory must contain `SKILL.md`; test is a no-op if `.claude/skills` is absent |
 
@@ -112,7 +112,7 @@ Without a harness test, these violations pass `npm run verify:quick` undetected.
 - `DESIGN.md` format and presence rules
 - Skill YAML frontmatter validation
 - Context brief format validation
-- Dependency boundary rules for modules beyond `core`
+- Dependency boundary rules for all modules
 - Progress document freshness checks
 
 ## AI-Era Verification Workflow

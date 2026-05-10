@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { createThought } from "../../../src/core/index.js";
+import { createThought } from "../../../src/triggers/index.js";
 
 describe("createThought", () => {
   it("returns a Thought with id, content, createdAt, and source", () => {

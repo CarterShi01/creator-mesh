@@ -126,7 +126,7 @@ Pre-declared MVP capability set. Returned by `capabilities()`.
 
 ## Allowed Dependencies
 
-- `src/core`
+- `src/triggers`
 - `src/shared`
 - `@notionhq/client` (Notion official SDK — the only external library dependency)
 

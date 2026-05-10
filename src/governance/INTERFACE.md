@@ -58,7 +58,7 @@ GovernanceEvaluator {
 
 ## Allowed Dependencies
 
-- `src/core`
+- `src/triggers`
 - `src/shared`
 - `src/storage` (for persisting audit records)
 
