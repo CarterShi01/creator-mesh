@@ -311,3 +311,59 @@ dist/assets/*.js       155+ kB
 - Add src/components/session/ for DesktopHostPanel, MobileRemotePanel, SessionEventLog, ConnectedSurfacesPanel
 - Extend PlatformKind to include mobile-ios | mobile-android
 - Wire session bridge commands through WorkflowClient
+
+### Task 02 — Session Bridge Domain Model (COMPLETE)
+- Branch: cm-session-bridge-task-02
+- Added: src/session/types.ts (174 lines, 20+ types)
+- Build: PASSED
+
+### Task 03 — In-Memory SessionStore (COMPLETE)
+- Branch: cm-session-bridge-task-03
+- Added: src/session/sessionStore.ts (345 lines)
+- Build: PASSED
+
+### Task 04 — Mock SessionBridge Transport (COMPLETE)
+- Branch: cm-session-bridge-task-04
+- Added: src/session/mockSessionBridge.ts
+- SessionBridge interface + MockSessionBridge impl
+- Commands dispatch to shared WorkflowClient
+- Build: PASSED
+
+### Task 05 — Desktop Host Mode UI (COMPLETE)
+- Branch: cm-session-bridge-task-05
+- Added: src/components/session/DesktopHostPanel.tsx
+- Session status, pairing code display, connected surfaces
+- Safety note: local/mock only, no network
+- Build: PASSED
+
+### Task 06 — Mobile Remote Control UI (COMPLETE)
+- Branch: cm-session-bridge-task-06
+- Added: src/components/session/MobileRemotePanel.tsx
+- Pairing code input, Start/Accept/Reject/RequestChanges/Cancel buttons
+- Build: PASSED
+
+### Task 07 — Session Event Log and Connected Surfaces (COMPLETE)
+- Branch: cm-session-bridge-task-07
+- Added: src/components/session/SessionEventLog.tsx
+- Added: src/components/session/ConnectedSurfacesPanel.tsx
+- Build: PASSED
+
+### Task 08 — Integration with Runtime Panels (COMPLETE)
+- Branch: cm-session-bridge-task-08
+- Updated: App.tsx — session bridge panels behind toggle, shared WorkflowClient
+- Updated: mockSessionBridge.ts — setWorkflowClient() for RunLedger sharing
+- All existing Phase 1-4 behavior preserved
+- Build: PASSED
+
+### Task 09 — Remote Control Architecture Docs (COMPLETE)
+- Branch: cm-session-bridge-task-09
+- Added: docs/session-bridge-architecture.md (Phase A→E, security principles, file map, next steps)
+- Updated: README.md — pointer to architecture doc
+- Build: PASSED
+
+### Task 10 — Final Cleanup (COMPLETE)
+- Branch: cm-session-bridge-task-10
+- Safety audit: no real network, no shell exec, no file access, no external services
+- README updated with Phase 5 and how-to sections
+- TASK_SUMMARY.md finalized
+- Build: PASSED
