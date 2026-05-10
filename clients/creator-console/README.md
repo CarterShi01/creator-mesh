@@ -1,9 +1,33 @@
 # CreatorMesh Console
 
 Isolated PWA-ready web client and Tauri macOS desktop shell for the CreatorMesh Agent OS.
-Phase 2 — PWA + Phase 3 — Tauri Desktop Shell.
+Phase 2 — PWA + Phase 3 — Tauri Desktop Shell + Phase 4 — Governed Runtime Bridge.
 
 > **This client must remain side-effect free until connected through a governed API boundary.**
+
+---
+
+## Runtime Architecture
+
+The console uses a `WorkflowClient` abstraction that decouples the UI from the runtime implementation.
+
+```
+UI components
+  → WorkflowClient (src/runtime/workflowClient.ts)
+    → MockRuntimeClient   ← current (Phase 4, mock-only, no external calls)
+    → LocalRuntimeClient  ← future (LocalWorkflowRunner → Orchestrator → Connectors)
+    → HttpRuntimeClient   ← future (server-side API)
+```
+
+### Runtime Modes
+
+| Mode | Description | External Side Effects |
+|---|---|---|
+| `mock` | In-memory mock runtime (current) | None |
+| `local` | LocalWorkflowRunner on same machine (future) | Real Notion + Anthropic |
+| `remote` | Remote API server (future) | Real Notion + Anthropic |
+
+The current mode is always `mock`. All governance decisions, run events, and human review decisions are recorded in the in-memory `RunLedger`.
 
 ---
 

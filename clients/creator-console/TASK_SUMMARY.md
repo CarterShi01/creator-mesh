@@ -230,3 +230,53 @@ dist/assets/*.js       155+ kB
 7. Add RunHistoryPanel from ledger (Task 08)
 8. Add future LocalWorkflowRunner integration placeholder (Task 09)
 9. Final cleanup + README update (Task 10)
+
+### Task 02 — Runtime API Contract (COMPLETE)
+- Branch: cm-runtime-bridge-task-02
+- Added: src/runtime/types.ts — 25 types covering the full runtime/governance contract
+- Build: PASSED
+
+### Task 03 — WorkflowClient Interface (COMPLETE)
+- Branch: cm-runtime-bridge-task-03
+- Added: src/runtime/workflowClient.ts — interface + createWorkflowClient() factory
+- Build: PASSED
+
+### Task 04 — RunLedger (COMPLETE)
+- Branch: cm-runtime-bridge-task-04
+- src/runtime/runLedger.ts — createRun, getRun, updateRun, listRuns, appendGovernanceDecision, appendHumanDecision, appendEvent
+- Build: PASSED
+
+### Task 05 — Governed Mock Runtime Client (COMPLETE)
+- Branch: cm-runtime-bridge-task-05
+- src/runtime/mockRuntimeClient.ts — full MockRuntimeClient behind WorkflowClient interface
+- startRun: 5 steps, 3 governance decisions; resumeRun/accept: approves write, completes; reject/changes_requested handled; cancelRun
+- Build: PASSED
+
+### Task 06 — UI Refactored to WorkflowClient (COMPLETE)
+- Branch: cm-runtime-bridge-task-06
+- App.tsx → async WorkflowClient handlers; RuntimeRun state; no direct mock imports
+- All components updated to RuntimeRun types; RunTimeline shows events
+- Build: PASSED
+
+### Task 07 — RuntimeHealth + Governance Panels (COMPLETE)
+- Branch: cm-runtime-bridge-task-07
+- RuntimeHealthPanel: mode, side effects, Notion, Anthropic, desktop, safety mode
+- GovernancePanel: per-decision outcome badges
+- Build: PASSED
+
+### Task 08 — Run History Panel (COMPLETE)
+- Branch: cm-runtime-bridge-task-08
+- RunHistoryPanel: lists runs, click to select, shows kind/status/preview/time
+- Build: PASSED
+
+### Task 09 — Future Integration Boundary (COMPLETE)
+- Branch: cm-runtime-bridge-task-09
+- src/runtime/localRuntimeClient.placeholder.ts — full integration plan: path diagram, TODO map, field mapping, Option A (HTTP) and Option B (Tauri)
+- Build: PASSED
+
+### Task 10 — Final Cleanup (COMPLETE)
+- Branch: cm-runtime-bridge-task-10
+- StatusBadge.tsx: uses RuntimeStepStatus from runtime/types
+- README.md: runtime architecture section added
+- No direct mock model imports remain in UI components
+- Build: PASSED
