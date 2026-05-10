@@ -1,31 +1,50 @@
 # Knowledge
 
-The `knowledge` directory manages the structured knowledge layer of CreatorMesh.
+`src/knowledge` owns callable soft knowledge.
 
-This layer is responsible for thoughts, notes, ideas, plans, reflections, and other knowledge objects that may be created from inputs.
+Knowledge provides the soft cognitive substrate for CreatorMesh. It contains reusable domain understanding, skills, principles, examples, checklists, and context that can be called by `creation` and `agents` when interpreting problems or producing outputs.
 
-It should not be tied to a single knowledge tool. Notion may be a future connector, but the knowledge layer itself should remain tool-agnostic.
+Knowledge is not raw captured input. It is the distilled, reusable reasoning material that the system and its agents can draw on.
 
 ## What belongs here
 
-- Thought processing
-- Note structuring
-- Idea modeling
-- Knowledge relationships
-- Knowledge tree concepts
-- Reflection and summary models
-- Mind-map-ready knowledge structures
+- Reusable domain knowledge and professional knowledge
+- Principles, frameworks, and reasoning patterns
+- Examples and analogies
+- Checklists and rubrics
+- Prompt patterns and instruction templates
+- Context briefs and methodology fragments
+- Skills — a skill is one important kind of knowledge asset: a structured, callable capability description that an agent can apply to a task
 
 ## What does not belong here
 
-- Direct Notion API calls
-- Direct XMind integration
-- Coding agent execution
-- External message transport
-- Low-level storage adapters
+- The semantic model of creation (Quest, Object, Relation, Action, ArtifactRef, Feedback) — `creation` owns that worldview
+- Runtime session memory or execution context — `runtime` owns that
+- External connector storage or provider-specific data — `connectors` and `storage` own that
+- Raw notes generated directly from inputs — those belong to `creation` or `triggers` output
+- Physical execution logic — `agents`, `runners`, and `connectors` execute; knowledge supports reasoning
+- Direct Notion API calls, XMind integration, or any provider SDK
+
+## What knowledge is NOT
+
+- Not the owner of the CreatorMesh worldview — `creation` is the methodological center
+- Not a runtime session store or LLM context buffer
+- Not a database of connector outputs
+- Not just "notes generated from thoughts"
+- Not the physical executor — knowledge supports reasoning, it does not run tasks
+
+## Relationship to agents and creation
+
+`creation` uses knowledge when interpreting intent, framing quests, or evaluating decisions.
+
+`agents` use knowledge when applying domain expertise to a task — a ThoughtAgent may draw on writing principles, a CareerAgent on career frameworks, a ResearchAgent on research methodologies.
+
+`workflows` may load relevant knowledge before an agent step to give agents better reasoning context.
+
+Knowledge is the soft layer. It does not own goals or artifacts, and it does not execute work. It provides the reasoning material that enables informed action.
 
 ## Role in the architecture
 
-`knowledge` turns captured inputs into reusable personal knowledge assets.
+`knowledge` sits alongside `agents` and `workflows` in the layer below `creation` and `runtime`, above `runners`, `connectors`, `governance`, `storage`, and `outputs`.
 
-It is where thoughts and messages can become structured knowledge before they are turned into plans, actions, workflows, or shipped products.
+It is tool-agnostic. Notion may store some knowledge artifacts, but the knowledge layer itself does not depend on Notion or any other external system. Knowledge assets should be callable regardless of which storage backend or connector is active.

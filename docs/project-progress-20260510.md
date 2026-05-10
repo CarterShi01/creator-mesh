@@ -288,8 +288,8 @@ All other `src/` directories except `src/runners/claude-code/` contain no implem
 - 13-layer architecture defined and documented
 - All 13 source directories created
 - All 13 source directories have `README.md` and `INTERFACE.md`
-- Architecture explicitly separates `core` (what things are) from `orchestrator` (how things move)
-- `core` zero-dependency invariant documented
+- Architecture explicitly separates `creation` (methodological core / worldview) from `runtime` (execution loop)
+- `triggers` zero-dependency invariant documented; harness-enforced
 
 ### Quality and Cost Harness
 
@@ -631,6 +631,36 @@ Upgraded the console client to PWA-ready and Tauri desktop shell (10 additional 
 ### Creation Domain Module
 
 Added `src/creation` as a domain-layer placeholder for long-running creation state. Updated architecture and context-map references from 13 to 14 modules. Introduced `LongArc`, `CreationAsset`, `DecisionRecord`, `ArtifactRef`, `ProgressSnapshot`, and `ContextBrief` as documented interface concepts. No runtime workflow, connector, runner, collaboration, or contribution mechanics were implemented.
+
+### Architecture README Alignment: workflows, knowledge, agents
+
+Updated `src/workflows/README.md`, `src/knowledge/README.md`, and `src/agents/README.md` to reflect the latest architecture model. Also made minimal updates to `docs/context-map.md`.
+
+**src/workflows/README.md** — rewritten to position workflows as stable creator routines (not exhaustive tool-specific automations):
+- New framing: "Workflows are stable creator routines. They represent repeatable ways of handling work the creator has decided are worth preserving."
+- Clarified what workflows are NOT: not the worldview (creation owns that), not the LLM loop (runtime owns that), not a per-tool automation catalog
+- `ThoughtToNoteWorkflow` reframed as MVP/demo validating governed execution and human review — not the template for per-connector automations
+- Added examples of appropriate future workflows: Weekly Review, Idea Evaluation, Book Note Distillation, Career Decision Review, Project Planning, Code Change Review, Visa Material Packaging, Lesson Plan Generation
+- Layering section added: creation decides → runtime executes → workflows define the routine → agents/runners/connectors provide callable capabilities
+
+**src/knowledge/README.md** — rewritten to position knowledge as callable soft knowledge:
+- New framing: "Knowledge provides the soft cognitive substrate for CreatorMesh — reusable domain understanding, skills, principles, examples, checklists, and context."
+- Clarified what knowledge is NOT: not the semantic model owner (creation owns Quest/Object/etc.), not runtime session memory, not a connector data store, not just notes from inputs
+- Skills explicitly named as one important kind of knowledge asset (module name unchanged)
+- Layering: creation and agents draw on knowledge; knowledge does not execute
+
+**src/agents/README.md** — rewritten to position agents as role-based execution subjects:
+- New framing: "Agents are role-based execution handles. They apply soft knowledge and request physical capabilities, but do not own the CreatorMesh worldview."
+- Clarified what agents are NOT: not the worldview (creation), not the runtime loop (runtime), not direct connector/runner owners, not hardcoded workflows, not allowed to bypass governance
+- `ThoughtAgent` reframed as first MVP implementation demonstrating the AgentRole interface — not the final taxonomy
+- Layering: creation frames the work → runtime dispatches and enforces governance → agents perform domain reasoning → runners/connectors provide physical execution
+
+**docs/context-map.md** — three source map entries updated:
+- `src/knowledge`: "Callable soft knowledge — domain knowledge, principles, skills, examples, checklists, reasoning assets"
+- `src/agents`: "Role-based execution subjects — apply knowledge, request capabilities through runtime"
+- `src/workflows`: "Stable creator routines — reusable, creator-approved step sequences"
+
+No implementation behavior changed. No new dependencies. `npm run verify`: **244 tests passing (21 test files)**.
 
 ### Architecture Rename: src/orchestrator → src/runtime
 

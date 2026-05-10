@@ -26,12 +26,12 @@ Before reading any implementation file, read in this order:
 |-----------|---------|
 | `src/triggers` | Interaction boundary — stable input primitives (Thought, Message), trigger signal types, input normalization. Formerly split across `src/core`, `src/triggers`, `src/intake`. |
 | `src/creation` | Long-running creation domain state (LongArc, CreationAsset, DecisionRecord, ArtifactRef, ProgressSnapshot, ContextBrief) |
-| `src/knowledge` | Callable soft knowledge assets |
+| `src/knowledge` | Callable soft knowledge — domain knowledge, principles, skills, examples, checklists, reasoning assets |
 | `src/runtime` | Execution loop — step dispatch, governance enforcement, pause/resume |
-| `src/agents` | Agent roles and reasoning contracts |
+| `src/agents` | Role-based execution subjects — apply knowledge, request capabilities through runtime |
 | `src/runners` | Execution engines and runner adapters |
 | `src/connectors` | External tool integrations |
-| `src/workflows` | End-to-end input-to-output transformations |
+| `src/workflows` | Stable creator routines — reusable, creator-approved step sequences |
 | `src/governance` | Approval, audit, permission, and safety policies |
 | `src/storage` | Persistence abstractions and adapters |
 | `src/outputs` | Output artifacts and write-back preparation |
