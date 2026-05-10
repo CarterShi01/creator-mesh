@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import type { MockRun } from '../model/types'
+import type { RuntimeRun } from '../runtime/types'
 
 interface HumanReviewPanelProps {
-  run: MockRun | null
+  run: RuntimeRun | null
   onAccept: () => void
   onReject: () => void
   onRequestChanges: (feedback: string) => void

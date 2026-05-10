@@ -1,6 +1,6 @@
-import type { MockRun, StepStatus } from '../model/types'
+import type { RuntimeRun, RuntimeStepStatus } from '../runtime/types'
 
-const STEP_ICONS: Record<StepStatus, string> = {
+const STEP_ICONS: Record<RuntimeStepStatus, string> = {
   pending:   '○',
   running:   '◌',
   completed: '✓',
@@ -10,7 +10,7 @@ const STEP_ICONS: Record<StepStatus, string> = {
 }
 
 interface WorkflowPreviewProps {
-  run: MockRun | null
+  run: RuntimeRun | null
 }
 
 export default function WorkflowPreview({ run }: WorkflowPreviewProps) {

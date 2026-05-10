@@ -1,14 +1,18 @@
-import type { RunStatus } from '../model/types'
+import type { RuntimeHealth, RuntimeRunStatus } from '../runtime/types'
 import { PwaStatus } from './PwaStatus'
 import { getPlatformInfo } from '../platform/platform'
 
+type RunStatus = RuntimeRunStatus | 'idle'
+
 interface HeaderProps {
   runStatus: RunStatus
+  runtimeHealth?: RuntimeHealth | null
 }
 
 const platformInfo = getPlatformInfo()
 
-export default function Header({ runStatus }: HeaderProps) {
+export default function Header({ runStatus, runtimeHealth }: HeaderProps) {
+  void runtimeHealth // available for future runtime health badge
   return (
     <header className="header">
       <div className="header-brand">

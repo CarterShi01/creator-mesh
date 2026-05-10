@@ -1,7 +1,7 @@
-import type { MockRun } from '../model/types'
+import type { RuntimeRun } from '../runtime/types'
 
 interface ResultPanelProps {
-  run: MockRun | null
+  run: RuntimeRun | null
 }
 
 export default function ResultPanel({ run }: ResultPanelProps) {
@@ -27,6 +27,12 @@ export default function ResultPanel({ run }: ResultPanelProps) {
         </p>
       )}
 
+      {run?.status === 'cancelled' && (
+        <p className="result-empty" style={{ color: 'var(--color-text-muted)' }}>
+          ◻ Workflow cancelled.
+        </p>
+      )}
+
       {run?.status === 'changes_requested' && (
         <div>
           <p className="result-empty" style={{ color: 'var(--color-warning)', marginBottom: 8 }}>
@@ -48,22 +54,19 @@ export default function ResultPanel({ run }: ResultPanelProps) {
           <div className="result-title">{run.result.title}</div>
 
           <div>
-            <div className="review-field-label" style={{ marginBottom: 3 }}>Mock Notion URL</div>
-            <div className="result-url">
-              {run.result.mockNotionUrl}
-              <span
-                style={{
-                  marginLeft: 8,
+            <div className="review-field-label" style={{ marginBottom: 3 }}>
+              Artifact URL {run.result.isMock && (
+                <span style={{
+                  marginLeft: 6,
                   fontSize: 10,
                   background: 'rgba(99,102,241,0.15)',
                   color: '#a5b4fc',
                   padding: '1px 6px',
                   borderRadius: 4,
-                }}
-              >
-                MOCK
-              </span>
+                }}>MOCK</span>
+              )}
             </div>
+            <div className="result-url">{run.result.artifactUrl}</div>
           </div>
 
           <div>
