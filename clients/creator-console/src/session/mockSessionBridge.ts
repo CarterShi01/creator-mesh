@@ -9,7 +9,10 @@
 //   Phase C: LAN relay (optional)
 //   Phase D: Cloud relay (optional)
 
-import type { WorkflowClient } from '../runtime/workflowClient'
+import type { RuntimeClient } from '../runtime/client'
+import type { SessionClient, BridgeHealth } from './client'
+// WorkflowClient kept for backward compat — it's an alias of RuntimeClient
+type WorkflowClient = RuntimeClient
 import type {
   SessionId,
   SurfaceId,
@@ -35,39 +38,16 @@ import {
   detectCurrentSurfaceKind,
   surfaceKindLabel,
 } from './sessionStore'
-import { createWorkflowClient } from '../runtime/workflowClient'
+import { getRuntimeClient } from '../runtime/workflowClient'
 
-// ─── Bridge Health ────────────────────────────────────────────────────────────
-
-export interface BridgeHealth {
-  bridgeMode: 'mock' | 'local' | 'remote'
-  sessionActive: boolean
-  connectedSurfaces: number
-  pairingActive: boolean
-  externalSideEffects: false
-  note: string
-}
-
-// ─── Session Bridge Interface ─────────────────────────────────────────────────
-
-export interface SessionBridge {
-  getBridgeHealth(): BridgeHealth
-  createHostSession(): CreatorMeshSession
-  getCurrentSession(): CreatorMeshSession | null
-  startPairing(): PairingState | SessionBridgeError
-  /** Controller calls this with the pairing code to join */
-  connectController(pairingCode: string, controllerLabel?: string): ConnectedSurface | SessionBridgeError
-  sendCommand(command: Omit<RemoteControlCommand, 'commandId' | 'sentAt'>): Promise<{ ok: boolean; error?: string }>
-  subscribeToEvents(callback: (event: SessionEvent) => void): () => void
-  disconnectSurface(surfaceId: SurfaceId): void
-  listEvents(): SessionEvent[]
-}
+// SessionBridge is kept as an alias for backward compat with existing components
+export type { SessionClient as SessionBridge, BridgeHealth } from './client'
 
 // ─── Mock Implementation ──────────────────────────────────────────────────────
 
 type EventCallback = (event: SessionEvent) => void
 
-class MockSessionBridge implements SessionBridge {
+class MockSessionBridge implements SessionClient {
   private workflowClient: WorkflowClient
   private subscribers: Set<EventCallback> = new Set()
   private hostSurfaceId: SurfaceId
@@ -76,7 +56,7 @@ class MockSessionBridge implements SessionBridge {
   constructor() {
     this.workflowClient = null as unknown as WorkflowClient
     this.hostSurfaceId = `surface-host-${Date.now().toString(36)}`
-    createWorkflowClient().then(client => { this.workflowClient = client })
+    getRuntimeClient().then(client => { this.workflowClient = client })
   }
 
   /** Inject a pre-created WorkflowClient so bridge and App share the same RunLedger. */
@@ -281,6 +261,11 @@ export function getSessionBridge(): MockSessionBridge {
     _bridge = new MockSessionBridge()
   }
   return _bridge
+}
+
+/** Preferred alias — returns the SessionClient interface. */
+export function getSessionClient(): SessionClient {
+  return getSessionBridge()
 }
 
 export function resetSessionBridge(): void {
