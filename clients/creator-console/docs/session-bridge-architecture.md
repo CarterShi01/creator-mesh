@@ -14,11 +14,15 @@ All session bridge functionality is local, in-process, and mock-only.
 
 ```
 Browser / PWA / Mac Desktop (single process)
-  ├── WorkflowClient (shared singleton)
-  │     └── MockRuntimeClient → RunLedger (in-memory)
-  ├── MockSessionBridge (in-memory event bus)
-  │     ├── SessionStore (in-memory sessions, surfaces, events)
-  │     └── dispatches RemoteControlCommands → WorkflowClient
+  ├── RuntimeClient interface  (src/runtime/client.ts)
+  │     └── getRuntimeClient() singleton factory  (src/runtime/workflowClient.ts)
+  │           └── MockRuntimeClient  (src/runtime/mock/mockClient.ts)
+  │                 └── RunLedger    (src/runtime/mock/runLedger.ts — in-memory)
+  ├── SessionClient interface  (src/session/client.ts)
+  │     └── MockSessionBridge  (src/session/mockSessionBridge.ts — in-memory event bus)
+  │           ├── SessionStore (src/session/sessionStore.ts — in-memory sessions, surfaces, events)
+  │           └── dispatches RemoteControlCommands → RuntimeClient (shared singleton)
+  ├── Surface detection        (src/surface/detector.ts)
   └── UI Panels
         ├── DesktopHostPanel   — Host Mode UI
         ├── MobileRemotePanel  — Controller Mode UI
@@ -166,15 +170,49 @@ Mobile App
 
 ## File Map (Current Phase A)
 
+### Surface Module (`src/surface/`)
 | File | Purpose |
 |---|---|
-| `src/session/types.ts` | Domain types: SessionId, SurfaceKind, SurfaceRole, SessionEvent, RemoteControlCommand, PairingState |
+| `src/surface/types.ts` | Canonical `SurfaceKind` (web\|pwa\|tauri\|capacitor\|unknown), `SurfaceRole`, `SurfaceInfo`, `SurfaceCapabilities` |
+| `src/surface/detector.ts` | `detectSurface()`, `detectSurfaceKind()`, `isDesktopSurface()`, `isMobileSurface()` |
+| `src/surface/tauriBridge.ts` | Desktop-native commands: `getAppVersion()`, `getPlatformLabel()`, `getDesktopCapabilities()` |
+| `src/surface/capacitorBridge.ts` | Stub for future Capacitor iOS/Android plugins |
+| `src/surface/index.ts` | Barrel re-export |
+
+### Runtime Module (`src/runtime/`)
+| File | Purpose |
+|---|---|
+| `src/runtime/client.ts` | Pure `RuntimeClient` interface (no factory, no implementation) |
+| `src/runtime/types.ts` | Domain types: `RuntimeRun`, `RuntimeStep`, `StartRunRequest`, etc. |
+| `src/runtime/workflowClient.ts` | Singleton factory: `getRuntimeClient()`, `resetRuntimeClient()` |
+| `src/runtime/mock/mockClient.ts` | `MockRuntimeClient` — governed 5-step in-memory simulation |
+| `src/runtime/mock/runLedger.ts` | `RunLedger` — in-memory audit store for runs, decisions, events |
+| `src/runtime/index.ts` | Barrel re-export (public API) |
+
+### Session Module (`src/session/`)
+| File | Purpose |
+|---|---|
+| `src/session/types.ts` | Domain types: `SessionId`, `SurfaceKind`, `SurfaceRole`, `SessionEvent`, `RemoteControlCommand`, `PairingState` |
+| `src/session/client.ts` | Pure `SessionClient` interface, `BridgeHealth` type |
 | `src/session/sessionStore.ts` | In-memory store: sessions, surfaces, events, pairing lifecycle |
-| `src/session/mockSessionBridge.ts` | Mock transport: SessionBridge interface + MockSessionBridge impl |
+| `src/session/mockSessionBridge.ts` | `MockSessionBridge` impl: in-process command dispatch via shared `RuntimeClient` |
+| `src/session/index.ts` | Barrel re-export (public API) |
+
+### UI Components (`src/components/session/`)
+| File | Purpose |
+|---|---|
 | `src/components/session/DesktopHostPanel.tsx` | Host mode UI: session ID, pairing code, connected surfaces |
 | `src/components/session/MobileRemotePanel.tsx` | Controller mode UI: pairing input, remote action buttons |
 | `src/components/session/SessionEventLog.tsx` | Event audit log: timestamped event stream |
 | `src/components/session/ConnectedSurfacesPanel.tsx` | Surface list: kind, role, connection status, last seen |
+
+### Backward-Compat Shims (do not use in new code)
+| File | Shims to |
+|---|---|
+| `src/platform/platform.ts` | `src/surface/detector.ts` |
+| `src/platform/desktopBridge.ts` | `src/surface/tauriBridge.ts` |
+| `src/runtime/mockRuntimeClient.ts` | `src/runtime/mock/mockClient.ts` |
+| `src/runtime/runLedger.ts` | `src/runtime/mock/runLedger.ts` |
 
 ---
 
