@@ -1,0 +1,43 @@
+{
+  "name": "CreatorMesh Console",
+  "short_name": "CreatorMesh",
+  "description": "Personal Agent OS for independent creators. Capture thoughts, run AI workflows, review decisions, ship results.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#6366f1",
+  "background_color": "#0f0f23",
+  "lang": "en",
+  "scope": "/",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/apple-touch-icon.svg",
+      "sizes": "180x180",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "New Thought",
+      "short_name": "Capture",
+      "description": "Capture a new thought or message",
+      "url": "/?mode=thought",
+      "icons": [{ "src": "/icons/icon-192.svg", "sizes": "192x192" }]
+    }
+  ]
+}
