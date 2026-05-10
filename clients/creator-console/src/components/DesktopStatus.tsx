@@ -46,9 +46,9 @@ export function DesktopStatus() {
             {Object.entries(info.capabilities).map(([key, enabled]) => (
               <span
                 key={key}
-                className={`desktop-cap ${enabled ? 'desktop-cap--on' : 'desktop-cap--off'}`}
+                className={`desktop-cap ${enabled ? 'desktop-cap--on' : key === 'governedWorkflowApi' ? 'desktop-cap--future' : 'desktop-cap--off'}`}
               >
-                {key}: {enabled ? 'enabled' : 'disabled'}
+                {key}: {enabled ? 'enabled' : key === 'governedWorkflowApi' ? 'future' : 'disabled'}
               </span>
             ))}
           </div>
