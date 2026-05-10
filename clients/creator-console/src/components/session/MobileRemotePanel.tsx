@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { getSessionBridge } from '../../session/mockSessionBridge'
 import type { CreatorMeshSession } from '../../session/types'
-import { detectCurrentSurfaceKind } from '../../session/sessionStore'
+import { detectSurfaceKind } from '../../surface/detector'
 
 export function MobileRemotePanel() {
   const [session, setSession] = useState<CreatorMeshSession | null>(null)
@@ -12,8 +12,8 @@ export function MobileRemotePanel() {
   const [error, setError] = useState<string | null>(null)
 
   const bridge = getSessionBridge()
-  const surfaceKind = detectCurrentSurfaceKind()
-  const isMobile = surfaceKind === 'mobile-ios' || surfaceKind === 'mobile-android'
+  const surfaceKind = detectSurfaceKind()
+  const isMobile = surfaceKind === 'capacitor'
   const label = isMobile ? '📱 Mobile Remote Control' : '📱 Remote Control Preview'
 
   const controllerSurfaceId = `ctrl-preview-${typeof window !== 'undefined' ? (window as Window & { _ctrlId?: string })._ctrlId ?? ((window as Window & { _ctrlId?: string })._ctrlId = Date.now().toString(36)) : 'ssr'}`

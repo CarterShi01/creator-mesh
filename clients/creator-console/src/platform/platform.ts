@@ -1,3 +1,15 @@
+// Backward-compatibility shim — platform detection has moved to src/surface/.
+// New code should import from '../surface/detector' or '../surface'.
+
+import {
+  detectSurface,
+  detectSurfaceKind,
+  isDesktopSurface,
+  isPwaSurface,
+  isStandaloneSurface,
+} from '../surface/detector'
+
+// PlatformKind kept for backward compat
 export type PlatformKind = 'web' | 'pwa' | 'tauri' | 'unknown'
 
 export interface PlatformInfo {
@@ -8,47 +20,18 @@ export interface PlatformInfo {
   isTauri: boolean
 }
 
-function detectKind(): PlatformKind {
-  // Tauri injects __TAURI__ into the window
-  if (typeof window !== 'undefined' && '__TAURI__' in window) {
-    return 'tauri'
-  }
-  if (
-    typeof window !== 'undefined' &&
-    (window.matchMedia('(display-mode: standalone)').matches ||
-      (navigator as Navigator & { standalone?: boolean }).standalone === true)
-  ) {
-    return 'pwa'
-  }
-  if (typeof window !== 'undefined') {
-    return 'web'
-  }
-  return 'unknown'
-}
-
 export function getPlatformInfo(): PlatformInfo {
-  const kind = detectKind()
+  const surface = detectSurface()
   return {
-    kind,
-    label:
-      kind === 'tauri'
-        ? 'Desktop Shell'
-        : kind === 'pwa'
-          ? 'PWA'
-          : kind === 'web'
-            ? 'Browser'
-            : 'Unknown',
-    isDesktop: kind === 'tauri',
-    isPwa: kind === 'pwa',
-    isTauri: kind === 'tauri',
+    kind: surface.kind as PlatformKind,
+    label: surface.label,
+    isDesktop: surface.kind === 'tauri',
+    isPwa: surface.kind === 'pwa',
+    isTauri: surface.kind === 'tauri',
   }
 }
 
-export function isDesktopShell(): boolean {
-  return detectKind() === 'tauri'
-}
+export function isDesktopShell(): boolean { return isDesktopSurface() }
+export function isPwaStandalone(): boolean { return isPwaSurface() || isStandaloneSurface() }
 
-export function isPwaStandalone(): boolean {
-  const k = detectKind()
-  return k === 'pwa' || k === 'tauri'
-}
+export { detectSurfaceKind as detectKind }

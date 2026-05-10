@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { isDesktopShell } from '../platform/platform'
-import { getAppVersion, getPlatformLabel, getDesktopCapabilities } from '../platform/desktopBridge'
+import { isDesktopSurface } from '../surface/detector'
+import { getAppVersion, getPlatformLabel, getDesktopCapabilities } from '../surface/tauriBridge'
 
 interface DesktopInfo {
   version: string
@@ -12,18 +12,22 @@ export function DesktopStatus() {
   const [info, setInfo] = useState<DesktopInfo | null>(null)
 
   useEffect(() => {
-    if (!isDesktopShell()) return
+    if (!isDesktopSurface()) return
 
     Promise.all([
       getAppVersion(),
       getPlatformLabel(),
       getDesktopCapabilities(),
-    ]).then(([version, platform, capabilities]) => {
-      setInfo({ version, platform, capabilities })
+    ]).then(([version, platform, caps]) => {
+      setInfo({
+        version: version ?? 'unknown',
+        platform: platform ?? 'unknown',
+        capabilities: caps as unknown as Record<string, boolean>,
+      })
     })
   }, [])
 
-  if (!isDesktopShell() || !info) return null
+  if (!isDesktopSurface() || !info) return null
 
   return (
     <div className="desktop-status panel">

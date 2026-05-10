@@ -35,10 +35,29 @@ import {
   listEvents,
   recordEvent,
   updateSessionStatus,
-  detectCurrentSurfaceKind,
-  surfaceKindLabel,
 } from './sessionStore'
+import { detectSurfaceKind as detectEnvKind } from '../surface/detector'
 import { getRuntimeClient } from '../runtime/workflowClient'
+
+// Map surface/detector SurfaceKind → session SurfaceKind (session has legacy naming)
+function toSessionSurfaceKind(kind: string): SurfaceKind {
+  const map: Record<string, SurfaceKind> = {
+    tauri: 'mac-desktop',
+    capacitor: 'mobile-ios', // capacitor default; refined by UA if needed
+    pwa: 'pwa',
+    web: 'web',
+    unknown: 'unknown',
+  }
+  return map[kind] ?? 'unknown'
+}
+
+function sessionSurfaceLabel(kind: SurfaceKind): string {
+  const labels: Record<SurfaceKind, string> = {
+    'web': 'Browser', 'pwa': 'PWA', 'mac-desktop': 'Mac Desktop',
+    'mobile-ios': 'iOS', 'mobile-android': 'Android', 'unknown': 'Unknown',
+  }
+  return labels[kind] ?? 'Unknown'
+}
 
 // SessionBridge is kept as an alias for backward compat with existing components
 export type { SessionClient as SessionBridge, BridgeHealth } from './client'
@@ -78,7 +97,7 @@ class MockSessionBridge implements SessionClient {
 
   createHostSession(): CreatorMeshSession {
     const session = createSession()
-    const kind = detectCurrentSurfaceKind()
+    const kind = toSessionSurfaceKind(detectEnvKind())
 
     // Register the current surface as host
     connectSurface(session.sessionId, {
@@ -86,7 +105,7 @@ class MockSessionBridge implements SessionClient {
       kind,
       role: 'host',
       connectionStatus: 'connected',
-      label: kind === 'mac-desktop' ? 'Mac Desktop Host' : `${surfaceKindLabel(kind)} Host`,
+      label: kind === 'mac-desktop' ? 'Mac Desktop Host' : `${sessionSurfaceLabel(kind)} Host`,
     })
 
     this._notifySubscribers(session.sessionId)
@@ -114,16 +133,17 @@ class MockSessionBridge implements SessionClient {
     const controllerId = `surface-ctrl-${this.controllerSurfaceCount}-${Date.now().toString(36)}`
 
     // Detect controller surface kind (simulate mobile for preview)
-    const kind: SurfaceKind = detectCurrentSurfaceKind() === 'mac-desktop'
-      ? 'web' // preview mode on desktop
-      : detectCurrentSurfaceKind()
+    const envKind = detectEnvKind()
+    const kind: SurfaceKind = envKind === 'tauri'
+      ? 'web' // preview mode on desktop shows as "web controller"
+      : toSessionSurfaceKind(envKind)
 
     const result = completePairing(session.sessionId, pairingCode, {
       surfaceId: controllerId,
       kind,
       role: 'controller',
       connectionStatus: 'pairing',
-      label: controllerLabel ?? `${surfaceKindLabel(kind)} Controller`,
+      label: controllerLabel ?? `${sessionSurfaceLabel(kind)} Controller`,
     })
 
     this._notifySubscribers(session.sessionId)
