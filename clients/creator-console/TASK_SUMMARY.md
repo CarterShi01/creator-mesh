@@ -100,3 +100,65 @@ dist/assets/*.js       155+ kB
 - No node_modules reinstall needed
 - No existing PWA manifest, service worker, or Tauri config found
 - Clean baseline confirmed for Phase 2/3 work
+
+### Task 02 — PWA Manifest (COMPLETE)
+- Branch: cm-console-desktop-task-02
+- Added: public/manifest.webmanifest, public/icons/ (3 SVG placeholders)
+- Updated: index.html with manifest link, theme-color, apple-mobile-web-app-* meta tags
+- Build: PASSED
+
+### Task 03 — PWA Service Worker (COMPLETE)
+- Branch: cm-console-desktop-task-03
+- Added: vite-plugin-pwa as devDependency
+- Configured: VitePWA with generateSW strategy, static shell caching only
+- Updated: README.md with PWA cache note
+- Build: PASSED — dist/sw.js and workbox assets generated
+
+### Task 04 — PWA Status UX (COMPLETE)
+- Branch: cm-console-desktop-task-04
+- Added: src/components/PwaStatus.tsx, src/hooks/usePwa.ts
+- Shows: Browser/App/Standalone mode, offline-ready badge, update-available badge
+- Updated: Header.tsx to include PwaStatus, styles.css for pwa-badge variants
+- Build: PASSED
+
+### Task 05 — Platform Boundary (COMPLETE)
+- Branch: cm-console-desktop-task-05
+- Added: src/platform/platform.ts (PlatformKind, getPlatformInfo, isDesktopShell, isPwaStandalone)
+- Added: src/platform/desktopBridge.ts (safe no-op bridge using window.__TAURI__ detection)
+- Updated: Header.tsx to show "Desktop Shell" badge when in Tauri
+- Updated: PwaStatus.tsx to accept platformLabel prop
+- Build: PASSED (uses window-based Tauri detection, no @tauri-apps/api import needed in web build)
+
+### Task 06 — Tauri v2 Shell Init (COMPLETE — scaffolded, awaiting Rust)
+- Branch: cm-console-desktop-task-06
+- Added: src-tauri/Cargo.toml, src-tauri/build.rs, src-tauri/src/main.rs
+- Added: src-tauri/tauri.conf.json, src-tauri/capabilities/default.json
+- Added: @tauri-apps/api, @tauri-apps/cli as devDependencies
+- Added: tauri:dev and tauri:build npm scripts
+- Rust/Cargo: NOT AVAILABLE on this machine — cargo build not possible yet
+- Build: Web build PASSED
+
+### Task 07 — macOS Desktop Identity (COMPLETE)
+- Branch: cm-console-desktop-task-07
+- Tauri conf already had: productName, identifier, window 1280x820, min 900x640
+- Added: src/components/DesktopStatus.tsx — shows Desktop Shell panel when in Tauri
+- Updated: App.tsx to include DesktopStatus in timeline column
+- Added: .badge-desktop, .desktop-status-* CSS
+- Build: PASSED
+
+### Task 08 — Tauri Command Bridge (COMPLETE)
+- Branch: cm-console-desktop-task-08
+- Native commands defined in main.rs: get_app_version, get_platform_label, get_desktop_capabilities
+- Bridge: desktopBridge.ts uses window.__TAURI__.core.invoke with safe fallback
+- DesktopStatus: shows version, platform label, capability flags (local shell: disabled, filesystem: disabled, governedWorkflowApi: future)
+- Build: PASSED
+
+### Task 09 — macOS Build Attempt (COMPLETE — BLOCKED on Rust)
+- Branch: cm-console-desktop-task-09
+- Web build: PASSED (158.9KB JS, 9.97KB CSS, PWA sw.js generated)
+- Rust/Cargo: NOT INSTALLED — tauri build cannot proceed
+- Tauri CLI: npx tauri 2.11.1 available
+- BLOCKER: Install Rust to enable Tauri build
+  - Command: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+  - Then: source ~/.cargo/env && cd clients/creator-console && npm run tauri:build
+  - Expected output: src-tauri/target/release/bundle/macos/CreatorMesh Console.app
