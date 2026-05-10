@@ -4,7 +4,7 @@ Version: 20260510
 
 ## Current Phase
 
-CreatorMesh has completed the first end-to-end workflow execution phase, has a minimal runtime governance layer, a fully functional Phase 1 Responsive Web Console MVP, and has now upgraded the console client to **Phase 2 PWA + Phase 3 Tauri Desktop Shell** (scaffolded).
+CreatorMesh has completed the first end-to-end workflow execution phase, has a minimal runtime governance layer, a fully functional web console (PWA-ready, Tauri shell scaffolded), and has now completed the **Phase 4 Governed Runtime Bridge MVP** — the console UI is fully decoupled from mock implementation via a `WorkflowClient` abstraction backed by a governed `MockRuntimeClient` and `RunLedger`.
 
 All core adapters are implemented and wired together:
 - ConnectorPort: designed + implemented (NotionConnectorAdapter)
@@ -17,8 +17,11 @@ All core adapters are implemented and wired together:
 
 The console client is now a PWA-ready installable web app with a Tauri v2 desktop shell scaffolded. The Tauri build is blocked by missing Rust/Cargo on the current machine — all web/PWA work is complete and validated.
 
+The Phase 4 Governed Runtime Bridge is complete: `WorkflowClient` abstraction, `MockRuntimeClient` (governed, 5-step simulation, 3 governance decisions per run), `RunLedger` (in-memory run/governance/event store), `RuntimeHealthPanel`, `GovernancePanel`, `RunHistoryPanel`. All UI components now read from `RuntimeRun` types — zero direct mock imports remain in the component tree.
+
 The next phase is focused on:
 - Installing Rust to activate the Tauri desktop build
+- Implementing `LocalRuntimeClient` (see `localRuntimeClient.placeholder.ts`) to wire LocalWorkflowRunner
 - Real integration testing with actual API credentials (Anthropic + Notion)
 - Adding remaining workflow steps or a second workflow
 - Strengthening governance: AuditRecord persistence, full ApprovalPolicy configuration
@@ -58,14 +61,22 @@ Inspected on 20260510.
 | `clients/creator-console/src/model/types.ts` | Present |
 | `clients/creator-console/src/model/seedExamples.ts` | Present |
 | `clients/creator-console/src/model/mockWorkflow.ts` | Present |
+| `clients/creator-console/src/runtime/types.ts` | Present (25 Runtime API types mapping to real CreatorMesh backend concepts) |
+| `clients/creator-console/src/runtime/workflowClient.ts` | Present (WorkflowClient interface + createWorkflowClient factory) |
+| `clients/creator-console/src/runtime/runLedger.ts` | Present (in-memory RunLedger: runs, governance decisions, events) |
+| `clients/creator-console/src/runtime/mockRuntimeClient.ts` | Present (MockRuntimeClient: 5-step governed simulation, 3 governance decisions/run) |
+| `clients/creator-console/src/runtime/localRuntimeClient.placeholder.ts` | Present (full integration plan: HTTP Option A + Tauri IPC Option B) |
 | `clients/creator-console/src/components/Header.tsx` | Present (shows PwaStatus + platform badge) |
 | `clients/creator-console/src/components/Layout.tsx` | Present |
-| `clients/creator-console/src/components/StatusBadge.tsx` | Present |
+| `clients/creator-console/src/components/StatusBadge.tsx` | Present (uses RuntimeStepStatus from runtime/types) |
 | `clients/creator-console/src/components/CapturePanel.tsx` | Present |
-| `clients/creator-console/src/components/WorkflowPreview.tsx` | Present |
-| `clients/creator-console/src/components/HumanReviewPanel.tsx` | Present |
-| `clients/creator-console/src/components/RunTimeline.tsx` | Present |
-| `clients/creator-console/src/components/ResultPanel.tsx` | Present |
+| `clients/creator-console/src/components/WorkflowPreview.tsx` | Present (reads RuntimeRun) |
+| `clients/creator-console/src/components/HumanReviewPanel.tsx` | Present (reads RuntimeRun) |
+| `clients/creator-console/src/components/RunTimeline.tsx` | Present (shows RuntimeEvents) |
+| `clients/creator-console/src/components/ResultPanel.tsx` | Present (reads RuntimeRun) |
+| `clients/creator-console/src/components/GovernancePanel.tsx` | Present (per-decision outcome badges) |
+| `clients/creator-console/src/components/RuntimeHealthPanel.tsx` | Present (mode, side effects, connections, safety mode) |
+| `clients/creator-console/src/components/RunHistoryPanel.tsx` | Present (lists runs from RunLedger; click to select) |
 | `clients/creator-console/src/components/PwaStatus.tsx` | Present (Browser/App/Offline/Update badges) |
 | `clients/creator-console/src/components/DesktopStatus.tsx` | Present (shows in Tauri mode: version, platform, capabilities) |
 | `clients/creator-console/src/hooks/usePwa.ts` | Present (standalone, offline-ready, update detection) |
@@ -77,8 +88,9 @@ Inspected on 20260510.
 | `clients/creator-console/src-tauri/src/main.rs` | Present (3 safe commands: get_app_version, get_platform_label, get_desktop_capabilities) |
 | `clients/creator-console/src-tauri/tauri.conf.json` | Present (productName, identifier, window 1280×820, min 900×640) |
 | `clients/creator-console/src-tauri/capabilities/default.json` | Present |
-| `clients/creator-console/README.md` | Present (full runbook: web dev, build, PWA preview, Tauri dev, Tauri build) |
-| `clients/creator-console/TASK_SUMMARY.md` | Present (all 10 Phase 2/3 tasks documented) |
+| `clients/creator-console/README.md` | Present (runtime architecture + full runbook) |
+| `clients/creator-console/TASK_SUMMARY.md` | Present (Phase 1 + Phase 2/3 + Phase 4 tasks documented) |
+| `clients/creator-console/DESIGN.md` | Present (Phase 4 runtime bridge architecture, WorkflowClient decision, RunLedger rationale) |
 | `clients/creator-console/docs/desktop-runbook.md` | Present (Tauri prerequisites, commands, artifact locations, troubleshooting) |
 | `clients/creator-console/dist/` | Present (built — includes sw.js, workbox assets) |
 | `npm run build` (creator-console) | Passing (158.9KB JS, 9.97KB CSS, sw.js + workbox generated) |
@@ -476,17 +488,19 @@ Slash command invocation was previously reported as "Unknown skill" for `creator
 
 ## Current Focus
 
-The current focus is Tauri desktop build activation, real integration validation, and governance strengthening.
+The current focus is implementing `LocalRuntimeClient` to connect the console to the real backend, Tauri desktop build activation, and real integration validation.
 
-1. **Install Rust/Cargo** to activate the Tauri macOS desktop build (`npm run tauri:build` will produce the .app once Rust is available).
-2. Test ThoughtToNoteWorkflow with real Anthropic API and Notion API credentials.
-3. ~~Implement approval enforcement in Orchestrator~~ — **Done.**
-4. ~~Build Phase 1 Responsive Web Console MVP~~ — **Done.**
-5. ~~Add PWA manifest, service worker, and platform boundary~~ — **Done.** Phase 2 complete.
-6. ~~Scaffold Tauri v2 desktop shell~~ — **Done.** Phase 3 scaffolded; awaiting Rust to build.
-7. Design and implement a second workflow or extend ThoughtToNoteWorkflow with richer output mapping.
-8. Strengthen docs-presence harness to verify new implementation files are tracked.
-9. Keep project progress accurate after each meaningful session.
+1. **Implement `LocalRuntimeClient`** — follow the plan in `src/runtime/localRuntimeClient.placeholder.ts` to wire `WorkflowClient` to `LocalWorkflowRunner` via HTTP (Option A) or Tauri IPC (Option B).
+2. **Install Rust/Cargo** to activate the Tauri macOS desktop build (`npm run tauri:build` will produce the .app once Rust is available).
+3. Test ThoughtToNoteWorkflow with real Anthropic API and Notion API credentials.
+4. ~~Implement approval enforcement in Orchestrator~~ — **Done.**
+5. ~~Build Phase 1 Responsive Web Console MVP~~ — **Done.**
+6. ~~Add PWA manifest, service worker, and platform boundary~~ — **Done.** Phase 2 complete.
+7. ~~Scaffold Tauri v2 desktop shell~~ — **Done.** Phase 3 scaffolded; awaiting Rust to build.
+8. ~~Governed Runtime Bridge MVP~~ — **Done.** Phase 4 complete. WorkflowClient abstraction, MockRuntimeClient, RunLedger, GovernancePanel, RuntimeHealthPanel, RunHistoryPanel all merged.
+9. Design and implement a second workflow or extend ThoughtToNoteWorkflow with richer output mapping.
+10. Strengthen docs-presence harness to verify new implementation files are tracked.
+11. Keep project progress accurate after each meaningful session.
 
 ## Next Recommended Work
 
@@ -495,8 +509,9 @@ Suggested next steps, roughly in order:
 1. ~~**Build Phase 1 Responsive Web Console**~~ — **Done.**
 1b. ~~**Phase 2 PWA**~~ — **Done.** manifest.webmanifest, vite-plugin-pwa, PwaStatus, usePwa hook, platform detection all complete. Web build passing with sw.js.
 1c. ~~**Phase 3 Tauri Desktop Shell**~~ — **Scaffolded.** src-tauri/ complete; native commands defined; bridge wired; blocked on Rust installation.
-1d. **Activate Tauri build** — `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh && source ~/.cargo/env && cd clients/creator-console && npm run tauri:build`. Expected: `src-tauri/target/release/bundle/macos/CreatorMesh Console.app`.
-1e. **Wire real API** — replace `createMockRun()` with `POST /api/runs`; subscribe to Orchestrator events via SSE/WebSocket; connect LocalWorkflowRunner via governed HTTP API.
+1d. ~~**Phase 4 Governed Runtime Bridge**~~ — **Done.** WorkflowClient abstraction, MockRuntimeClient, RunLedger, GovernancePanel, RuntimeHealthPanel, RunHistoryPanel, all components migrated to RuntimeRun types.
+1e. **Activate Tauri build** — `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh && source ~/.cargo/env && cd clients/creator-console && npm run tauri:build`. Expected: `src-tauri/target/release/bundle/macos/CreatorMesh Console.app`.
+1f. **Implement LocalRuntimeClient** — follow `src/runtime/localRuntimeClient.placeholder.ts`; choose Option A (HTTP) or Option B (Tauri IPC); wire `startRun`/`resumeRun`/`cancelRun` to real LocalWorkflowRunner.
 1. **Validate skill invocation** — confirm slash command invocation works for all 7 skills, or document known limitations and natural-language fallbacks. `creator-context-brief` and `creator-progress-maintainer` validated; others unconfirmed.
 2. ~~**Add `Message` domain primitive**~~ — **Done.**
 24. **Add AuditRecord persistence to governance** — GovernanceEvaluator MVP is in place, but `ConnectorResult.auditId` and `RunnerResult.auditId` still reference un-persisted audit records. A minimal `AuditRecord` and in-memory or file-backed storage adapter would complete the audit trail promised in the INTERFACE.md invariants.
@@ -524,6 +539,30 @@ Suggested next steps, roughly in order:
 21. ~~**Design + implement minimal Orchestrator**~~ — **Done.** `src/orchestrator/orchestrator.ts`: Orchestrator class implements StepExecutor; dispatches agent/connector/runner steps to registered adapters; resolves `$input.*` and `$steps.*.*` input mappings. `StepExecutor` interface added to `src/workflows/port.ts`. `AgentRole` interface added to `src/agents/port.ts`. 10 smoke tests. Test suite: 100 tests.
 22. ~~**Design + implement ThoughtAgent**~~ — **Done.** `src/agents/thought-agent.ts`: ThoughtAgent implements AgentRole; injectable ThoughtAgentClient for testability; AnthropicThoughtClient backed by claude-haiku-4-5-20251001; returns ThoughtClassification (category, summary, tags, confidence, suggestedTitle). @anthropic-ai/sdk installed. 9 smoke tests. Test suite: 109 tests.
 23. ~~**Wire ThoughtToNoteWorkflow end-to-end**~~ — **Done.** LocalWorkflowRunner accepts optional StepExecutor constructor arg; when present, non-HumanReview steps dispatch to Orchestrator. Fixed thought-to-note inputMapping to reference classify.suggestedTitle and classify.summary. 9 end-to-end smoke tests validate full path: ThoughtAgent → HumanReview pause → NotionConnector write. Test suite: 109 tests total.
+
+### Phase 4 Governed Runtime Bridge MVP
+
+Refactored the console client to decouple UI from runtime via `WorkflowClient` abstraction (10 task branches: `cm-runtime-bridge-task-01` through `cm-runtime-bridge-task-10`, all merged to master).
+
+**Runtime layer (`src/runtime/`):**
+- `types.ts` — 25 stable Runtime API types: `RuntimeMode`, `RuntimeHealth`, `RuntimeRun`, `RuntimeStep`, `RuntimeStepStatus`, `RuntimeClassification`, `RuntimeHumanDecision`, `RuntimeGovernanceDecision`, `RuntimeResult`, `RuntimeEvent`, `RunLedgerState`; each type maps 1:1 to a real CreatorMesh backend concept (documented inline)
+- `workflowClient.ts` — `WorkflowClient` interface (`startRun`, `resumeRun`, `cancelRun`, `getHealth`, `getLedger`) + `createWorkflowClient(mode)` factory
+- `runLedger.ts` — in-memory `RunLedger`: `createRun`, `getRun`, `updateRun`, `listRuns`, `appendGovernanceDecision`, `appendHumanDecision`, `appendEvent`
+- `mockRuntimeClient.ts` — `MockRuntimeClient` implementing `WorkflowClient`; 5-step workflow simulation; 3 governance decisions per run; accept/reject/changes_requested/cancel all handled; writes to RunLedger
+- `localRuntimeClient.placeholder.ts` — full integration plan: path diagram (UI → WorkflowClient → LocalWorkflowRunner → Orchestrator → Connectors), TODO map, field mapping table, Option A (HTTP) and Option B (Tauri IPC)
+
+**UI changes:**
+- `App.tsx` — async WorkflowClient handlers; `RuntimeRun` state; zero direct mock imports
+- All components updated to `RuntimeRun` types (`HumanReviewPanel`, `WorkflowPreview`, `RunTimeline`, `ResultPanel`, `CapturePanel`)
+- `StatusBadge.tsx` — uses `RuntimeStepStatus` from `runtime/types`
+- Added `RuntimeHealthPanel` — displays mode, side effects, Notion/Anthropic connection, desktop shell, safety mode
+- Added `GovernancePanel` — per-decision outcome badges (approved / auto_approved / needs_review / denied)
+- Added `RunHistoryPanel` — lists runs from RunLedger; click to select; shows kind/status/preview/time
+
+**Documentation:**
+- `README.md` — runtime architecture section added (WorkflowClient flow diagram, runtime modes table)
+- `DESIGN.md` — rewritten to reflect Phase 4 runtime bridge architecture, WorkflowClient decision, RunLedger rationale
+- `TASK_SUMMARY.md` — Phase 4 tasks documented
 
 ### Phase 1 Responsive Web Console MVP
 
@@ -614,14 +653,16 @@ Test suite: 172 tests (was 151), all passing. `npm run verify` clean.
 
 ## Progress Summary
 
-CreatorMesh has completed its initial foundation-building phase and is advancing into client platform work.
+CreatorMesh has completed its initial foundation-building phase and has advanced through four phases of console client work.
 
 The quality and cost harness is in place: reading order, documentation layers, project-level skills, context briefs, and progress tracking.
 
-The connector layer is complete (ConnectorPort, NotionConnectorAdapter, 15 smoke tests). All three Port abstractions are implemented (RunnerPort, WorkflowRunnerPort, LocalWorkflowRunner). ThoughtToNoteWorkflow runs end-to-end in smoke tests. GovernanceEvaluator enforces the MVP conservative policy in the Orchestrator. 172 tests passing.
+The backend layer is complete: ConnectorPort + NotionConnectorAdapter, RunnerPort + ClaudeCodeRunnerAdapter, WorkflowRunnerPort + LocalWorkflowRunner, ThoughtToNoteWorkflow end-to-end, GovernanceEvaluator enforcing MVP conservative policy in Orchestrator. 172 tests passing.
 
-The console client has now been upgraded from Phase 1 (responsive web) to Phase 2 (PWA-ready) and Phase 3 (Tauri desktop shell scaffolded):
-- Phase 2 PWA is complete: manifest.webmanifest, vite-plugin-pwa with Workbox generateSW, PwaStatus component, platform detection, browser/standalone/offline-ready/update-available UI badges. Build passing with sw.js.
-- Phase 3 Tauri shell is scaffolded: src-tauri/ directory with Cargo.toml, main.rs (3 safe native commands), tauri.conf.json (productName, identifier, window size), and a safe desktop bridge. DesktopStatus component shows platform info when in Tauri. **Build blocked on Rust/Cargo not being installed.** One command unblocks it: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh && source ~/.cargo/env && cd clients/creator-console && npm run tauri:build`
+The console client has progressed through four phases:
+- **Phase 1** — Responsive Web Console MVP: full mock flow, 3-column layout, build passing.
+- **Phase 2** — PWA: manifest.webmanifest, vite-plugin-pwa, PwaStatus, platform detection, sw.js. Build passing.
+- **Phase 3** — Tauri Desktop Shell: scaffolded (src-tauri/, native commands, desktop bridge). **Build blocked on Rust/Cargo.** Unblock: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh && source ~/.cargo/env && cd clients/creator-console && npm run tauri:build`
+- **Phase 4** — Governed Runtime Bridge: `WorkflowClient` abstraction, `MockRuntimeClient` (5-step governed simulation, 3 governance decisions/run), `RunLedger` (in-memory audit store), `GovernancePanel`, `RuntimeHealthPanel`, `RunHistoryPanel`. All UI components read from `RuntimeRun` types. Zero direct mock imports remain in the component tree. Build passing.
 
-The console is still mock-only. Phase 4 integration will wire the governed HTTP API (replacing createMockRun), subscribe to Orchestrator events, and connect LocalWorkflowRunner via API boundary.
+The next integration milestone (Phase 5) is implementing `LocalRuntimeClient` — follow `src/runtime/localRuntimeClient.placeholder.ts` for the full plan. Switching runtimes requires only changing the `createWorkflowClient()` factory argument.

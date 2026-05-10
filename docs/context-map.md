@@ -18,7 +18,7 @@ Before reading any implementation file, read in this order:
 
 | Directory | Purpose |
 |-----------|---------|
-| `clients/creator-console` | Phase 1 Responsive Web Console MVP — isolated Vite + React + TypeScript client; mock-only; zero src/ import; read DESIGN.md before working here |
+| `clients/creator-console` | Phase 4 Governed Runtime Bridge — isolated Vite + React + TypeScript PWA client; WorkflowClient abstraction + RunLedger; mock-only runtime; zero src/ import; read DESIGN.md before working here |
 
 ## Source Map
 
