@@ -4,7 +4,7 @@ import { Runtime } from "../../../src/runtime/runtime.js";
 import { ThoughtAgent } from "../../../src/agents/thought-agent.js";
 import { thoughtToNoteWorkflow } from "../../../src/workflows/definitions/thought-to-note.js";
 import type { ThoughtAgentClient, ThoughtClassification } from "../../../src/agents/thought-agent.js";
-import type { ConnectorPort, ConnectorAction, ConnectorResult } from "../../../src/connectors/port.js";
+import type { ConnectorPort, ConnectorAction, ConnectorResult } from "../../../src/capabilities/connectors/port.js";
 
 const MOCK_CLASSIFICATION: ThoughtClassification = {
   category: "idea",

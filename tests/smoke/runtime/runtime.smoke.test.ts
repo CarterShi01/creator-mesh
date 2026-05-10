@@ -2,11 +2,11 @@ import { describe, it, expect, vi } from "vitest";
 import { Runtime } from "../../../src/runtime/runtime.js";
 import { GovernanceEvaluator } from "../../../src/governance/index.js";
 import type { AgentRole, AgentInput } from "../../../src/agents/port.js";
-import type { ConnectorPort, ConnectorAction, ConnectorResult } from "../../../src/connectors/port.js";
-import type { RunnerPort, RunnerAction, RunnerResult } from "../../../src/runners/port.js";
+import type { ConnectorPort, ConnectorAction, ConnectorResult } from "../../../src/capabilities/connectors/port.js";
+import type { RunnerPort, RunnerAction, RunnerResult } from "../../../src/capabilities/runners/port.js";
 import type { AgentStep, ConnectorStep, RunnerStep } from "../../../src/workflows/types.js";
-import type { Capability } from "../../../src/connectors/port.js";
-import type { RunnerCapability } from "../../../src/runners/port.js";
+import type { Capability } from "../../../src/capabilities/connectors/port.js";
+import type { RunnerCapability } from "../../../src/capabilities/runners/port.js";
 
 function makeAgentStep(overrides: Partial<AgentStep> = {}): AgentStep {
   return {

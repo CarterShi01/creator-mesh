@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from "vitest";
-import { ClaudeCodeRunnerAdapter } from "../../../src/runners/claude-code/adapter.js";
-import { ClaudeCodeRunnerRegistry } from "../../../src/runners/claude-code/registry.js";
-import { classifyInvokeError } from "../../../src/runners/claude-code/errors.js";
-import type { SubprocessInvoker } from "../../../src/runners/claude-code/invoke.js";
-import type { RunnerAction } from "../../../src/runners/port.js";
+import { ClaudeCodeRunnerAdapter } from "../../../../src/capabilities/runners/claude-code/adapter.js";
+import { ClaudeCodeRunnerRegistry } from "../../../../src/capabilities/runners/claude-code/registry.js";
+import { classifyInvokeError } from "../../../../src/capabilities/runners/claude-code/errors.js";
+import type { SubprocessInvoker } from "../../../../src/capabilities/runners/claude-code/invoke.js";
+import type { RunnerAction } from "../../../../src/capabilities/runners/port.js";
 
 function makeAction(taskType: string, description = "test task"): RunnerAction {
   return {

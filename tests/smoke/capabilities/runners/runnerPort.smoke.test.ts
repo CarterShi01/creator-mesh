@@ -8,7 +8,7 @@ import type {
   RunnerContext,
   RunnerArtifact,
   RunnerConfig,
-} from "../../../src/runners/index.js";
+} from "../../../../src/capabilities/runners/index.js";
 import type {
   RunnerTaskType,
   RunnerPermissionLevel,
@@ -16,7 +16,7 @@ import type {
   RunnerResultStatus,
   RunnerActionStatus,
   ApprovalResult,
-} from "../../../src/runners/index.js";
+} from "../../../../src/capabilities/runners/index.js";
 
 describe("RunnerPort types", () => {
   it("RunnerCapability can be constructed with all required fields", () => {

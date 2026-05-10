@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { APIResponseError, APIErrorCode } from "@notionhq/client";
-import { classifyNotionError } from "../../../../src/connectors/notion/errors.js";
+import { classifyNotionError } from "../../../../../src/capabilities/connectors/notion/errors.js";
 
 function makeAPIError(code: string, status: number): APIResponseError {
   return new APIResponseError({

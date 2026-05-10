@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { normalizePage, normalizeBlock } from "../../../../src/connectors/notion/normalize.js";
+import { normalizePage, normalizeBlock } from "../../../../../src/capabilities/connectors/notion/normalize.js";
 import type {
   PageObjectResponse,
   BlockObjectResponse,

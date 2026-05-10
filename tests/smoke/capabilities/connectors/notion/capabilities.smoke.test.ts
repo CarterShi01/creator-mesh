@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { NOTION_CAPABILITIES } from "../../../../src/connectors/notion/capabilities.js";
+import { NOTION_CAPABILITIES } from "../../../../../src/capabilities/connectors/notion/capabilities.js";
 
 describe("NOTION_CAPABILITIES", () => {
   it("declares exactly 5 MVP capabilities", () => {

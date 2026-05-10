@@ -34,16 +34,13 @@ CreatorMesh is organized into the following conceptual layers:
 5. Agents
    Domain-specific reasoning roles. Execute within workflow steps and produce structured outputs.
 
-6. Runners
-   Executes work through specific execution environments (e.g., Claude Code via subprocess, future: Codex, OpenHands, Aider, scripts, human).
+6. Capabilities
+   Groups callable physical and provider-backed capabilities. Invoked by runtime and agents through port interfaces. Contains: `runners` (execution environments: Claude Code, human runner, future Codex/OpenHands/Aider), `connectors` (external system integrations: Notion, GitHub, future MCP servers), and `models` (scaffold only — future model-provider/inference capabilities). Capabilities do not own the worldview, LLM loop, or session/context. Provider SDKs are isolated inside adapter implementations.
 
-7. Connectors
-   Integrates with external tools (e.g., Notion SDK) through ConnectorPort and CapabilityRegistry.
-
-8. Workflows
+7. Workflows
    Defines stable, creator-approved end-to-end transformations from inputs to outputs.
 
-9. Governance
+8. Governance
    Handles approval policies, permission levels, auditability, cost control, and safety.
 
 10. Storage
@@ -64,7 +61,7 @@ CreatorMesh should be:
 - Tool-agnostic
 - Local-first where possible
 - Human-in-the-loop by default
-- Extensible through agents, runners, and connectors
+- Extensible through agents and capabilities (runners, connectors, models)
 - Auditable and controllable
 
 ## Core Distinction

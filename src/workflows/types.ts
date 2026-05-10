@@ -1,5 +1,5 @@
-import type { CapabilityType } from "../connectors/index.js";
-import type { RunnerTaskType } from "../runners/index.js";
+import type { CapabilityType } from "../capabilities/connectors/index.js";
+import type { RunnerTaskType } from "../capabilities/runners/index.js";
 
 export type WorkflowStepType =
   | "agent"

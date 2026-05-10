@@ -5,8 +5,8 @@ import { LocalWorkflowRunner } from "./workflows/local-runner.js";
 import { Runtime } from "./runtime/runtime.js";
 import { ThoughtAgent, AnthropicThoughtClient } from "./agents/thought-agent.js";
 import type { ThoughtClassification } from "./agents/thought-agent.js";
-import { NotionConnectorAdapter } from "./connectors/notion/adapter.js";
-import type { NotionPageData } from "./connectors/notion/normalize.js";
+import { NotionConnectorAdapter } from "./capabilities/connectors/notion/adapter.js";
+import type { NotionPageData } from "./capabilities/connectors/notion/normalize.js";
 import { thoughtToNoteWorkflow } from "./workflows/definitions/thought-to-note.js";
 
 function requireEnv(name: string): string {

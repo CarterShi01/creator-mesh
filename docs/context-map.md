@@ -29,8 +29,10 @@ Before reading any implementation file, read in this order:
 | `src/knowledge` | Callable soft knowledge — domain knowledge, principles, skills, examples, checklists, reasoning assets |
 | `src/runtime` | Execution loop — step dispatch, governance enforcement, pause/resume |
 | `src/agents` | Role-based execution subjects — apply knowledge, request capabilities through runtime |
-| `src/runners` | Execution engines and runner adapters |
-| `src/connectors` | External tool integrations |
+| `src/capabilities` | Callable capability layer — groups runners, connectors, and models (scaffold) |
+| `src/capabilities/runners` | Execution environment adapters (Claude Code, human runner, future Codex/OpenHands) |
+| `src/capabilities/connectors` | External system integrations (Notion, GitHub, MCP, etc.) |
+| `src/capabilities/models` | Scaffold only — future model-provider/inference capabilities |
 | `src/workflows` | Stable creator routines — reusable, creator-approved step sequences |
 | `src/governance` | Approval, audit, permission, and safety policies |
 | `src/storage` | Persistence abstractions and adapters |

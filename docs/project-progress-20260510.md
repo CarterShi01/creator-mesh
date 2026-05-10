@@ -143,13 +143,13 @@ Inspected on 20260510.
 
 All current source modules have both `README.md` and `INTERFACE.md`:
 
-`src/triggers`, `src/creation`, `src/knowledge`, `src/runtime`, `src/agents`, `src/runners`, `src/connectors`, `src/workflows`, `src/governance`, `src/storage`, `src/outputs`, `src/shared`
+`src/triggers`, `src/creation`, `src/knowledge`, `src/runtime`, `src/agents`, `src/capabilities`, `src/capabilities/runners`, `src/capabilities/connectors`, `src/capabilities/models`, `src/workflows`, `src/governance`, `src/storage`, `src/outputs`, `src/shared`
 
-(Note: `src/orchestrator` was renamed to `src/runtime` on 2026-05-11. `src/core` and `src/intake` were merged into `src/triggers` in the cm-arch-step-07 consolidation. The harness docs-presence test dynamically scans the src directory and passes with 28 tests.)
+(Note: `src/orchestrator` was renamed to `src/runtime` on 2026-05-11. `src/core` and `src/intake` were merged into `src/triggers` in the cm-arch-step-07 consolidation. `src/runners` and `src/connectors` were moved under `src/capabilities/` on 2026-05-11. The harness docs-presence test dynamically scans the src directory and passes with 26 tests.)
 
 All current source modules have `DESIGN.md`. Each `DESIGN.md` captures: current design summary, goals, key decisions, tradeoffs, alternatives considered, assumptions, open questions, future evolution, and ChatGPT handoff context.
 
-`src/connectors/DESIGN.md` and `src/connectors/INTERFACE.md` have since been significantly expanded beyond the initial skeleton — see "ConnectorPort and CapabilityRegistry Design" in Completed Work below.
+`src/capabilities/connectors/DESIGN.md` and `src/capabilities/connectors/INTERFACE.md` have been significantly expanded — see "ConnectorPort and CapabilityRegistry Design" in Completed Work below.
 
 ### Templates
 
@@ -182,25 +182,34 @@ All current source modules have `DESIGN.md`. Each `DESIGN.md` captures: current 
 | `src/core/DESIGN.md` | Present — retroactively created; captures Thought/Message mirror decision and zero-dependency invariant |
 | `src/core` — `Message` primitive | Present |
 
+### Capabilities Layer (src/capabilities/)
+
+| Item | Status |
+|---|---|
+| `src/capabilities/README.md` — capabilities as callable physical/provider layer; not the system brain | Present |
+| `src/capabilities/DESIGN.md` — submodule summary, architecture boundary, deferred models scope | Present |
+| `src/capabilities/INTERFACE.md` — namespace export pattern, allowed/disallowed deps | Present |
+| `src/capabilities/index.ts` — namespace-style barrel exports: `runners`, `connectors`, `models` | Present |
+| `src/capabilities/runners/` — all runner files moved here from `src/runners/` | Present |
+| `src/capabilities/connectors/` — all connector files moved here from `src/connectors/` | Present |
+| `src/capabilities/models/README.md`, `DESIGN.md`, `INTERFACE.md`, `index.ts` — scaffold only | Present |
+
 ### ConnectorPort Implementation
 
 | Item | Status |
 |---|---|
-| `src/connectors/types.ts` — all type enumerations | Present |
-| `src/connectors/port.ts` — `ConnectorPort`, `CapabilityRegistry`, `ConnectorAction`, `ConnectorResult` | Present |
-| `src/connectors/index.ts` — barrel re-exports | Present |
+| `src/capabilities/connectors/types.ts` — all type enumerations | Present |
+| `src/capabilities/connectors/port.ts` — `ConnectorPort`, `CapabilityRegistry`, `ConnectorAction`, `ConnectorResult` | Present |
+| `src/capabilities/connectors/index.ts` — barrel re-exports | Present |
 
 ### RunnerPort Design
 
 | Item | Status |
 |---|---|
-| `src/runners/DESIGN.md` — full RunnerPort + RunnerRegistry design (7 task types, 5 permission levels, HumanRunner, sync/async model) | Present |
-| `src/runners/INTERFACE.md` — full public type contracts for RunnerPort, RunnerRegistry, RunnerCapability, RunnerAction, RunnerResult, RunnerArtifact, RunnerConfig | Present |
-| `src/runners/claude-code/DESIGN.md` — ClaudeCodeRunnerAdapter design (subprocess invocation, MVP: read/plan/write/test, error taxonomy, artifact detection) | Present |
-| `src/runners/claude-code/INTERFACE.md` — public contract for ClaudeCodeRunnerAdapter, ClaudeCodeRunnerRegistry, ClaudeCodeRunnerConfig | Present |
-| `src/runners/port.ts` — RunnerPort TypeScript types | Missing |
-| `src/runners/types.ts` — RunnerTaskType, RunnerPermissionLevel enumerations | Missing |
-| `src/runners/index.ts` — barrel re-exports | Missing |
+| `src/capabilities/runners/DESIGN.md` — full RunnerPort + RunnerRegistry design (7 task types, 5 permission levels, HumanRunner, sync/async model) | Present |
+| `src/capabilities/runners/INTERFACE.md` — full public type contracts for RunnerPort, RunnerRegistry, RunnerCapability, RunnerAction, RunnerResult, RunnerArtifact, RunnerConfig | Present |
+| `src/capabilities/runners/claude-code/DESIGN.md` — ClaudeCodeRunnerAdapter design (subprocess invocation, MVP: read/plan/write/test, error taxonomy, artifact detection) | Present |
+| `src/capabilities/runners/claude-code/INTERFACE.md` — public contract for ClaudeCodeRunnerAdapter, ClaudeCodeRunnerRegistry, ClaudeCodeRunnerConfig | Present |
 
 ### WorkflowPort Design
 
@@ -218,14 +227,14 @@ All current source modules have `DESIGN.md`. Each `DESIGN.md` captures: current 
 
 | Item | Status |
 |---|---|
-| `src/connectors/notion/normalize.ts` — `normalizePage()`, `normalizeBlock()`, all `NotionXxxData` shapes | Present |
-| `src/connectors/notion/errors.ts` — `classifyNotionError()`, `NotionErrorCode` type | Present |
-| `src/connectors/notion/capabilities.ts` — `NOTION_CAPABILITIES` (5 MVP capabilities) | Present |
-| `src/connectors/notion/adapter.ts` — `NotionConnectorAdapter` implementing `ConnectorPort` | Present |
-| `src/connectors/notion/index.ts` — barrel re-exports | Present |
+| `src/capabilities/connectors/notion/normalize.ts` — `normalizePage()`, `normalizeBlock()`, all `NotionXxxData` shapes | Present |
+| `src/capabilities/connectors/notion/errors.ts` — `classifyNotionError()`, `NotionErrorCode` type | Present |
+| `src/capabilities/connectors/notion/capabilities.ts` — `NOTION_CAPABILITIES` (5 MVP capabilities) | Present |
+| `src/capabilities/connectors/notion/adapter.ts` — `NotionConnectorAdapter` implementing `ConnectorPort` | Present |
+| `src/capabilities/connectors/notion/index.ts` — barrel re-exports | Present |
 | `@notionhq/client` — installed | Present |
 
-All other `src/` directories except `src/runners/claude-code/` contain no implementation files yet. `src/runners/` and `src/workflows/` now have full DESIGN.md and INTERFACE.md from the Port design phase (see below).
+All other `src/` directories except `src/capabilities/runners/claude-code/` contain no implementation files yet. `src/capabilities/runners/` and `src/workflows/` now have full DESIGN.md and INTERFACE.md from the Port design phase (see below).
 
 ### TypeScript Project Configuration and Testing
 
@@ -250,13 +259,15 @@ All other `src/` directories except `src/runners/claude-code/` contain no implem
 | `tests/e2e/README.md` | Present (placeholder) |
 | `tests/smoke/core/createThought.smoke.test.ts` | Present (5 tests, all passing) |
 | `tests/smoke/core/createMessage.smoke.test.ts` | Present (5 tests, all passing) |
-| `tests/smoke/connectors/notion/normalize.smoke.test.ts` | Present (4 tests, all passing) |
-| `tests/smoke/connectors/notion/errors.smoke.test.ts` | Present (7 tests, all passing) |
-| `tests/smoke/connectors/notion/capabilities.smoke.test.ts` | Present (4 tests, all passing) |
+| `tests/smoke/capabilities/connectors/notion/normalize.smoke.test.ts` | Present (4 tests, all passing) |
+| `tests/smoke/capabilities/connectors/notion/errors.smoke.test.ts` | Present (7 tests, all passing) |
+| `tests/smoke/capabilities/connectors/notion/capabilities.smoke.test.ts` | Present (4 tests, all passing) |
+| `tests/smoke/capabilities/runners/claudeCodeRunner.smoke.test.ts` | Present (15 tests, all passing) |
+| `tests/smoke/capabilities/runners/runnerPort.smoke.test.ts` | Present (8 tests, all passing) |
 | `tests/harness/architecture-boundaries.test.ts` | Present (4 tests, all passing) |
-| `tests/harness/docs-presence.test.ts` | Present (30 tests, all passing) |
+| `tests/harness/docs-presence.test.ts` | Present (26 tests, all passing) |
 | `tests/harness/skills-format.test.ts` | Present (8 tests, all passing) |
-| `npm run verify` | Passing (typecheck + 67 tests across smoke + harness) |
+| `npm run verify` | Passing (typecheck + 242 tests across 21 test files) |
 
 ### CI and Verification Policy
 
@@ -705,6 +716,31 @@ Updated `src/workflows/README.md`, `src/knowledge/README.md`, and `src/agents/RE
 
 No implementation behavior changed. No new dependencies. `npm run verify`: **244 tests passing (21 test files)**.
 
+### Capabilities Consolidation: src/runners + src/connectors → src/capabilities/
+
+Moved `src/runners/` and `src/connectors/` under a new `src/capabilities/` parent module. Added `src/capabilities/models/` as a scaffold-only placeholder. Bumped project version to 0.0.1.
+
+Changes:
+- `src/capabilities/README.md`, `DESIGN.md`, `INTERFACE.md`, `index.ts` — new parent module; namespace-style barrel exports (`export * as runners`, `export * as connectors`, `export * as models`)
+- `src/capabilities/runners/` — all runner files moved here (port.ts, types.ts, index.ts, claude-code/ subtree, docs); source at original `src/runners/`
+- `src/capabilities/connectors/` — all connector files moved here (port.ts, types.ts, index.ts, notion/ subtree, docs); source at original `src/connectors/`
+- `src/capabilities/models/README.md`, `DESIGN.md`, `INTERFACE.md`, `index.ts` — scaffold only; `export {}` body
+- `src/runners/` and `src/connectors/` directories removed
+- `src/runtime/runtime.ts` — import paths updated to `../capabilities/connectors/port.js` and `../capabilities/runners/port.js`
+- `src/workflows/types.ts` — import paths updated to `../capabilities/connectors/index.js` and `../capabilities/runners/index.js`
+- `src/cli.ts` — import paths updated to `./capabilities/connectors/notion/adapter.js` and `./capabilities/connectors/notion/normalize.js`
+- `tests/smoke/runners/` removed; files moved to `tests/smoke/capabilities/runners/` (import depth +1 level)
+- `tests/smoke/connectors/` removed; files moved to `tests/smoke/capabilities/connectors/` (import depth +1 level)
+- `tests/harness/architecture-boundaries.test.ts` — HIGHER_LEVEL_MODULES updated: `"runners"`, `"connectors"` replaced with `"capabilities"`
+- `docs/architecture.md` — layers 6 (Runners) + 7 (Connectors) merged into single layer 6 (Capabilities); Capabilities description added
+- `docs/context-map.md` — standalone `src/runners` and `src/connectors` entries replaced by `src/capabilities`, `src/capabilities/runners`, `src/capabilities/connectors`, `src/capabilities/models`
+- `package.json` (root) — version bumped `0.1.0` → `0.0.1`
+- `clients/creator-console/package.json` — version bumped `0.1.0` → `0.0.1`
+
+Type name collision resolved: both runners and connectors export `ApprovalRequirement` and `ApprovalResult`. Namespace-style exports (`export * as runners`, `export * as connectors`) prevent name conflicts at the parent index.
+
+`npm run verify` passes clean: **242 tests (21 test files)**. (Drop from 244: -4 from removed standalone runners+connectors docs-presence tests, +2 from new capabilities parent module docs-presence tests = net -2.)
+
 ### Architecture Rename: src/orchestrator → src/runtime
 
 Renamed the `src/orchestrator` module to `src/runtime` to reflect the realigned product model where `creation` owns the methodological core (worldview, intent framing, quest construction) and `runtime` owns execution infrastructure (dispatch, governance enforcement, step sequencing).
@@ -776,7 +812,7 @@ CreatorMesh has completed its initial foundation-building phase and has advanced
 
 The quality and cost harness is in place: reading order, documentation layers, project-level skills, context briefs, and progress tracking.
 
-The backend layer is complete: ConnectorPort + NotionConnectorAdapter, RunnerPort + ClaudeCodeRunnerAdapter, WorkflowRunnerPort + LocalWorkflowRunner, ThoughtToNoteWorkflow end-to-end, GovernanceEvaluator enforcing MVP conservative policy in Runtime. The `src/orchestrator` module has been renamed to `src/runtime`; `Orchestrator` class renamed to `Runtime`. **244 root-package tests passing (21 test files).**
+The backend layer is complete: ConnectorPort + NotionConnectorAdapter, RunnerPort + ClaudeCodeRunnerAdapter, WorkflowRunnerPort + LocalWorkflowRunner, ThoughtToNoteWorkflow end-to-end, GovernanceEvaluator enforcing MVP conservative policy in Runtime. The `src/orchestrator` module has been renamed to `src/runtime`; `Orchestrator` class renamed to `Runtime`. `src/runners` and `src/connectors` have been consolidated under `src/capabilities/` with a new `src/capabilities/models` scaffold. Project version bumped to 0.0.1. **242 root-package tests passing (21 test files).**
 
 The console client has progressed through seven phases — all building toward the same goal: match Claude Code's architecture abstraction (local runtime host + lightweight controller surfaces + governed API boundary):
 

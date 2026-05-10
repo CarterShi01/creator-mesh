@@ -1,5 +1,5 @@
-import type { ConnectorPort, ConnectorAction } from "../connectors/port.js";
-import type { RunnerPort } from "../runners/port.js";
+import type { ConnectorPort, ConnectorAction } from "../capabilities/connectors/port.js";
+import type { RunnerPort } from "../capabilities/runners/port.js";
 import type { AgentRole } from "../agents/port.js";
 import type { StepExecutor } from "../workflows/port.js";
 import type { WorkflowStep, WorkflowInput, StepInputMapping } from "../workflows/types.js";
