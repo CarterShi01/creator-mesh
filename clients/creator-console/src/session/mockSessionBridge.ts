@@ -74,11 +74,14 @@ class MockSessionBridge implements SessionBridge {
   private controllerSurfaceCount = 0
 
   constructor() {
-    // workflowClient is set async; initialise to a promise-resolved stub inline
     this.workflowClient = null as unknown as WorkflowClient
     this.hostSurfaceId = `surface-host-${Date.now().toString(36)}`
-    // Resolve async factory immediately
     createWorkflowClient().then(client => { this.workflowClient = client })
+  }
+
+  /** Inject a pre-created WorkflowClient so bridge and App share the same RunLedger. */
+  setWorkflowClient(client: WorkflowClient): void {
+    this.workflowClient = client
   }
 
   getBridgeHealth(): BridgeHealth {
