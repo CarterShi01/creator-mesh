@@ -12,7 +12,8 @@
     "test:harness": "vitest run tests/harness",
     "verify:harness": "npm run typecheck && npm run test:harness",
     "verify:quick": "npm run typecheck && npm run test:smoke",
-    "verify": "npm run typecheck && npm run test"
+    "verify": "npm run typecheck && npm run test",
+    "think": "tsx src/cli.ts"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

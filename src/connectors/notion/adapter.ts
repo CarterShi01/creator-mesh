@@ -153,7 +153,13 @@ export class NotionConnectorAdapter implements ConnectorPort {
   }
 
   private async createPage(payload?: Record<string, unknown>) {
-    const parent = payload?.["parent"] as CreatePageParameters["parent"] | undefined;
+    const rawParent = payload?.["parent"];
+    let parent: CreatePageParameters["parent"] | undefined;
+    if (typeof rawParent === "string") {
+      parent = { type: "page_id" as const, page_id: rawParent };
+    } else {
+      parent = rawParent as CreatePageParameters["parent"] | undefined;
+    }
     const title = typeof payload?.["title"] === "string" ? payload["title"] : "Untitled";
 
     if (!parent) throw new Error("notion.unknown: parent required for create/page");
