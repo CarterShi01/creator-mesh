@@ -6,7 +6,7 @@ const ROOT = process.cwd();
 const CORE_DIR = join(ROOT, "src", "core");
 
 const OTHER_SRC_MODULES = [
-  "agents", "connectors", "governance", "intake", "knowledge",
+  "agents", "connectors", "creation", "governance", "intake", "knowledge",
   "orchestrator", "outputs", "runners", "shared", "storage",
   "triggers", "workflows",
 ];

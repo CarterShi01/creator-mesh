@@ -21,6 +21,7 @@ Before reading any implementation file, read in this order:
 | `src/core` | Stable domain primitives and internal concepts |
 | `src/triggers` | Input signals that start flows |
 | `src/intake` | Normalization of raw inputs |
+| `src/creation` | Long-running creation domain state (LongArc, CreationAsset, DecisionRecord, ArtifactRef, ProgressSnapshot, ContextBrief) |
 | `src/knowledge` | Structured knowledge assets |
 | `src/orchestrator` | Flow coordination and routing |
 | `src/agents` | Agent roles and reasoning contracts |
@@ -31,6 +32,16 @@ Before reading any implementation file, read in this order:
 | `src/storage` | Persistence abstractions and adapters |
 | `src/outputs` | Output artifacts and write-back preparation |
 | `src/shared` | Small reusable utilities |
+
+## When to read creation docs
+
+Read `src/creation/` docs before `src/knowledge/` or `src/workflows/` when working on:
+
+- `LongArc` or long-running domain state
+- `CreationAsset`, `DecisionRecord`, `ArtifactRef`
+- `ProgressSnapshot` or `ContextBrief`
+- any flow that tracks what a unit of work is (not how it is executed)
+- long-running continuity across many workflow runs or tool interactions
 
 ## Cost Rule
 

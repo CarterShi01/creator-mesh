@@ -471,6 +471,10 @@ Suggested next steps, roughly in order:
 22. ~~**Design + implement ThoughtAgent**~~ — **Done.** `src/agents/thought-agent.ts`: ThoughtAgent implements AgentRole; injectable ThoughtAgentClient for testability; AnthropicThoughtClient backed by claude-haiku-4-5-20251001; returns ThoughtClassification (category, summary, tags, confidence, suggestedTitle). @anthropic-ai/sdk installed. 9 smoke tests. Test suite: 109 tests.
 23. ~~**Wire ThoughtToNoteWorkflow end-to-end**~~ — **Done.** LocalWorkflowRunner accepts optional StepExecutor constructor arg; when present, non-HumanReview steps dispatch to Orchestrator. Fixed thought-to-note inputMapping to reference classify.suggestedTitle and classify.summary. 9 end-to-end smoke tests validate full path: ThoughtAgent → HumanReview pause → NotionConnector write. Test suite: 109 tests total.
 
+### Creation Domain Module
+
+Added `src/creation` as a domain-layer placeholder for long-running creation state. Updated architecture and context-map references from 13 to 14 modules. Introduced `LongArc`, `CreationAsset`, `DecisionRecord`, `ArtifactRef`, `ProgressSnapshot`, and `ContextBrief` as documented interface concepts. No runtime workflow, connector, runner, collaboration, or contribution mechanics were implemented.
+
 ## Known Risks
 
 - Over-designing the architecture before validating small workflows
