@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import type { RuntimeRun, RuntimeHealth } from './runtime/types'
 import type { WorkflowClient } from './runtime/workflowClient'
 import { createWorkflowClient } from './runtime/workflowClient'
+import { getSessionBridge } from './session/mockSessionBridge'
 import Layout from './components/Layout'
 import Header from './components/Header'
 import CapturePanel from './components/CapturePanel'
@@ -13,6 +14,10 @@ import { DesktopStatus } from './components/DesktopStatus'
 import { RuntimeHealthPanel } from './components/RuntimeHealthPanel'
 import { GovernancePanel } from './components/GovernancePanel'
 import { RunHistoryPanel } from './components/RunHistoryPanel'
+import { DesktopHostPanel } from './components/session/DesktopHostPanel'
+import { MobileRemotePanel } from './components/session/MobileRemotePanel'
+import { SessionEventLog } from './components/session/SessionEventLog'
+import { ConnectedSurfacesPanel } from './components/session/ConnectedSurfacesPanel'
 
 export default function App() {
   const clientRef = useRef<WorkflowClient | null>(null)
@@ -21,15 +26,37 @@ export default function App() {
   const [runtimeHealth, setRuntimeHealth] = useState<RuntimeHealth | null>(null)
   const [allRuns, setAllRuns] = useState<RuntimeRun[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [showSession, setShowSession] = useState(false)
 
-  // Initialize WorkflowClient once
+  const bridge = getSessionBridge()
+
+  // Initialize WorkflowClient once and share with session bridge
   useEffect(() => {
     createWorkflowClient().then(client => {
       clientRef.current = client
+      // Share the same client with the session bridge so they use one RunLedger
+      bridge.setWorkflowClient(client)
       setClientReady(true)
       client.getHealth().then(setRuntimeHealth)
     })
-  }, [])
+  }, [bridge])
+
+  // Subscribe to session bridge events to refresh run state after remote commands
+  useEffect(() => {
+    const unsub = bridge.subscribeToEvents(async () => {
+      const client = clientRef.current
+      if (!client) return
+      const listResponse = await client.listRuns()
+      setAllRuns(listResponse.runs)
+      // Refresh current run if it has changed
+      const session = bridge.getCurrentSession()
+      if (session?.activeRunId && clientRef.current) {
+        const runResponse = await clientRef.current.getRun(session.activeRunId)
+        if (runResponse.run) setCurrentRun(runResponse.run)
+      }
+    })
+    return unsub
+  }, [bridge])
 
   const client = clientRef.current
 
@@ -75,7 +102,6 @@ export default function App() {
     setIsLoading(false)
   }, [client, currentRun])
 
-
   if (!clientReady) {
     return (
       <div style={{ padding: 32, color: 'var(--color-text-muted)' }}>
@@ -113,6 +139,27 @@ export default function App() {
             selectedRunId={currentRun?.runId ?? null}
             onSelectRun={setCurrentRun}
           />
+
+          {/* Session Bridge toggle */}
+          <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '12px' }}>
+            <button
+              className="btn btn-ghost"
+              style={{ fontSize: '12px', width: '100%' }}
+              onClick={() => setShowSession(s => !s)}
+            >
+              {showSession ? '▲ Hide' : '▼ Show'} Session Bridge / Remote Control
+            </button>
+          </div>
+
+          {showSession && (
+            <>
+              <DesktopHostPanel />
+              <MobileRemotePanel />
+              <ConnectedSurfacesPanel />
+              <SessionEventLog />
+            </>
+          )}
+
           <DesktopStatus />
           <RunTimeline run={currentRun} />
           <ResultPanel run={currentRun} />
