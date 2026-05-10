@@ -316,6 +316,14 @@ export function recordEvent(
   return event
 }
 
+/** Reset all in-memory store state. For testing only. */
+export function resetStore(): void {
+  store.sessions.clear()
+  store.events.clear()
+  store.currentSessionId = null
+  store.eventSequence = 0
+}
+
 // Helper to detect if a result is an error
 export function isSessionError(v: unknown): v is SessionBridgeError {
   return typeof v === 'object' && v !== null && 'code' in v && 'message' in v
