@@ -4,7 +4,7 @@ Version: 20260510
 
 ## Current Phase
 
-CreatorMesh has completed the first end-to-end workflow execution phase and now has a minimal runtime governance layer.
+CreatorMesh has completed the first end-to-end workflow execution phase, has a minimal runtime governance layer, and now has a fully functional Phase 1 Responsive Web Console MVP.
 
 All core adapters are implemented and wired together:
 - ConnectorPort: designed + implemented (NotionConnectorAdapter)
@@ -17,10 +17,13 @@ All core adapters are implemented and wired together:
 
 The first full workflow path is validated by smoke tests: a raw Thought flows through classification, human review, and Notion page creation without stubs.
 
+A Phase 1 Responsive Web Console MVP is now complete at `clients/creator-console/`. It demonstrates the full CreatorMesh product experience (Capture → Classify → Structure → Human Review → Output) using local mock data only. Zero real API calls. Build passing.
+
 The next phase is focused on:
 - Real integration testing with actual API credentials (Anthropic + Notion)
 - Adding remaining workflow steps or a second workflow
 - Strengthening governance: AuditRecord persistence, full ApprovalPolicy configuration
+- Phase 2 PWA: manifest, service worker, real API wiring
 
 ## Current Development Principle
 
@@ -43,6 +46,31 @@ Inspected on 20260510.
 | `package.json` | Present |
 | `AGENTS.md` | Present |
 | `CLAUDE.md` | Present |
+
+### Console Client
+
+| File | Status |
+|---|---|
+| `clients/creator-console/package.json` | Present |
+| `clients/creator-console/vite.config.ts` | Present |
+| `clients/creator-console/index.html` | Present |
+| `clients/creator-console/src/App.tsx` | Present |
+| `clients/creator-console/src/model/types.ts` | Present |
+| `clients/creator-console/src/model/seedExamples.ts` | Present |
+| `clients/creator-console/src/model/mockWorkflow.ts` | Present |
+| `clients/creator-console/src/components/Header.tsx` | Present |
+| `clients/creator-console/src/components/Layout.tsx` | Present |
+| `clients/creator-console/src/components/StatusBadge.tsx` | Present |
+| `clients/creator-console/src/components/CapturePanel.tsx` | Present |
+| `clients/creator-console/src/components/WorkflowPreview.tsx` | Present |
+| `clients/creator-console/src/components/HumanReviewPanel.tsx` | Present |
+| `clients/creator-console/src/components/RunTimeline.tsx` | Present |
+| `clients/creator-console/src/components/ResultPanel.tsx` | Present |
+| `clients/creator-console/src/integrationNotes.ts` | Present |
+| `clients/creator-console/README.md` | Present |
+| `clients/creator-console/TASK_SUMMARY.md` | Present |
+| `clients/creator-console/dist/` | Present (built) |
+| `npm run build` (creator-console) | Passing |
 
 ### Documentation Files
 
@@ -436,18 +464,21 @@ Slash command invocation was previously reported as "Unknown skill" for `creator
 
 ## Current Focus
 
-The current focus is real integration validation and governance strengthening.
+The current focus is real integration validation, governance strengthening, and console Phase 2 readiness.
 
 1. Test ThoughtToNoteWorkflow with real Anthropic API and Notion API credentials.
 2. ~~Implement approval enforcement in Orchestrator~~ — **Done.** GovernanceEvaluator integrated into Orchestrator. ConnectorStep and RunnerStep are now blocked by default for write/destructive/external-side-effect unless prior HumanReview accepted.
-3. Design and implement a second workflow or extend ThoughtToNoteWorkflow with richer output mapping.
-4. Strengthen docs-presence harness to verify new implementation files are tracked.
-5. Keep project progress accurate after each meaningful session.
+3. ~~Build Phase 1 Responsive Web Console MVP~~ — **Done.** `clients/creator-console/` complete: 10 tasks, all merged and pushed. Mock-only, build passing, 3-column responsive layout, full human review flow.
+4. Design and implement a second workflow or extend ThoughtToNoteWorkflow with richer output mapping.
+5. Strengthen docs-presence harness to verify new implementation files are tracked.
+6. Keep project progress accurate after each meaningful session.
 
 ## Next Recommended Work
 
 Suggested next steps, roughly in order:
 
+1. ~~**Build Phase 1 Responsive Web Console**~~ — **Done.** `clients/creator-console/` complete. 10 tasks merged and pushed. Mock-only, responsive, build passing.
+1b. **Phase 2 PWA** — add `public/manifest.json` + `vite-plugin-pwa` service worker; wire real `LocalWorkflowRunner` via HTTP API replacing `createMockRun()`; subscribe to Orchestrator SSE/WS events.
 1. **Validate skill invocation** — confirm slash command invocation works for all 7 skills, or document known limitations and natural-language fallbacks. `creator-context-brief` and `creator-progress-maintainer` validated; others unconfirmed.
 2. ~~**Add `Message` domain primitive**~~ — **Done.**
 24. **Add AuditRecord persistence to governance** — GovernanceEvaluator MVP is in place, but `ConnectorResult.auditId` and `RunnerResult.auditId` still reference un-persisted audit records. A minimal `AuditRecord` and in-memory or file-backed storage adapter would complete the audit trail promised in the INTERFACE.md invariants.
@@ -475,6 +506,44 @@ Suggested next steps, roughly in order:
 21. ~~**Design + implement minimal Orchestrator**~~ — **Done.** `src/orchestrator/orchestrator.ts`: Orchestrator class implements StepExecutor; dispatches agent/connector/runner steps to registered adapters; resolves `$input.*` and `$steps.*.*` input mappings. `StepExecutor` interface added to `src/workflows/port.ts`. `AgentRole` interface added to `src/agents/port.ts`. 10 smoke tests. Test suite: 100 tests.
 22. ~~**Design + implement ThoughtAgent**~~ — **Done.** `src/agents/thought-agent.ts`: ThoughtAgent implements AgentRole; injectable ThoughtAgentClient for testability; AnthropicThoughtClient backed by claude-haiku-4-5-20251001; returns ThoughtClassification (category, summary, tags, confidence, suggestedTitle). @anthropic-ai/sdk installed. 9 smoke tests. Test suite: 109 tests.
 23. ~~**Wire ThoughtToNoteWorkflow end-to-end**~~ — **Done.** LocalWorkflowRunner accepts optional StepExecutor constructor arg; when present, non-HumanReview steps dispatch to Orchestrator. Fixed thought-to-note inputMapping to reference classify.suggestedTitle and classify.summary. 9 end-to-end smoke tests validate full path: ThoughtAgent → HumanReview pause → NotionConnector write. Test suite: 109 tests total.
+
+### Phase 1 Responsive Web Console MVP
+
+Implemented a fully isolated Vite + React + TypeScript client at `clients/creator-console/` (10 task branches, all merged to master and pushed).
+
+**Infrastructure:**
+- Own `package.json`, `tsconfig.json`, `vite.config.ts` — zero dependency on root `src/`
+- Production build: `tsc && vite build` — passing
+- Dark theme CSS design system with CSS variables
+
+**Domain model** (`src/model/`):
+- `types.ts` — `InputKind`, `RunStatus`, `StepStatus`, `MockWorkflowStep`, `MockClassification`, `MockReview`, `MockResult`, `MockRun`; all fields annotated with real CreatorMesh concept references
+- `seedExamples.ts` — two seed inputs (Thought, Message)
+- `mockWorkflow.ts` — deterministic state machine: `createMockRun`, `acceptRun`, `rejectRun`, `requestChanges`; never-throws style
+
+**Components** (`src/components/`):
+- `Header.tsx` — brand + mock mode badge + run status badge
+- `Layout.tsx` — 3-column desktop / 2-column tablet / 1-column mobile responsive grid
+- `StatusBadge.tsx` — reusable step status indicator
+- `CapturePanel.tsx` — Thought/Message toggle, textarea, seed examples, target selector, inline validation, Run Workflow button
+- `WorkflowPreview.tsx` — 5-step visual pipeline (Capture → Classify → Structure → Human Review → Output) with per-step status
+- `HumanReviewPanel.tsx` — classification preview, Accept/Reject/Request Changes, feedback textarea; buttons disabled unless `status === 'paused'`
+- `RunTimeline.tsx` — step-by-step audit trail
+- `ResultPanel.tsx` — empty / paused / rejected / changes_requested / completed states with mock Notion URL (clearly labelled MOCK)
+
+**Documentation:**
+- `clients/creator-console/README.md` — run/build instructions, mock mapping table, UI↔concept table, 4-phase roadmap, future integration points
+- `clients/creator-console/TASK_SUMMARY.md` — all 10 task branches, what was implemented, what was not, how to move to Phase 2
+- `src/integrationNotes.ts` — design reference: each mock maps to a real integration point (LocalWorkflowRunner, Orchestrator, GovernanceEvaluator, NotionConnectorAdapter, ClaudeCodeRunnerAdapter)
+
+**Safety guarantees:**
+- Zero real Notion or Anthropic API calls
+- No import from core `src/` modules
+- Human review enforcement at UI level (buttons disabled until `status === 'paused'`)
+- `overflow-x: hidden` on body prevents mobile horizontal scroll
+- Clearly labelled MOCK badge on Notion URLs
+
+**Build result:** `tsc + vite build` passing; dist 155 kB JS, 8.6 kB CSS.
 
 ### Creation Domain Module
 
@@ -541,3 +610,5 @@ All three Port abstractions are now designed and implemented in TypeScript. Runn
 The next milestones are: ClaudeCodeRunnerAdapter (first real execution runner), minimal Orchestrator (step dispatch from workflow to real ports), ThoughtAgent (first reasoning role via Claude API), and end-to-end wiring of ThoughtToNoteWorkflow with real implementations.
 
 A minimal runtime governance layer is now in place. `GovernanceEvaluator` enforces the MVP conservative policy: safe-read auto-approved, destructive denied, write/execute/external-side-effect gated on prior HumanReview acceptance. The Orchestrator enforces this policy before calling any ConnectorPort or RunnerPort — connectors and runners never receive blocked requests. The existing workflow path continues to work because GovernanceEvaluator is optional (backward-compatible injection). 172 tests passing. Remaining governance gaps: AuditRecord persistence, configurable ApprovalPolicy, full ThoughtToNoteWorkflow E2E test with governance enabled.
+
+A Phase 1 Responsive Web Console MVP is now complete at `clients/creator-console/`. It is an isolated Vite + React + TypeScript project that demonstrates the full CreatorMesh creator experience across desktop (3-column), tablet (2-column), and mobile (1-column) layouts. The full flow is functional: Capture → WorkflowPreview → HumanReview (Accept/Reject/Request Changes) → RunTimeline → Result. All execution is deterministic local mock data. Zero real API calls. Build passing. All 10 task branches merged to master and pushed. The project is ready for Phase 2 PWA integration.

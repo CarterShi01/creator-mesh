@@ -14,6 +14,12 @@ Before reading any implementation file, read in this order:
 6. Target directory `INTERFACE.md` — if it exists
 7. Only then: specific implementation files needed for the task
 
+## Client Layer
+
+| Directory | Purpose |
+|-----------|---------|
+| `clients/creator-console` | Phase 1 Responsive Web Console MVP — isolated Vite + React + TypeScript client; mock-only; zero src/ import; read DESIGN.md before working here |
+
 ## Source Map
 
 | Directory | Purpose |

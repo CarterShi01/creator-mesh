@@ -441,6 +441,7 @@ This workflow does not implement destructive Notion operations. It prefers `crea
 - `TriggerDevRunner` implementing `WorkflowRunnerPort` for durable, retryable, background execution.
 - Parallel step execution within a workflow for steps without data dependencies.
 - A workflow editor or visual builder (React Flow) as a future UI layer over `WorkflowDefinition` data.
+- **Phase 2 console wiring:** `clients/creator-console/` (Phase 1 complete, mock-only) will connect to `LocalWorkflowRunner` via HTTP API. `createMockRun()` → `POST /api/runs`; review decisions → `POST /api/runs/:id/review`. The console component tree is designed to map directly to real `WorkflowRun` shapes — substitution, not rewrite.
 - Dynamic governance policies from `src/governance` overriding per-step and per-workflow defaults.
 
 ## ChatGPT Handoff Context
