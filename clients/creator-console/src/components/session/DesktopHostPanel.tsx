@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback } from 'react'
 import { getSessionBridge } from '../../session/mockSessionBridge'
 import type { CreatorMeshSession, PairingState } from '../../session/types'
-import { isDesktopShell } from '../../platform/platform'
+import { isDesktopSurface } from '../../surface/detector'
 
 export function DesktopHostPanel() {
   const [session, setSession] = useState<CreatorMeshSession | null>(null)
   const [pairing, setPairing] = useState<PairingState | null>(null)
   const [error, setError] = useState<string | null>(null)
   const bridge = getSessionBridge()
-  const isDesktop = isDesktopShell()
+  const isDesktop = isDesktopSurface()
 
   const refresh = useCallback(() => {
     const s = bridge.getCurrentSession()

@@ -1,6 +1,6 @@
 import type { RuntimeHealth, RuntimeRunStatus } from '../runtime/types'
 import { PwaStatus } from './PwaStatus'
-import { getPlatformInfo } from '../platform/platform'
+import { detectSurface } from '../surface/detector'
 
 type RunStatus = RuntimeRunStatus | 'idle'
 
@@ -9,7 +9,7 @@ interface HeaderProps {
   runtimeHealth?: RuntimeHealth | null
 }
 
-const platformInfo = getPlatformInfo()
+const platformInfo = detectSurface()
 
 export default function Header({ runStatus, runtimeHealth }: HeaderProps) {
   void runtimeHealth // available for future runtime health badge
@@ -18,7 +18,7 @@ export default function Header({ runStatus, runtimeHealth }: HeaderProps) {
       <div className="header-brand">
         <span className="header-logo">⬡</span>
         <h1 className="header-title">CreatorMesh Console</h1>
-        {platformInfo.isTauri && (
+        {platformInfo.kind === 'tauri' && (
           <span className="badge badge-desktop">Desktop Shell</span>
         )}
       </div>
