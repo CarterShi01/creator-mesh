@@ -11,15 +11,20 @@ For multi-surface architecture details, see [`docs/session-bridge-architecture.m
 
 ## Runtime Architecture
 
-The console uses a `WorkflowClient` abstraction that decouples the UI from the runtime implementation.
+The console uses a `RuntimeClient` interface that decouples the UI from the runtime implementation.
 
 ```
 UI components
-  → WorkflowClient (src/runtime/workflowClient.ts)
-    → MockRuntimeClient   ← current (Phase 4, mock-only, no external calls)
-    → LocalRuntimeClient  ← future (LocalWorkflowRunner → Orchestrator → Connectors)
-    → HttpRuntimeClient   ← future (server-side API)
+  → RuntimeClient interface  (src/runtime/client.ts)
+  → getRuntimeClient()        (src/runtime/workflowClient.ts — singleton factory)
+    → MockRuntimeClient       ← current (Phase 4, mock-only, no external calls)
+       └── src/runtime/mock/mockClient.ts
+       └── src/runtime/mock/runLedger.ts (in-memory audit store)
+    → LocalRuntimeClient      ← future (LocalWorkflowRunner → Orchestrator → Connectors)
+    → HttpRuntimeClient       ← future (server-side API)
 ```
+
+`WorkflowClient` is kept as a type alias for `RuntimeClient` for backward compatibility.
 
 ### Runtime Modes
 
@@ -29,7 +34,7 @@ UI components
 | `local` | LocalWorkflowRunner on same machine (future) | Real Notion + Anthropic |
 | `remote` | Remote API server (future) | Real Notion + Anthropic |
 
-The current mode is always `mock`. All governance decisions, run events, and human review decisions are recorded in the in-memory `RunLedger`.
+The current mode is always `mock`. All governance decisions, run events, and human review decisions are recorded in the in-memory `RunLedger`. Import from `src/runtime` (the barrel index) for the public API.
 
 ---
 
@@ -132,17 +137,20 @@ npm run tauri:build
 
 ---
 
-## Platform Boundary
+## Surface Model
 
-The app detects its runtime environment via `src/platform/platform.ts`:
+The console uses a unified `SurfaceKind` model (web | pwa | tauri | capacitor | unknown) defined in `src/surface/`.
 
-| Environment | Detection |
+| Module | Purpose |
 |---|---|
-| Browser | Default |
-| PWA Standalone | `(display-mode: standalone)` media query |
-| Tauri Desktop | `window.__TAURI__` present |
+| `src/surface/types.ts` | `SurfaceKind`, `SurfaceRole`, `SurfaceInfo`, `SurfaceCapabilities` |
+| `src/surface/detector.ts` | `detectSurface()`, `detectSurfaceKind()`, `isDesktopSurface()`, `isMobileSurface()` |
+| `src/surface/tauriBridge.ts` | `getAppVersion()`, `getPlatformLabel()`, `getDesktopCapabilities()` — degrades gracefully in web/PWA |
+| `src/surface/capacitorBridge.ts` | Stub for future Capacitor iOS/Android plugins |
 
-Desktop-native commands go through `src/platform/desktopBridge.ts`. All methods are safe, read-only, and fall back gracefully in web/PWA mode.
+**Detection order:** `window.__TAURI__` → `window.Capacitor` → `(display-mode: standalone)` → `'web'`
+
+`src/platform/platform.ts` and `src/platform/desktopBridge.ts` are backward-compatibility shims that re-export from `src/surface/`. New code should import from `src/surface` directly.
 
 ---
 
@@ -263,18 +271,29 @@ See [`docs/session-bridge-architecture.md`](./docs/session-bridge-architecture.m
 ### Phase 5 — Session Bridge / Remote Control MVP (complete)
 - Session domain model: `SessionId`, `SurfaceKind`, `SurfaceRole`, `RemoteControlCommand`
 - `SessionStore` — in-memory sessions, surfaces, events, pairing lifecycle
-- `MockSessionBridge` — in-process command dispatch; shared `WorkflowClient`
+- `MockSessionBridge` — in-process command dispatch; shared `RuntimeClient`
 - `DesktopHostPanel` — host mode with pairing code display
 - `MobileRemotePanel` — controller mode with remote action buttons
 - `SessionEventLog` + `ConnectedSurfacesPanel`
 - Architecture doc: `docs/session-bridge-architecture.md` (Phase A → E)
 
-### Phase 6 — LocalRuntimeClient Integration
+### Phase 6 — Architecture Consolidation (complete)
+- Unified `surface/` module: `SurfaceKind` (web|pwa|tauri|capacitor|unknown), `SurfaceInfo`, `SurfaceCapabilities`
+- `src/surface/detector.ts` as canonical surface detection (replaces `platform/platform.ts`)
+- `src/surface/tauriBridge.ts` as canonical desktop bridge (replaces `platform/desktopBridge.ts`)
+- `RuntimeClient` pure interface in `src/runtime/client.ts` (separated from factory)
+- `SessionClient` pure interface in `src/session/client.ts`
+- Mock implementations moved to `src/runtime/mock/` subdirectory
+- Singleton `getRuntimeClient()` factory ensures one shared `RunLedger` across App and SessionBridge
+- Barrel index files: `src/runtime/index.ts`, `src/session/index.ts`
+- `platform/` files reduced to backward-compat shims
+
+### Phase 7 — LocalRuntimeClient Integration
 - Implement `LocalRuntimeClient` (see `src/runtime/localRuntimeClient.placeholder.ts`)
 - Add local HTTP server to Tauri backend
 - Wire GovernanceEvaluator server-side
 
-### Phase 7 — Mobile Shell (future evaluation)
+### Phase 8 — Mobile Shell (future evaluation)
 - Add Capacitor (`npm install @capacitor/core @capacitor/cli && npx cap init`)
 - Evaluate LAN pairing bridge (Phase C in `docs/session-bridge-architecture.md`)
 - Push notification integration for mobile review prompts
