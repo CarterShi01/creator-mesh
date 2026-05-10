@@ -89,11 +89,12 @@ All integration must go through a governed API boundary — never call adapters 
 - 3-column desktop, 2-column tablet, 1-column mobile layout
 - No external API calls
 
-### Phase 2 — PWA
-- Add `manifest.json` and service worker
-- Offline support for mock mode
-- Push notifications for human review prompts
-- Optionally connect to a local CreatorMesh API server
+### Phase 2 — PWA (current)
+- PWA manifest (`manifest.webmanifest`) with name, icons, display mode
+- Service worker via `vite-plugin-pwa` (workbox `generateSW` strategy)
+- **PWA mode caches only static mock UI assets. No real workflow data is cached yet.**
+- Offline support for the mock UI shell
+- Push notifications for human review prompts (future)
 
 ### Phase 3 — Tauri / Electron Shell
 - Wrap Phase 2 in a desktop shell
