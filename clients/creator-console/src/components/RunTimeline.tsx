@@ -1,4 +1,4 @@
-import type { MockRun } from '../model/types'
+import type { RuntimeRun } from '../runtime/types'
 
 const TYPE_LABELS: Record<string, string> = {
   capture:      'capture',
@@ -9,7 +9,7 @@ const TYPE_LABELS: Record<string, string> = {
 }
 
 interface RunTimelineProps {
-  run: MockRun | null
+  run: RuntimeRun | null
 }
 
 export default function RunTimeline({ run }: RunTimelineProps) {
@@ -20,20 +20,39 @@ export default function RunTimeline({ run }: RunTimelineProps) {
       {!run ? (
         <p className="panel-placeholder">No run yet — timeline will appear here.</p>
       ) : (
-        <div className="timeline">
-          {run.steps.map(step => (
-            <div key={step.id} className="timeline-item">
-              <span className="timeline-item-type">{TYPE_LABELS[step.type] ?? step.type}</span>
-              <span
-                className={`status-badge status-badge--sm status-badge--${step.status}`}
-                style={{ flexShrink: 0 }}
-              >
-                {step.status}
-              </span>
-              <span className="timeline-item-msg">{step.description}</span>
+        <>
+          <div className="timeline">
+            {run.steps.map(step => (
+              <div key={step.id} className="timeline-item">
+                <span className="timeline-item-type">{TYPE_LABELS[step.type] ?? step.type}</span>
+                <span
+                  className={`status-badge status-badge--sm status-badge--${step.status}`}
+                  style={{ flexShrink: 0 }}
+                >
+                  {step.status}
+                </span>
+                <span className="timeline-item-msg">{step.description}</span>
+              </div>
+            ))}
+          </div>
+          {run.events.length > 0 && (
+            <div style={{ marginTop: 12 }}>
+              <div className="review-field-label" style={{ marginBottom: 4 }}>Events</div>
+              <div className="timeline">
+                {run.events.map(ev => (
+                  <div key={ev.id} className="timeline-item">
+                    <span className="timeline-item-type" style={{ color: 'var(--color-accent)' }}>
+                      {ev.kind}
+                    </span>
+                    <span className="timeline-item-msg" style={{ fontSize: 11 }}>
+                      {ev.detail ?? ''}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
     </div>
   )

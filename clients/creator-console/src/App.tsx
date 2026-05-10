@@ -1,6 +1,7 @@
-import { useState } from 'react'
-import type { MockRun, InputKind } from './model/types'
-import { createMockRun, acceptRun, rejectRun, requestChanges } from './model/mockWorkflow'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import type { RuntimeRun, RuntimeHealth } from './runtime/types'
+import type { WorkflowClient } from './runtime/workflowClient'
+import { createWorkflowClient } from './runtime/workflowClient'
 import Layout from './components/Layout'
 import Header from './components/Header'
 import CapturePanel from './components/CapturePanel'
@@ -11,39 +12,92 @@ import ResultPanel from './components/ResultPanel'
 import { DesktopStatus } from './components/DesktopStatus'
 
 export default function App() {
-  const [run, setRun] = useState<MockRun | null>(null)
-  const runStatus = run?.status ?? 'idle'
+  const clientRef = useRef<WorkflowClient | null>(null)
+  const [clientReady, setClientReady] = useState(false)
+  const [currentRun, setCurrentRun] = useState<RuntimeRun | null>(null)
+  const [runtimeHealth, setRuntimeHealth] = useState<RuntimeHealth | null>(null)
+  const [allRuns, setAllRuns] = useState<RuntimeRun[]>([])
+  const [isLoading, setIsLoading] = useState(false)
 
-  function handleRun(text: string, kind: InputKind, target: string) {
-    setRun(createMockRun(text, kind, target))
-  }
+  // Initialize WorkflowClient once
+  useEffect(() => {
+    createWorkflowClient().then(client => {
+      clientRef.current = client
+      setClientReady(true)
+      client.getHealth().then(setRuntimeHealth)
+    })
+  }, [])
 
-  function handleAccept() {
-    if (run) setRun(acceptRun(run))
-  }
+  const client = clientRef.current
 
-  function handleReject() {
-    if (run) setRun(rejectRun(run))
-  }
+  const runStatus = currentRun?.status ?? 'idle'
 
-  function handleRequestChanges(feedback: string) {
-    if (run) setRun(requestChanges(run, feedback))
+  const handleRun = useCallback(async (text: string, kind: 'thought' | 'message', target: string) => {
+    if (!client) return
+    setIsLoading(true)
+    const response = await client.startRun({ inputKind: kind, inputText: text, target })
+    setCurrentRun(response.run)
+    const listResponse = await client.listRuns()
+    setAllRuns(listResponse.runs)
+    setIsLoading(false)
+  }, [client])
+
+  const handleAccept = useCallback(async () => {
+    if (!client || !currentRun) return
+    setIsLoading(true)
+    const response = await client.resumeRun(currentRun.runId, { decision: 'accepted' })
+    setCurrentRun(response.run)
+    const listResponse = await client.listRuns()
+    setAllRuns(listResponse.runs)
+    setIsLoading(false)
+  }, [client, currentRun])
+
+  const handleReject = useCallback(async () => {
+    if (!client || !currentRun) return
+    setIsLoading(true)
+    const response = await client.resumeRun(currentRun.runId, { decision: 'rejected' })
+    setCurrentRun(response.run)
+    const listResponse = await client.listRuns()
+    setAllRuns(listResponse.runs)
+    setIsLoading(false)
+  }, [client, currentRun])
+
+  const handleRequestChanges = useCallback(async (feedback: string) => {
+    if (!client || !currentRun) return
+    setIsLoading(true)
+    const response = await client.resumeRun(currentRun.runId, { decision: 'changes_requested', feedback })
+    setCurrentRun(response.run)
+    const listResponse = await client.listRuns()
+    setAllRuns(listResponse.runs)
+    setIsLoading(false)
+  }, [client, currentRun])
+
+  // Expose allRuns and runtimeHealth for future panels via context or props
+  void allRuns
+  void runtimeHealth
+
+  if (!clientReady) {
+    return (
+      <div style={{ padding: 32, color: 'var(--color-text-muted)' }}>
+        Initializing runtime…
+      </div>
+    )
   }
 
   return (
     <Layout
-      header={<Header runStatus={runStatus} />}
+      header={<Header runStatus={runStatus} runtimeHealth={runtimeHealth} />}
       capture={
         <CapturePanel
           onRun={handleRun}
-          isRunning={runStatus === 'running'}
+          isRunning={isLoading || runStatus === 'running'}
         />
       }
       workflow={
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing)' }}>
-          <WorkflowPreview run={run} />
+          <WorkflowPreview run={currentRun} />
           <HumanReviewPanel
-            run={run}
+            run={currentRun}
             onAccept={handleAccept}
             onReject={handleReject}
             onRequestChanges={handleRequestChanges}
@@ -53,8 +107,8 @@ export default function App() {
       timeline={
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing)' }}>
           <DesktopStatus />
-          <RunTimeline run={run} />
-          <ResultPanel run={run} />
+          <RunTimeline run={currentRun} />
+          <ResultPanel run={currentRun} />
         </div>
       }
     />

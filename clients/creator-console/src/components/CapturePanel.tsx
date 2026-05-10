@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import type { InputKind } from '../model/types'
 import { seedExamples } from '../model/seedExamples'
+
+type InputKind = 'thought' | 'message'
 
 const TARGETS = [
   'Mock Notion Inbox',
