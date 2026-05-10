@@ -6,6 +6,38 @@
 
 ## Public Concepts
 
+### Implemented (MVP)
+
+**`GovernancePermissionLevel`**
+Unified permission level type covering both connector and runner permission levels. Defined in governance so the evaluator does not need to import from `src/connectors` or `src/runners`.
+```
+"safe-read" | "write" | "destructive" | "execute" | "external-side-effect" | "human"
+```
+
+**`GovernanceDecision`**
+The outcome of a governance evaluation.
+```
+GovernanceDecision {
+  decision: "auto-approved" | "denied" | "requires-approval"
+  reason: string
+}
+```
+
+**`GovernanceEvaluator`**
+Stateless evaluator. Maps a `GovernancePermissionLevel` + a boolean `humanReviewApproved` to a `GovernanceDecision`. MVP conservative policy:
+- `safe-read` → `auto-approved`
+- `human` → `auto-approved`
+- `destructive` → `denied` (always; no override in MVP)
+- `write` / `execute` / `external-side-effect` → `auto-approved` when `humanReviewApproved`; `requires-approval` otherwise
+
+```
+GovernanceEvaluator {
+  evaluate(permissionLevel: GovernancePermissionLevel, humanReviewApproved: boolean): GovernanceDecision
+}
+```
+
+### Planned (not yet implemented)
+
 - `ApprovalRequest` — a request raised when a significant action requires human review before proceeding
 - `ApprovalResult` — the creator's response to an approval request (approved, rejected, deferred)
 - `ApprovalPolicy` — a rule that determines when an approval is required
@@ -50,7 +82,14 @@
 
 ## Main Files
 
-No implementation files are defined yet.
+Implemented:
+- `evaluator.ts` — `GovernanceEvaluator`, `GovernanceDecision`, `GovernancePermissionLevel`
+- `index.ts` — barrel re-exports
+
+Planned:
+- `approval.ts` — `ApprovalRequest`, `ApprovalResult`, approval checkpoint logic
+- `audit.ts` — `AuditRecord`, append-only audit persistence
+- `policy.ts` — `ApprovalPolicy`, `PermissionPolicy` rule evaluation
 
 ## Change Rules for Agents
 

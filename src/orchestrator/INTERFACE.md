@@ -9,14 +9,15 @@
 ### Orchestrator
 
 **`Orchestrator`**
-Implements `StepExecutor` from `src/workflows`. Accepts registries of agents, connectors, and runners at construction. Dispatches workflow steps to the appropriate adapter.
+Implements `StepExecutor` from `src/workflows`. Accepts registries of agents, connectors, and runners at construction. Optionally accepts a `GovernanceEvaluator` as a 4th parameter to enforce permission-level checks before ConnectorStep and RunnerStep dispatch.
 
 ```
 Orchestrator implements StepExecutor {
   constructor(
     agentRoles: Map<string, AgentRole>,
     connectors: Map<string, ConnectorPort>,
-    runners: Map<string, RunnerPort>
+    runners: Map<string, RunnerPort>,
+    governance?: GovernanceEvaluator   // optional; when absent, no enforcement applied
   )
   executeStep(
     step: WorkflowStep,
@@ -25,6 +26,12 @@ Orchestrator implements StepExecutor {
   ): Promise<unknown>
 }
 ```
+
+**Governance enforcement (when GovernanceEvaluator is provided):**
+- `safe-read` connector/runner capabilities → auto-approved, proceed
+- `write` / `execute` / `external-side-effect` → auto-approved if a prior HumanReviewStep accepted (`stepOutputs` contains `{ decision: "accept" }`); otherwise throws "Governance blocked"
+- `destructive` → always throws "Governance denied"
+- When governance is absent (no 4th argument) → no checks applied; backward-compatible behavior
 
 ### StepExecutor (defined in src/workflows/port.ts)
 
@@ -68,12 +75,12 @@ Input mapping references follow a `$input.*` / `$steps.*.*` convention:
 - `src/connectors` (ConnectorPort interface)
 - `src/runners` (RunnerPort interface)
 - `src/workflows` (StepExecutor, WorkflowStep, WorkflowInput)
+- `src/governance` (GovernanceEvaluator — optional, injected at construction)
 
 ## Disallowed Dependencies
 
 - `src/triggers`
 - `src/intake`
-- `src/governance` (deferred — MVP skips approval enforcement at orchestrator level)
 - `src/storage`
 - `src/outputs`
 
@@ -82,10 +89,12 @@ Input mapping references follow a `$input.*` / `$steps.*.*` convention:
 - **Coordinator only**: Orchestrator selects and delegates — it does not perform domain logic itself.
 - **Never throws for missing registrations silently**: if an agent, connector, or runner is not registered, Orchestrator throws a descriptive error.
 - **Connector failures propagate**: if a ConnectorResult.status is "failure", Orchestrator throws so LocalWorkflowRunner can mark the step as failed.
+- **Governance check before execution**: when a GovernanceEvaluator is provided, it is called before every ConnectorStep and RunnerStep. A `denied` or `requires-approval` decision throws before `execute()` is called — the connector/runner never receives the request.
+- **Governance is backward-compatible**: the 4th constructor argument is optional. Existing callers that omit it receive unchanged behavior.
 
 ## Main Files
 
-- `orchestrator.ts` — `Orchestrator` class implementing `StepExecutor`
+- `orchestrator.ts` — `Orchestrator` class implementing `StepExecutor`; optional `GovernanceEvaluator` injection; `_hasAcceptedHumanReview()` helper reads `stepOutputs` for `{ decision: "accept" }` outputs from prior HumanReviewStep
 - `index.ts` — barrel re-exports
 
 ## Change Rules for Agents

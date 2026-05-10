@@ -4,22 +4,23 @@ Version: 20260510
 
 ## Current Phase
 
-CreatorMesh has completed the first end-to-end workflow execution phase.
+CreatorMesh has completed the first end-to-end workflow execution phase and now has a minimal runtime governance layer.
 
 All core adapters are implemented and wired together:
 - ConnectorPort: designed + implemented (NotionConnectorAdapter)
 - RunnerPort: designed + implemented (ClaudeCodeRunnerAdapter with injectable SubprocessInvoker)
 - WorkflowRunnerPort: designed + implemented (LocalWorkflowRunner with optional StepExecutor)
-- Orchestrator: implemented (dispatches AgentStep / ConnectorStep / RunnerStep via registered adapters)
+- Orchestrator: implemented (dispatches AgentStep / ConnectorStep / RunnerStep via registered adapters; optional GovernanceEvaluator enforces permission checks before connector/runner execution)
 - ThoughtAgent: implemented (stateless reasoning role backed by Anthropic API; injectable client)
 - ThoughtToNoteWorkflow: wired end-to-end (ThoughtAgent → HumanReview → NotionConnector via Orchestrator)
+- GovernanceEvaluator: implemented (MVP conservative policy: safe-read auto-approved, destructive denied, write/execute/external-side-effect gated on prior HumanReview acceptance)
 
 The first full workflow path is validated by smoke tests: a raw Thought flows through classification, human review, and Notion page creation without stubs.
 
 The next phase is focused on:
 - Real integration testing with actual API credentials (Anthropic + Notion)
 - Adding remaining workflow steps or a second workflow
-- Strengthening governance layer (approval checkpoints at Orchestrator level)
+- Strengthening governance: AuditRecord persistence, full ApprovalPolicy configuration
 
 ## Current Development Principle
 
@@ -438,7 +439,7 @@ Slash command invocation was previously reported as "Unknown skill" for `creator
 The current focus is real integration validation and governance strengthening.
 
 1. Test ThoughtToNoteWorkflow with real Anthropic API and Notion API credentials.
-2. Implement approval enforcement in Orchestrator (governance checkpoints before connector/runner steps).
+2. ~~Implement approval enforcement in Orchestrator~~ — **Done.** GovernanceEvaluator integrated into Orchestrator. ConnectorStep and RunnerStep are now blocked by default for write/destructive/external-side-effect unless prior HumanReview accepted.
 3. Design and implement a second workflow or extend ThoughtToNoteWorkflow with richer output mapping.
 4. Strengthen docs-presence harness to verify new implementation files are tracked.
 5. Keep project progress accurate after each meaningful session.
@@ -449,6 +450,10 @@ Suggested next steps, roughly in order:
 
 1. **Validate skill invocation** — confirm slash command invocation works for all 7 skills, or document known limitations and natural-language fallbacks. `creator-context-brief` and `creator-progress-maintainer` validated; others unconfirmed.
 2. ~~**Add `Message` domain primitive**~~ — **Done.**
+24. **Add AuditRecord persistence to governance** — GovernanceEvaluator MVP is in place, but `ConnectorResult.auditId` and `RunnerResult.auditId` still reference un-persisted audit records. A minimal `AuditRecord` and in-memory or file-backed storage adapter would complete the audit trail promised in the INTERFACE.md invariants.
+25. **Wire GovernanceEvaluator into E2E tests and ThoughtToNoteWorkflow** — The current E2E smoke tests use Orchestrator without governance. Update the e2e test to instantiate Orchestrator with `new GovernanceEvaluator()` to prove the full path: ThoughtAgent → HumanReview → Orchestrator+Governance → NotionConnector.
+26. **Strengthen docs-presence harness** — Add checks for new implementation files in `src/governance/` so harness catches future governance additions.
+27. **Second workflow** — Message → Response Draft or Thought → Project Plan, to validate the workflow model beyond ThoughtToNoteWorkflow.
 3. ~~**Create `tsconfig.json`**~~ — **Done.**
 4. ~~**Add minimal tests**~~ — **Done.** Smoke tests for `createThought()` pass; six-layer test structure documented.
 5. ~~**Create `DESIGN.md` for all modules**~~ — **Done.** All 13 `src/` modules now have DESIGN.md.
@@ -474,6 +479,26 @@ Suggested next steps, roughly in order:
 ### Creation Domain Module
 
 Added `src/creation` as a domain-layer placeholder for long-running creation state. Updated architecture and context-map references from 13 to 14 modules. Introduced `LongArc`, `CreationAsset`, `DecisionRecord`, `ArtifactRef`, `ProgressSnapshot`, and `ContextBrief` as documented interface concepts. No runtime workflow, connector, runner, collaboration, or contribution mechanics were implemented.
+
+### Minimal Governance / Safety Execution MVP
+
+Implemented the first runtime governance layer:
+
+- `src/governance/evaluator.ts` — `GovernanceEvaluator` class (stateless); `GovernanceDecision` type (`auto-approved | denied | requires-approval`); `GovernancePermissionLevel` type unifying connector and runner permission levels; MVP conservative policy:
+  - `safe-read` → auto-approved
+  - `human` → auto-approved
+  - `destructive` → denied (always)
+  - `write` / `execute` / `external-side-effect` → auto-approved if prior HumanReviewStep accepted; requires-approval otherwise
+- `src/governance/index.ts` — barrel re-exports
+- `src/orchestrator/orchestrator.ts` — optional 4th constructor argument `governance?: GovernanceEvaluator`; `_hasAcceptedHumanReview()` helper inspects `stepOutputs` for `{ decision: "accept" }` output from prior HumanReviewStep; governance check runs before ConnectorStep and RunnerStep dispatch — the connector/runner `execute()` is never called if governance denies or blocks
+- `src/governance/INTERFACE.md` — updated: GovernanceEvaluator, GovernanceDecision, GovernancePermissionLevel documented; planned concepts (ApprovalRequest, AuditRecord, etc.) preserved as planned
+- `src/orchestrator/INTERFACE.md` — updated: governance moved from disallowed to allowed dependency; GovernanceEvaluator injection documented; invariants updated with governance-before-execution rule and backward-compat guarantee
+
+Tests added:
+- `tests/smoke/governance/governance-evaluator.smoke.test.ts` — 10 unit tests covering all 6 permission levels and prior-review logic
+- 9 new integration tests in `tests/smoke/orchestrator/orchestrator.smoke.test.ts` covering: safe-read auto-approved, write blocked, destructive denied, write approved after prior HumanReview, write runner blocked, write runner approved, backward compat without governance
+
+Test suite: 172 tests (was 151), all passing. `npm run verify` clean.
 
 ## Known Risks
 
@@ -514,3 +539,5 @@ The connector cleanup is now complete: `src/connectors/INTERFACE.md` reflects th
 All three Port abstractions are now designed and implemented in TypeScript. RunnerPort types (types.ts / port.ts / index.ts) and WorkflowPort types (types.ts / port.ts / index.ts) are implemented. LocalWorkflowRunner executes workflows sequentially with pause/resume/cancel/status lifecycle. ThoughtToNoteWorkflow is the first concrete WorkflowDefinition: classify → review-classification → write-notion, with always-approve GovernanceCheckpoint on the Notion write step. The test suite stands at 108 tests across 12 test files, all passing.
 
 The next milestones are: ClaudeCodeRunnerAdapter (first real execution runner), minimal Orchestrator (step dispatch from workflow to real ports), ThoughtAgent (first reasoning role via Claude API), and end-to-end wiring of ThoughtToNoteWorkflow with real implementations.
+
+A minimal runtime governance layer is now in place. `GovernanceEvaluator` enforces the MVP conservative policy: safe-read auto-approved, destructive denied, write/execute/external-side-effect gated on prior HumanReview acceptance. The Orchestrator enforces this policy before calling any ConnectorPort or RunnerPort — connectors and runners never receive blocked requests. The existing workflow path continues to work because GovernanceEvaluator is optional (backward-compatible injection). 172 tests passing. Remaining governance gaps: AuditRecord persistence, configurable ApprovalPolicy, full ThoughtToNoteWorkflow E2E test with governance enabled.

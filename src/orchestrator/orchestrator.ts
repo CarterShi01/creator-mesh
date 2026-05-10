@@ -4,12 +4,14 @@ import type { AgentRole } from "../agents/port.js";
 import type { StepExecutor } from "../workflows/port.js";
 import type { WorkflowStep, WorkflowInput, StepInputMapping } from "../workflows/types.js";
 import type { AgentStep, ConnectorStep, RunnerStep } from "../workflows/types.js";
+import type { GovernanceEvaluator } from "../governance/index.js";
 
 export class Orchestrator implements StepExecutor {
   constructor(
     private readonly agentRoles: Map<string, AgentRole>,
     private readonly connectors: Map<string, ConnectorPort>,
-    private readonly runners: Map<string, RunnerPort>
+    private readonly runners: Map<string, RunnerPort>,
+    private readonly governance?: GovernanceEvaluator
   ) {}
 
   async executeStep(
@@ -54,6 +56,17 @@ export class Orchestrator implements StepExecutor {
     return resolved;
   }
 
+  // Returns true when any prior step output carries { decision: "accept" },
+  // which is the output shape written by LocalWorkflowRunner for HumanReviewStep.
+  private _hasAcceptedHumanReview(stepOutputs: Record<string, unknown>): boolean {
+    return Object.values(stepOutputs).some(
+      (output) =>
+        typeof output === "object" &&
+        output !== null &&
+        (output as Record<string, unknown>).decision === "accept"
+    );
+  }
+
   private async _executeAgentStep(
     step: AgentStep,
     workflowInput: WorkflowInput,
@@ -87,6 +100,24 @@ export class Orchestrator implements StepExecutor {
         `Orchestrator: connector "${step.connectorId}" does not support ${step.capabilityType}/${step.resourceType}`
       );
     }
+
+    if (this.governance) {
+      const govDecision = this.governance.evaluate(
+        capability.permissionLevel,
+        this._hasAcceptedHumanReview(stepOutputs)
+      );
+      if (govDecision.decision === "denied") {
+        throw new Error(
+          `Governance denied connector step "${step.stepId}" (${capability.permissionLevel}): ${govDecision.reason}`
+        );
+      }
+      if (govDecision.decision === "requires-approval") {
+        throw new Error(
+          `Governance blocked connector step "${step.stepId}" (${capability.permissionLevel}): ${govDecision.reason}`
+        );
+      }
+    }
+
     const payload = this._resolveInputs(step.inputMapping, workflowInput, stepOutputs);
     const action: ConnectorAction = {
       connectorId: step.connectorId,
@@ -112,6 +143,27 @@ export class Orchestrator implements StepExecutor {
     if (!runner) {
       throw new Error(`Orchestrator: runner not registered: "${step.runnerId}"`);
     }
+
+    if (this.governance) {
+      const cap = runner.registry().get(step.taskType);
+      // If capability is not found in registry, deny by default when governance is active.
+      const permLevel = cap?.permissionLevel ?? "execute";
+      const govDecision = this.governance.evaluate(
+        permLevel,
+        this._hasAcceptedHumanReview(stepOutputs)
+      );
+      if (govDecision.decision === "denied") {
+        throw new Error(
+          `Governance denied runner step "${step.stepId}" (${permLevel}): ${govDecision.reason}`
+        );
+      }
+      if (govDecision.decision === "requires-approval") {
+        throw new Error(
+          `Governance blocked runner step "${step.stepId}" (${permLevel}): ${govDecision.reason}`
+        );
+      }
+    }
+
     const parameters = this._resolveInputs(step.inputMapping, workflowInput, stepOutputs);
     const result = await runner.execute({
       runnerId: step.runnerId,
