@@ -4,7 +4,7 @@ Version: 20260510
 
 ## Current Phase
 
-CreatorMesh has completed the first end-to-end workflow execution phase, has a minimal runtime governance layer, and now has a fully functional Phase 1 Responsive Web Console MVP.
+CreatorMesh has completed the first end-to-end workflow execution phase, has a minimal runtime governance layer, a fully functional Phase 1 Responsive Web Console MVP, and has now upgraded the console client to **Phase 2 PWA + Phase 3 Tauri Desktop Shell** (scaffolded).
 
 All core adapters are implemented and wired together:
 - ConnectorPort: designed + implemented (NotionConnectorAdapter)
@@ -15,15 +15,13 @@ All core adapters are implemented and wired together:
 - ThoughtToNoteWorkflow: wired end-to-end (ThoughtAgent → HumanReview → NotionConnector via Orchestrator)
 - GovernanceEvaluator: implemented (MVP conservative policy: safe-read auto-approved, destructive denied, write/execute/external-side-effect gated on prior HumanReview acceptance)
 
-The first full workflow path is validated by smoke tests: a raw Thought flows through classification, human review, and Notion page creation without stubs.
-
-A Phase 1 Responsive Web Console MVP is now complete at `clients/creator-console/`. It demonstrates the full CreatorMesh product experience (Capture → Classify → Structure → Human Review → Output) using local mock data only. Zero real API calls. Build passing.
+The console client is now a PWA-ready installable web app with a Tauri v2 desktop shell scaffolded. The Tauri build is blocked by missing Rust/Cargo on the current machine — all web/PWA work is complete and validated.
 
 The next phase is focused on:
+- Installing Rust to activate the Tauri desktop build
 - Real integration testing with actual API credentials (Anthropic + Notion)
 - Adding remaining workflow steps or a second workflow
 - Strengthening governance: AuditRecord persistence, full ApprovalPolicy configuration
-- Phase 2 PWA: manifest, service worker, real API wiring
 
 ## Current Development Principle
 
@@ -51,14 +49,16 @@ Inspected on 20260510.
 
 | File | Status |
 |---|---|
-| `clients/creator-console/package.json` | Present |
-| `clients/creator-console/vite.config.ts` | Present |
-| `clients/creator-console/index.html` | Present |
+| `clients/creator-console/package.json` | Present (scripts: dev, build, preview, typecheck, tauri:dev, tauri:build) |
+| `clients/creator-console/vite.config.ts` | Present (VitePWA + react plugin) |
+| `clients/creator-console/index.html` | Present (manifest link, theme-color, apple meta tags) |
+| `clients/creator-console/public/manifest.webmanifest` | Present (PWA manifest) |
+| `clients/creator-console/public/icons/` | Present (icon-192.svg, icon-512.svg, apple-touch-icon.svg) |
 | `clients/creator-console/src/App.tsx` | Present |
 | `clients/creator-console/src/model/types.ts` | Present |
 | `clients/creator-console/src/model/seedExamples.ts` | Present |
 | `clients/creator-console/src/model/mockWorkflow.ts` | Present |
-| `clients/creator-console/src/components/Header.tsx` | Present |
+| `clients/creator-console/src/components/Header.tsx` | Present (shows PwaStatus + platform badge) |
 | `clients/creator-console/src/components/Layout.tsx` | Present |
 | `clients/creator-console/src/components/StatusBadge.tsx` | Present |
 | `clients/creator-console/src/components/CapturePanel.tsx` | Present |
@@ -66,11 +66,23 @@ Inspected on 20260510.
 | `clients/creator-console/src/components/HumanReviewPanel.tsx` | Present |
 | `clients/creator-console/src/components/RunTimeline.tsx` | Present |
 | `clients/creator-console/src/components/ResultPanel.tsx` | Present |
+| `clients/creator-console/src/components/PwaStatus.tsx` | Present (Browser/App/Offline/Update badges) |
+| `clients/creator-console/src/components/DesktopStatus.tsx` | Present (shows in Tauri mode: version, platform, capabilities) |
+| `clients/creator-console/src/hooks/usePwa.ts` | Present (standalone, offline-ready, update detection) |
+| `clients/creator-console/src/platform/platform.ts` | Present (PlatformKind, getPlatformInfo, isDesktopShell, isPwaStandalone) |
+| `clients/creator-console/src/platform/desktopBridge.ts` | Present (safe no-op bridge; window.__TAURI__ detection; graceful web fallback) |
 | `clients/creator-console/src/integrationNotes.ts` | Present |
-| `clients/creator-console/README.md` | Present |
-| `clients/creator-console/TASK_SUMMARY.md` | Present |
-| `clients/creator-console/dist/` | Present (built) |
-| `npm run build` (creator-console) | Passing |
+| `clients/creator-console/src-tauri/Cargo.toml` | Present (Tauri v2 config) |
+| `clients/creator-console/src-tauri/build.rs` | Present |
+| `clients/creator-console/src-tauri/src/main.rs` | Present (3 safe commands: get_app_version, get_platform_label, get_desktop_capabilities) |
+| `clients/creator-console/src-tauri/tauri.conf.json` | Present (productName, identifier, window 1280×820, min 900×640) |
+| `clients/creator-console/src-tauri/capabilities/default.json` | Present |
+| `clients/creator-console/README.md` | Present (full runbook: web dev, build, PWA preview, Tauri dev, Tauri build) |
+| `clients/creator-console/TASK_SUMMARY.md` | Present (all 10 Phase 2/3 tasks documented) |
+| `clients/creator-console/docs/desktop-runbook.md` | Present (Tauri prerequisites, commands, artifact locations, troubleshooting) |
+| `clients/creator-console/dist/` | Present (built — includes sw.js, workbox assets) |
+| `npm run build` (creator-console) | Passing (158.9KB JS, 9.97KB CSS, sw.js + workbox generated) |
+| `npm run tauri:build` | Blocked — Rust/Cargo not installed on current machine |
 
 ### Documentation Files
 
@@ -464,21 +476,27 @@ Slash command invocation was previously reported as "Unknown skill" for `creator
 
 ## Current Focus
 
-The current focus is real integration validation, governance strengthening, and console Phase 2 readiness.
+The current focus is Tauri desktop build activation, real integration validation, and governance strengthening.
 
-1. Test ThoughtToNoteWorkflow with real Anthropic API and Notion API credentials.
-2. ~~Implement approval enforcement in Orchestrator~~ — **Done.** GovernanceEvaluator integrated into Orchestrator. ConnectorStep and RunnerStep are now blocked by default for write/destructive/external-side-effect unless prior HumanReview accepted.
-3. ~~Build Phase 1 Responsive Web Console MVP~~ — **Done.** `clients/creator-console/` complete: 10 tasks, all merged and pushed. Mock-only, build passing, 3-column responsive layout, full human review flow.
-4. Design and implement a second workflow or extend ThoughtToNoteWorkflow with richer output mapping.
-5. Strengthen docs-presence harness to verify new implementation files are tracked.
-6. Keep project progress accurate after each meaningful session.
+1. **Install Rust/Cargo** to activate the Tauri macOS desktop build (`npm run tauri:build` will produce the .app once Rust is available).
+2. Test ThoughtToNoteWorkflow with real Anthropic API and Notion API credentials.
+3. ~~Implement approval enforcement in Orchestrator~~ — **Done.**
+4. ~~Build Phase 1 Responsive Web Console MVP~~ — **Done.**
+5. ~~Add PWA manifest, service worker, and platform boundary~~ — **Done.** Phase 2 complete.
+6. ~~Scaffold Tauri v2 desktop shell~~ — **Done.** Phase 3 scaffolded; awaiting Rust to build.
+7. Design and implement a second workflow or extend ThoughtToNoteWorkflow with richer output mapping.
+8. Strengthen docs-presence harness to verify new implementation files are tracked.
+9. Keep project progress accurate after each meaningful session.
 
 ## Next Recommended Work
 
 Suggested next steps, roughly in order:
 
-1. ~~**Build Phase 1 Responsive Web Console**~~ — **Done.** `clients/creator-console/` complete. 10 tasks merged and pushed. Mock-only, responsive, build passing.
-1b. **Phase 2 PWA** — add `public/manifest.json` + `vite-plugin-pwa` service worker; wire real `LocalWorkflowRunner` via HTTP API replacing `createMockRun()`; subscribe to Orchestrator SSE/WS events.
+1. ~~**Build Phase 1 Responsive Web Console**~~ — **Done.**
+1b. ~~**Phase 2 PWA**~~ — **Done.** manifest.webmanifest, vite-plugin-pwa, PwaStatus, usePwa hook, platform detection all complete. Web build passing with sw.js.
+1c. ~~**Phase 3 Tauri Desktop Shell**~~ — **Scaffolded.** src-tauri/ complete; native commands defined; bridge wired; blocked on Rust installation.
+1d. **Activate Tauri build** — `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh && source ~/.cargo/env && cd clients/creator-console && npm run tauri:build`. Expected: `src-tauri/target/release/bundle/macos/CreatorMesh Console.app`.
+1e. **Wire real API** — replace `createMockRun()` with `POST /api/runs`; subscribe to Orchestrator events via SSE/WebSocket; connect LocalWorkflowRunner via governed HTTP API.
 1. **Validate skill invocation** — confirm slash command invocation works for all 7 skills, or document known limitations and natural-language fallbacks. `creator-context-brief` and `creator-progress-maintainer` validated; others unconfirmed.
 2. ~~**Add `Message` domain primitive**~~ — **Done.**
 24. **Add AuditRecord persistence to governance** — GovernanceEvaluator MVP is in place, but `ConnectorResult.auditId` and `RunnerResult.auditId` still reference un-persisted audit records. A minimal `AuditRecord` and in-memory or file-backed storage adapter would complete the audit trail promised in the INTERFACE.md invariants.
@@ -509,41 +527,44 @@ Suggested next steps, roughly in order:
 
 ### Phase 1 Responsive Web Console MVP
 
-Implemented a fully isolated Vite + React + TypeScript client at `clients/creator-console/` (10 task branches, all merged to master and pushed).
+Implemented a fully isolated Vite + React + TypeScript client at `clients/creator-console/` (10 task branches, all merged to master and pushed). Mock-only. Build passing.
 
-**Infrastructure:**
-- Own `package.json`, `tsconfig.json`, `vite.config.ts` — zero dependency on root `src/`
-- Production build: `tsc && vite build` — passing
-- Dark theme CSS design system with CSS variables
+### Phase 2 PWA + Phase 3 Tauri Desktop Shell
 
-**Domain model** (`src/model/`):
-- `types.ts` — `InputKind`, `RunStatus`, `StepStatus`, `MockWorkflowStep`, `MockClassification`, `MockReview`, `MockResult`, `MockRun`; all fields annotated with real CreatorMesh concept references
-- `seedExamples.ts` — two seed inputs (Thought, Message)
-- `mockWorkflow.ts` — deterministic state machine: `createMockRun`, `acceptRun`, `rejectRun`, `requestChanges`; never-throws style
+Upgraded the console client to PWA-ready and Tauri desktop shell (10 additional task branches, all merged to master).
 
-**Components** (`src/components/`):
-- `Header.tsx` — brand + mock mode badge + run status badge
-- `Layout.tsx` — 3-column desktop / 2-column tablet / 1-column mobile responsive grid
-- `StatusBadge.tsx` — reusable step status indicator
-- `CapturePanel.tsx` — Thought/Message toggle, textarea, seed examples, target selector, inline validation, Run Workflow button
-- `WorkflowPreview.tsx` — 5-step visual pipeline (Capture → Classify → Structure → Human Review → Output) with per-step status
-- `HumanReviewPanel.tsx` — classification preview, Accept/Reject/Request Changes, feedback textarea; buttons disabled unless `status === 'paused'`
-- `RunTimeline.tsx` — step-by-step audit trail
-- `ResultPanel.tsx` — empty / paused / rejected / changes_requested / completed states with mock Notion URL (clearly labelled MOCK)
+**Phase 2 — PWA (complete):**
+- `public/manifest.webmanifest` — name, icons, display: standalone, theme_color, background_color
+- `public/icons/` — 3 SVG placeholder icons (192, 512, apple-touch)
+- `index.html` — manifest link, theme-color, apple-mobile-web-app-* meta tags
+- `vite-plugin-pwa` with Workbox `generateSW` strategy — static shell caching only, no API caching
+- `src/hooks/usePwa.ts` — detects standalone mode, offline readiness, update availability
+- `src/components/PwaStatus.tsx` — Browser/App/Offline ✓/Update ↻ badges in header
+- Build: PASSED — `dist/sw.js` + `dist/workbox-*.js` generated
+
+**Platform Boundary (complete):**
+- `src/platform/platform.ts` — `PlatformKind` (web|pwa|tauri|unknown), `getPlatformInfo()`, `isDesktopShell()`, `isPwaStandalone()`
+- `src/platform/desktopBridge.ts` — safe no-op bridge using `window.__TAURI__.core.invoke` with graceful web fallback; `getAppVersion()`, `getLocalRunnerStatus()`, `getPlatformLabel()`, `getDesktopCapabilities()`
+- Header shows "Desktop Shell" badge when in Tauri
+
+**Phase 3 — Tauri Desktop Shell (scaffolded, awaiting Rust):**
+- `src-tauri/Cargo.toml` — Tauri v2, serde, serde_json
+- `src-tauri/build.rs` — tauri-build entry
+- `src-tauri/src/main.rs` — 3 safe read-only native commands: `get_app_version`, `get_platform_label`, `get_desktop_capabilities`
+- `src-tauri/tauri.conf.json` — productName: "CreatorMesh Console", identifier: com.creatormesh.console, window 1280×820, min 900×640, withGlobalTauri: true
+- `src-tauri/capabilities/default.json` — minimal default permissions
+- `@tauri-apps/api` + `@tauri-apps/cli` v2 installed as devDependencies
+- `tauri:dev` and `tauri:build` npm scripts added
+- `src/components/DesktopStatus.tsx` — shows version, platform, capabilities (local shell: disabled, filesystem: disabled, governedWorkflowApi: future) when in Tauri
+
+**Build status:**
+- Web: `npm run build` PASSED — 158.9 kB JS, 9.97 kB CSS, sw.js + workbox
+- Tauri: BLOCKED — Rust/Cargo not installed. Command to unblock: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
 
 **Documentation:**
-- `clients/creator-console/README.md` — run/build instructions, mock mapping table, UI↔concept table, 4-phase roadmap, future integration points
-- `clients/creator-console/TASK_SUMMARY.md` — all 10 task branches, what was implemented, what was not, how to move to Phase 2
-- `src/integrationNotes.ts` — design reference: each mock maps to a real integration point (LocalWorkflowRunner, Orchestrator, GovernanceEvaluator, NotionConnectorAdapter, ClaudeCodeRunnerAdapter)
-
-**Safety guarantees:**
-- Zero real Notion or Anthropic API calls
-- No import from core `src/` modules
-- Human review enforcement at UI level (buttons disabled until `status === 'paused'`)
-- `overflow-x: hidden` on body prevents mobile horizontal scroll
-- Clearly labelled MOCK badge on Notion URLs
-
-**Build result:** `tsc + vite build` passing; dist 155 kB JS, 8.6 kB CSS.
+- `README.md` — full runbook: web dev, build, PWA preview, Tauri dev, Tauri build, artifact paths
+- `TASK_SUMMARY.md` — all 10 Phase 2/3 tasks, status, blockers, future roadmap
+- `docs/desktop-runbook.md` — prerequisites, commands, artifact locations, troubleshooting
 
 ### Creation Domain Module
 
@@ -593,22 +614,14 @@ Test suite: 172 tests (was 151), all passing. `npm run verify` clean.
 
 ## Progress Summary
 
-CreatorMesh has completed its initial foundation-building phase.
+CreatorMesh has completed its initial foundation-building phase and is advancing into client platform work.
 
 The quality and cost harness is in place: reading order, documentation layers, project-level skills, context briefs, and progress tracking.
 
-Both core primitives (`Thought` and `Message`) are implemented and tested. The smoke and harness test layers are active: 47 tests all passing. CI is in place via GitHub Actions. The verification policy is documented in `AGENTS.md` and `CLAUDE.md`.
+The connector layer is complete (ConnectorPort, NotionConnectorAdapter, 15 smoke tests). All three Port abstractions are implemented (RunnerPort, WorkflowRunnerPort, LocalWorkflowRunner). ThoughtToNoteWorkflow runs end-to-end in smoke tests. GovernanceEvaluator enforces the MVP conservative policy in the Orchestrator. 172 tests passing.
 
-All 13 `src/` modules now have all three documentation layers: `README.md` (purpose and boundaries), `DESIGN.md` (design reasoning and decisions), and `INTERFACE.md` (public contract). Three skills have been updated with an explicit bottom-up propagation rule — documentation updates flow from implementation file upward through the module, then propagate to dependent higher-layer modules in decreasing specificity.
+The console client has now been upgraded from Phase 1 (responsive web) to Phase 2 (PWA-ready) and Phase 3 (Tauri desktop shell scaffolded):
+- Phase 2 PWA is complete: manifest.webmanifest, vite-plugin-pwa with Workbox generateSW, PwaStatus component, platform detection, browser/standalone/offline-ready/update-available UI badges. Build passing with sw.js.
+- Phase 3 Tauri shell is scaffolded: src-tauri/ directory with Cargo.toml, main.rs (3 safe native commands), tauri.conf.json (productName, identifier, window size), and a safe desktop bridge. DesktopStatus component shows platform info when in Tauri. **Build blocked on Rust/Cargo not being installed.** One command unblocks it: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh && source ~/.cargo/env && cd clients/creator-console && npm run tauri:build`
 
-The connector layer is now complete at both design and implementation levels. `ConnectorPort`, `CapabilityRegistry`, all type enumerations, and `NotionConnectorAdapter` are implemented in TypeScript, type-checked clean, and covered by 15 smoke tests. The `ConnectorAction.payload` open question is resolved: structured input (query, page_id, parent+title) flows through `payload: Record<string, unknown>`. The Notion adapter handles all 5 MVP capabilities (search/read/create/append), normalizes Notion SDK responses into internal shapes, maps API errors to structured error codes, and never throws — all errors return as `ConnectorResult.status: "failure"`. The test suite grew from 47 to 62 tests, all green.
-
-The connector cleanup is now complete: `src/connectors/INTERFACE.md` reflects the implemented state (including the `payload` field), and `createMessage()` has full smoke test parity with `createThought()`. The test suite stands at 67 tests, all passing.
-
-All three Port abstractions are now designed and implemented in TypeScript. RunnerPort types (types.ts / port.ts / index.ts) and WorkflowPort types (types.ts / port.ts / index.ts) are implemented. LocalWorkflowRunner executes workflows sequentially with pause/resume/cancel/status lifecycle. ThoughtToNoteWorkflow is the first concrete WorkflowDefinition: classify → review-classification → write-notion, with always-approve GovernanceCheckpoint on the Notion write step. The test suite stands at 108 tests across 12 test files, all passing.
-
-The next milestones are: ClaudeCodeRunnerAdapter (first real execution runner), minimal Orchestrator (step dispatch from workflow to real ports), ThoughtAgent (first reasoning role via Claude API), and end-to-end wiring of ThoughtToNoteWorkflow with real implementations.
-
-A minimal runtime governance layer is now in place. `GovernanceEvaluator` enforces the MVP conservative policy: safe-read auto-approved, destructive denied, write/execute/external-side-effect gated on prior HumanReview acceptance. The Orchestrator enforces this policy before calling any ConnectorPort or RunnerPort — connectors and runners never receive blocked requests. The existing workflow path continues to work because GovernanceEvaluator is optional (backward-compatible injection). 172 tests passing. Remaining governance gaps: AuditRecord persistence, configurable ApprovalPolicy, full ThoughtToNoteWorkflow E2E test with governance enabled.
-
-A Phase 1 Responsive Web Console MVP is now complete at `clients/creator-console/`. It is an isolated Vite + React + TypeScript project that demonstrates the full CreatorMesh creator experience across desktop (3-column), tablet (2-column), and mobile (1-column) layouts. The full flow is functional: Capture → WorkflowPreview → HumanReview (Accept/Reject/Request Changes) → RunTimeline → Result. All execution is deterministic local mock data. Zero real API calls. Build passing. All 10 task branches merged to master and pushed. The project is ready for Phase 2 PWA integration.
+The console is still mock-only. Phase 4 integration will wire the governed HTTP API (replacing createMockRun), subscribe to Orchestrator events, and connect LocalWorkflowRunner via API boundary.
