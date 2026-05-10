@@ -1,9 +1,11 @@
 # CreatorMesh Console
 
 Isolated PWA-ready web client and Tauri macOS desktop shell for the CreatorMesh Agent OS.
-Phase 2 — PWA + Phase 3 — Tauri Desktop Shell + Phase 4 — Governed Runtime Bridge.
+Phase 2 — PWA + Phase 3 — Tauri Desktop Shell + Phase 4 — Governed Runtime Bridge + Phase 5 — Session Bridge / Remote Control MVP.
 
 > **This client must remain side-effect free until connected through a governed API boundary.**
+
+For multi-surface architecture details, see [`docs/session-bridge-architecture.md`](./docs/session-bridge-architecture.md).
 
 ---
 
