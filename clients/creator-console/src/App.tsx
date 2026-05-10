@@ -6,6 +6,8 @@ import Header from './components/Header'
 import CapturePanel from './components/CapturePanel'
 import WorkflowPreview from './components/WorkflowPreview'
 import HumanReviewPanel from './components/HumanReviewPanel'
+import RunTimeline from './components/RunTimeline'
+import ResultPanel from './components/ResultPanel'
 
 export default function App() {
   const [run, setRun] = useState<MockRun | null>(null)
@@ -48,9 +50,9 @@ export default function App() {
         </div>
       }
       timeline={
-        <div className="panel">
-          <h2 className="panel-title">Timeline &amp; Result</h2>
-          <p className="panel-placeholder">Timeline + Result — Task 08</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing)' }}>
+          <RunTimeline run={run} />
+          <ResultPanel run={run} />
         </div>
       }
     />
