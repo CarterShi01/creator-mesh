@@ -1,4 +1,4 @@
-# CreatorMesh Console — Phase 1 Task Summary
+# CreatorMesh Console — Task Summary (Phase 1 + Phase 2/3)
 
 ## All Task Branches
 
@@ -89,3 +89,14 @@ dist/index.html          0.41 kB
 dist/assets/*.css        8.58 kB
 dist/assets/*.js       155+ kB
 ```
+
+---
+
+## Phase 2 + Phase 3 Upgrade (PWA + Tauri Desktop Shell)
+
+### Task 01 — Baseline Audit (COMPLETE)
+- Branch: cm-console-desktop-task-01
+- Build verified: PASSED (155KB JS, 8.6KB CSS, 724ms)
+- No node_modules reinstall needed
+- No existing PWA manifest, service worker, or Tauri config found
+- Clean baseline confirmed for Phase 2/3 work
