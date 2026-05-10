@@ -1,70 +1,55 @@
-// WorkflowClient — the stable interface between UI and runtime.
-// UI components never import from runtime/mockRuntimeClient.ts directly.
-// All workflow actions go through this abstraction.
+// WorkflowClient factory — returns the shared singleton RuntimeClient.
 //
-// Dependency direction:
-//   UI components → WorkflowClient → runtime implementation (mock | local | remote)
+// Always import the interface from './client', not here.
+// This file exists only to provide createWorkflowClient() for backward compatibility
+// and getRuntimeClient() as the new preferred API.
+//
+// Singleton pattern: one RuntimeClient per app session = one shared RunLedger.
 
-import type {
-  RuntimeHealth,
-  StartRunRequest,
-  StartRunResponse,
-  ResumeRunRequest,
-  ResumeRunResponse,
-  GetRunResponse,
-  ListRunsResponse,
-} from './types'
+import type { RuntimeClient } from './client'
+export type { RuntimeClient, WorkflowClient } from './client'
 
-// ─── Interface ───────────────────────────────────────────────────────────────
+// ─── Singleton ────────────────────────────────────────────────────────────────
 
-export interface WorkflowClient {
-  /** Returns runtime health and safety mode. Maps to: future LocalWorkflowRunner.healthCheck() */
-  getHealth(): Promise<RuntimeHealth>
-
-  /**
-   * Start a new workflow run.
-   * Maps to: future POST /api/runs → LocalWorkflowRunner.execute(ThoughtToNoteWorkflow, input)
-   */
-  startRun(request: StartRunRequest): Promise<StartRunResponse>
-
-  /**
-   * Get the current state of a run.
-   * Maps to: future GET /api/runs/:id → Orchestrator.getRunStatus(runId)
-   */
-  getRun(runId: string): Promise<GetRunResponse>
-
-  /**
-   * List all runs in the ledger.
-   * Maps to: future GET /api/runs → RunLedger.listRuns()
-   */
-  listRuns(): Promise<ListRunsResponse>
-
-  /**
-   * Resume a paused run with a human review decision.
-   * Maps to: future POST /api/runs/:id/resume → LocalWorkflowRunner.resume(runId, ResumeInput)
-   *
-   * Governance rule: a run may only be resumed after it reaches HumanReviewStep (status=paused).
-   */
-  resumeRun(runId: string, request: ResumeRunRequest): Promise<ResumeRunResponse>
-
-  /**
-   * Cancel a run.
-   * Maps to: future POST /api/runs/:id/cancel → LocalWorkflowRunner.cancel(runId)
-   */
-  cancelRun(runId: string): Promise<GetRunResponse>
-}
-
-// ─── Factory ─────────────────────────────────────────────────────────────────
+let _instance: RuntimeClient | null = null
+let _initPromise: Promise<RuntimeClient> | null = null
 
 /**
- * Returns the active WorkflowClient implementation based on runtime mode.
+ * Returns the shared RuntimeClient singleton.
+ * First call initialises the mock client; subsequent calls return the same instance.
  *
- * Phase 4 (current): always returns MockRuntimeClient.
- * Phase 5 (future): detect local vs remote mode and return the appropriate client.
+ * Phase 4 (current): always MockRuntimeClient.
+ * Phase B (future): detect Tauri IPC available → LocalRuntimeClient.
+ * Phase C (future): detect remote config → RemoteRuntimeClient.
+ *
+ * Import path note: Step 4 will move MockRuntimeClient to ./mock/mockClient.
+ * Until then it lives at ./mockRuntimeClient.
  */
-export async function createWorkflowClient(): Promise<WorkflowClient> {
-  // Dynamic import keeps MockRuntimeClient out of the critical bundle path
-  // and makes it easy to swap implementations without touching this factory.
-  const { MockRuntimeClient } = await import('./mockRuntimeClient')
-  return new MockRuntimeClient()
+export async function getRuntimeClient(): Promise<RuntimeClient> {
+  if (_instance) return _instance
+  if (_initPromise) return _initPromise
+
+  _initPromise = (async (): Promise<RuntimeClient> => {
+    const { MockRuntimeClient } = await import('./mockRuntimeClient')
+    _instance = new MockRuntimeClient()
+    return _instance
+  })()
+
+  return _initPromise
+}
+
+/** Backward-compatible alias. Prefer getRuntimeClient() in new code. */
+export async function createWorkflowClient(): Promise<RuntimeClient> {
+  return getRuntimeClient()
+}
+
+/** Synchronous access — returns null before getRuntimeClient() has resolved. */
+export function getRuntimeClientSync(): RuntimeClient | null {
+  return _instance
+}
+
+/** Reset singleton (for testing). */
+export function resetRuntimeClient(): void {
+  _instance = null
+  _initPromise = null
 }

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import type { RuntimeRun, RuntimeHealth } from './runtime/types'
-import type { WorkflowClient } from './runtime/workflowClient'
-import { createWorkflowClient } from './runtime/workflowClient'
+import type { RuntimeClient } from './runtime/client'
+import { getRuntimeClient } from './runtime/workflowClient'
 import { getSessionBridge } from './session/mockSessionBridge'
 import Layout from './components/Layout'
 import Header from './components/Header'
@@ -20,7 +20,7 @@ import { SessionEventLog } from './components/session/SessionEventLog'
 import { ConnectedSurfacesPanel } from './components/session/ConnectedSurfacesPanel'
 
 export default function App() {
-  const clientRef = useRef<WorkflowClient | null>(null)
+  const clientRef = useRef<RuntimeClient | null>(null)
   const [clientReady, setClientReady] = useState(false)
   const [currentRun, setCurrentRun] = useState<RuntimeRun | null>(null)
   const [runtimeHealth, setRuntimeHealth] = useState<RuntimeHealth | null>(null)
@@ -32,9 +32,9 @@ export default function App() {
 
   // Initialize WorkflowClient once and share with session bridge
   useEffect(() => {
-    createWorkflowClient().then(client => {
+    getRuntimeClient().then(client => {
       clientRef.current = client
-      // Share the same client with the session bridge so they use one RunLedger
+      // Share the singleton with the session bridge — same RunLedger instance
       bridge.setWorkflowClient(client)
       setClientReady(true)
       client.getHealth().then(setRuntimeHealth)
