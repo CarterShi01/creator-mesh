@@ -4,6 +4,7 @@ import { createMockRun, acceptRun, rejectRun, requestChanges } from './model/moc
 import Layout from './components/Layout'
 import Header from './components/Header'
 import CapturePanel from './components/CapturePanel'
+import WorkflowPreview from './components/WorkflowPreview'
 
 export default function App() {
   const [run, setRun] = useState<MockRun | null>(null)
@@ -35,16 +36,19 @@ export default function App() {
         />
       }
       workflow={
-        <div className="panel">
-          <h2 className="panel-title">Workflow &amp; Review</h2>
-          <p className="panel-placeholder">Workflow preview + Human review — Tasks 06–07</p>
-          {run && (
-            <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              <button className="btn btn-success" onClick={handleAccept} disabled={run.status !== 'paused'}>Accept</button>
-              <button className="btn btn-danger" onClick={handleReject} disabled={run.status !== 'paused'}>Reject</button>
-              <button className="btn btn-warning" onClick={() => handleRequestChanges('Needs revision')} disabled={run.status !== 'paused'}>Request Changes</button>
-            </div>
-          )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing)' }}>
+          <WorkflowPreview run={run} />
+          <div className="panel">
+            <h2 className="panel-title">Human Review</h2>
+            <p className="panel-placeholder">Human review panel — Task 07</p>
+            {run && (
+              <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                <button className="btn btn-success" onClick={handleAccept} disabled={run.status !== 'paused'}>Accept</button>
+                <button className="btn btn-danger" onClick={handleReject} disabled={run.status !== 'paused'}>Reject</button>
+                <button className="btn btn-warning" onClick={() => handleRequestChanges('Needs revision')} disabled={run.status !== 'paused'}>Request Changes</button>
+              </div>
+            )}
+          </div>
         </div>
       }
       timeline={
