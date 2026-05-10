@@ -30,7 +30,7 @@ export async function getRuntimeClient(): Promise<RuntimeClient> {
   if (_initPromise) return _initPromise
 
   _initPromise = (async (): Promise<RuntimeClient> => {
-    const { MockRuntimeClient } = await import('./mockRuntimeClient')
+    const { MockRuntimeClient } = await import('./mock/mockClient')
     _instance = new MockRuntimeClient()
     return _instance
   })()
