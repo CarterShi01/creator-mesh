@@ -12,13 +12,14 @@ import ResultPanel from './components/ResultPanel'
 import { DesktopStatus } from './components/DesktopStatus'
 import { RuntimeHealthPanel } from './components/RuntimeHealthPanel'
 import { GovernancePanel } from './components/GovernancePanel'
+import { RunHistoryPanel } from './components/RunHistoryPanel'
 
 export default function App() {
   const clientRef = useRef<WorkflowClient | null>(null)
   const [clientReady, setClientReady] = useState(false)
   const [currentRun, setCurrentRun] = useState<RuntimeRun | null>(null)
   const [runtimeHealth, setRuntimeHealth] = useState<RuntimeHealth | null>(null)
-  const [_allRuns, setAllRuns] = useState<RuntimeRun[]>([])
+  const [allRuns, setAllRuns] = useState<RuntimeRun[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
   // Initialize WorkflowClient once
@@ -107,6 +108,11 @@ export default function App() {
       timeline={
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing)' }}>
           <RuntimeHealthPanel health={runtimeHealth} />
+          <RunHistoryPanel
+            runs={allRuns}
+            selectedRunId={currentRun?.runId ?? null}
+            onSelectRun={setCurrentRun}
+          />
           <DesktopStatus />
           <RunTimeline run={currentRun} />
           <ResultPanel run={currentRun} />
