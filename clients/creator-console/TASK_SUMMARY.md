@@ -367,3 +367,51 @@ dist/assets/*.js       155+ kB
 - README updated with Phase 5 and how-to sections
 - TASK_SUMMARY.md finalized
 - Build: PASSED
+
+---
+
+## Phase 6: Architecture Consolidation (Surface Model)
+
+### Step 01 — Audit Current Structure (COMPLETE)
+
+**Current directory map:**
+```
+src/
+  App.tsx                     ← orchestrates everything; imports from runtime/, session/, components/
+  model/                      ← legacy Phase 1 types (MockRun, MockWorkflow, seedExamples)
+                                only seedExamples still used (in CapturePanel)
+  platform/                   ← Tauri detection, desktopBridge, PlatformKind
+  runtime/                    ← WorkflowClient, MockRuntimeClient, RunLedger, types
+  session/                    ← SessionBridge, SessionStore, session types
+  components/                 ← UI panels
+    session/                  ← DesktopHostPanel, MobileRemotePanel, SessionEventLog, ConnectedSurfacesPanel
+  hooks/                      ← usePwa
+  styles.css
+```
+
+**Problems identified:**
+1. `model/` is a legacy namespace — MockRun types are unused; only seedExamples survives
+2. `platform/` defines PlatformKind (web/pwa/tauri/unknown) but session/sessionStore.ts defines SurfaceKind (web/pwa/mac-desktop/mobile-ios/…) — duplicated
+3. No unified Surface model — PlatformInfo and ConnectedSurface are disconnected
+4. `runtime/` boundary mixes WorkflowClient interface with mock implementation detail
+5. MockRuntimeClient imports getPlatformInfo from platform — tight coupling
+
+**Target structure (after Steps 2-7):**
+```
+src/
+  surface/                    ← unified surface detection + capability model
+    types.ts                  ← SurfaceKind, SurfaceCapability, SurfaceInfo
+    detector.ts               ← detect current surface from browser env
+    tauriBridge.ts            ← (rename from platform/desktopBridge)
+    capacitorBridge.ts        ← stub for future Capacitor
+  runtime/
+    client.ts                 ← WorkflowClient interface (pure types)
+    mock/
+      mockClient.ts           ← MockRuntimeClient (was mockRuntimeClient.ts)
+      runLedger.ts            ← unchanged
+    types.ts                  ← RuntimeRun, RuntimeHealth etc (unchanged)
+    workflowClient.ts         ← factory (unchanged public API)
+  session/                    ← unchanged, already well-placed
+  components/                 ← unchanged
+  model/                      ← kept for seedExamples only; deprecated note added
+```
