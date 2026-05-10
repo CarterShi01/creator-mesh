@@ -25,7 +25,7 @@ Before reading any implementation file, read in this order:
 | Directory | Purpose |
 |-----------|---------|
 | `src/triggers` | Interaction boundary — stable input primitives (Thought, Message), trigger signal types, input normalization. Formerly split across `src/core`, `src/triggers`, `src/intake`. |
-| `src/creation` | Long-running creation domain state (LongArc, CreationAsset, DecisionRecord, ArtifactRef, ProgressSnapshot, ContextBrief) |
+| `src/creation` | Semantic kernel and worldview (Quest, CreatorObject, CreationRelation, CreatorAction, ArtifactRef, FeedbackRecord) |
 | `src/knowledge` | Callable soft knowledge — domain knowledge, principles, skills, examples, checklists, reasoning assets |
 | `src/runtime` | Execution loop — step dispatch, governance enforcement, pause/resume |
 | `src/agents` | Role-based execution subjects — apply knowledge, request capabilities through runtime |
@@ -41,11 +41,10 @@ Before reading any implementation file, read in this order:
 
 Read `src/creation/` docs before `src/knowledge/` or `src/workflows/` when working on:
 
-- `LongArc` or long-running domain state
-- `CreationAsset`, `DecisionRecord`, `ArtifactRef`
-- `ProgressSnapshot` or `ContextBrief`
-- any flow that tracks what a unit of work is (not how it is executed)
-- long-running continuity across many workflow runs or tool interactions
+- `Quest`, `CreatorObject`, `CreatorAction`, `ArtifactRef`, `FeedbackRecord`, or `CreationRelation`
+- any flow that tracks what the creator is pursuing (not how the system executes)
+- semantic intent, worldview, or methodological kernel questions
+- long-running continuity across many workflow runs, agent steps, or tool interactions
 
 ## Cost Rule
 

@@ -628,9 +628,52 @@ Upgraded the console client to PWA-ready and Tauri desktop shell (10 additional 
 - `TASK_SUMMARY.md` — all 10 Phase 2/3 tasks, status, blockers, future roadmap
 - `docs/desktop-runbook.md` — prerequisites, commands, artifact locations, troubleshooting
 
-### Creation Domain Module
+### Creation Domain Module (initial placeholder)
 
-Added `src/creation` as a domain-layer placeholder for long-running creation state. Updated architecture and context-map references from 13 to 14 modules. Introduced `LongArc`, `CreationAsset`, `DecisionRecord`, `ArtifactRef`, `ProgressSnapshot`, and `ContextBrief` as documented interface concepts. No runtime workflow, connector, runner, collaboration, or contribution mechanics were implemented.
+Added `src/creation` as a domain-layer placeholder. Introduced initial concepts `LongArc`, `CreationAsset`, `DecisionRecord`, `ArtifactRef`, `ProgressSnapshot`, and `ContextBrief`. These have since been consolidated into the new worldview model — see "Creation Worldview Alignment" below.
+
+### Creation Worldview Alignment: semantic kernel upgrade
+
+Upgraded `src/creation` from a "long-running domain state container" into the **worldview and methodological kernel** of CreatorMesh. Documentation-only — no implementation files exist in `src/creation` yet.
+
+**src/creation/README.md** — full rewrite:
+- New positioning: "src/creation is the semantic kernel of CreatorMesh. It frames quests, constructs objects, maps relations, proposes actions, tracks artifacts, and absorbs feedback."
+- Defines the six core concepts: Quest, CreatorObject, CreationRelation, CreatorAction, ArtifactRef, FeedbackRecord
+- Worldview philosophy: subject intention, quest-driven thinking, object-oriented cognition, causal/value reasoning, language grounding, artifact accumulation, feedback evolution
+- Runtime boundary clearly stated: "Creation decides what should be understood and evolved. Runtime decides how the system safely runs the execution loop."
+- Relationships to runtime, knowledge, agents, workflows, connectors/runners documented
+
+**src/creation/DESIGN.md** — major update:
+- Added **Worldview Skeleton** section (7 elements: Subject Intention, Language Grounding, Object-Oriented Cognition, Causal/Value Reasoning, Interface-Oriented Decomposition, Layered Approximation, Feedback Evolution)
+- Added **Legacy Concept Consolidation** section with full mapping:
+  - LongArc → Quest
+  - CreationAsset → CreatorObject or ArtifactRef
+  - DecisionRecord → FeedbackRecord or ArtifactRef
+  - ProgressSnapshot → FeedbackRecord
+  - ContextBrief → ArtifactRef (if output) or `src/knowledge` asset
+  - ArtifactRef → ArtifactRef (retained, aligned to new model)
+- Updated all "orchestrator" references to "runtime"
+- Added runtime boundary section with explicit "Creation does NOT" list
+- Updated ChatGPT handoff context
+
+**src/creation/INTERFACE.md** — full remap to new model:
+- Retired: LongArc, CreationAsset, DecisionRecord, ProgressSnapshot, ContextBrief as root concepts
+- New concepts with TypeScript-style type definitions:
+  - `Quest` (replaces LongArc)
+  - `CreatorObject` (replaces CreationAsset for maintained entities)
+  - `CreationRelation` (new — connects quests/objects/actions/artifacts)
+  - `CreatorAction` (new — semantic user-level move)
+  - `ArtifactRef` (retained, aligned with questId/sourceObjectId/sourceActionId)
+  - `FeedbackRecord` (replaces ProgressSnapshot and evaluation parts of DecisionRecord)
+- Retired concepts table added
+- Disallowed dependencies updated: removed duplicate `src/triggers`, removed `src/orchestrator`, added `src/runtime`
+- Change rules updated to remove stale `src/orchestrator/INTERFACE.md` reference
+
+**docs/context-map.md** — two targeted updates:
+- creation source map entry: "Long-running creation domain state (LongArc…)" → "Semantic kernel and worldview (Quest, CreatorObject, CreationRelation, CreatorAction, ArtifactRef, FeedbackRecord)"
+- "When to read creation docs" section: replaced old concept names with new ones
+
+No implementation behavior changed. No new dependencies. `npm run verify`: **244 tests passing (21 test files)**.
 
 ### Architecture README Alignment: workflows, knowledge, agents
 
