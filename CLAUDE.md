@@ -1,87 +1,42 @@
-# Claude Code Instructions for CreatorMesh
+# CLAUDE.md
 
-Follow `AGENTS.md` as the primary instruction file for all development work in this project.
+You are the main development executor for this repository.
 
-## Required Reading Order
+## CreatorMesh Control Plane Strategy
 
-Before reading implementation files, always read in this order:
+CreatorMesh starts as a lightweight glue layer. It coordinates existing tools such as GitHub, Claude Code, OpenClaw, chat channels, GitHub Actions, and shell scripts.
 
-1. `AGENTS.md`
-2. `docs/context-map.md` — when available
-3. `docs/architecture.md`
-4. Target directory `README.md`
-5. Target directory `DESIGN.md` — when available
-6. Target directory `INTERFACE.md` — when available
-7. Only then: specific implementation files needed for the task
+Do not assume all target project code lives inside this repository. CreatorMesh can dispatch tasks to multiple GitHub-managed systems.
 
-## Context Budget
+## Current phase
 
-This project follows a context-budget-first development style.
+CreatorMesh is in Phase 1: Borrow.
 
-You are working in a codebase that will grow. Treat your context window as a limited resource.
+In this phase, prefer documentation-first scaffolding, simple scripts, and GitHub-based workflow integration. Do not introduce unnecessary runtime complexity.
 
-- Read the minimum needed to complete the task correctly.
-- Do not scan implementation files when a README or INTERFACE document is sufficient.
-- Do not load multiple files speculatively.
-- Prefer targeted reads over broad exploration.
+## Required workflow
 
-## Planning Before Editing
+For every task:
 
-For any non-trivial change:
+1. Read this file first.
+2. Read docs/control-plane/progress.md if it exists.
+3. Restate the task briefly.
+4. Create a short implementation plan.
+5. Make the smallest reasonable change.
+6. Run available build/test/lint commands when relevant.
+7. Update docs/control-plane/progress.md when changing the control-plane workflow.
+8. Create or update a PR summary with:
+   - What changed
+   - Why it changed
+   - How it was tested
+   - Risks
+   - Follow-up tasks
 
-1. State what you are going to do and which files will be affected.
-2. Wait for confirmation if the change is large or crosses module boundaries.
-3. Then make the edits.
+## Hard rules
 
-## Design Context
-
-When useful design reasoning emerges during a session, suggest updating the relevant `DESIGN.md`.
-
-Use `creator-design-context-maintainer` when asked to preserve design context.
-
-## Skill Invocation
-
-Invoke project skills using slash commands:
-
-- `/creator-context-navigator`
-- `/creator-change-planner`
-- `/creator-interface-maintainer`
-- `/creator-skill-harvester`
-- `/creator-design-context-maintainer`
-- `/creator-context-brief`
-- `/creator-progress-maintainer`
-
-Fallback natural-language invocations for `creator-context-brief`:
-
-- "Use creator-context-brief."
-- "Generate a CreatorMesh context brief."
-
-`creator-context-brief` is a manual read-only context export skill. It is used to generate a compressed project or goal-specific brief for ChatGPT or another LLM. It should not run the normal development harness or modify files.
-
-Fallback natural-language invocations for `creator-progress-maintainer`:
-
-- "Use creator-progress-maintainer."
-- "Update CreatorMesh project progress."
-
-`creator-progress-maintainer` is a post-change project progress skill. It should be used after meaningful code, documentation, architecture, or skill changes to update the latest project progress document based on repository evidence.
-
-## Verification After Edits
-
-After any code edit, run the relevant verification command. Do not rely only on reasoning.
-
-- Prefer deterministic commands over self-assessment.
-- Keep changes small and verifiable.
-- Use `npm run verify:quick` for most source changes.
-- Use `npm run verify` when harness, docs, or cross-module changes are involved.
-
-See `AGENTS.md` Verification Policy for the full decision table.
-
-## After Meaningful Work
-
-After completing a meaningful task, suggest:
-
-- What should be documented or updated in a README or INTERFACE file.
-- Whether a reusable skill should be created for this type of task.
-- Whether a summary should be added to `docs/context-map.md`.
-
-This keeps future sessions cheaper and faster.
+- Do not merge main.
+- Do not deploy production.
+- Do not touch secrets, credentials, tokens, billing, DNS, or production databases.
+- Do not modify production infrastructure unless explicitly requested by the human operator.
+- All code changes must go through PR.
+- High-risk actions require human approval.
