@@ -9,3 +9,22 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+
+# Local runtime / secrets
+.env
+*.env
+*.local
+*.local.*
+config/*.local.yaml
+configs/*.local.yaml
+
+# Runtime state
+.creator-mesh-runtime/
+runtime/
+logs/
+tmp/
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/
