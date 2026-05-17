@@ -117,7 +117,9 @@ Append-only log of decisions, pivots, and scope changes. Updated by:
 
 ## GitHub tracker issue
 
-Opened by the Planner in the **primary managed-project repo**. Serves as the human-facing status board.
+Opened by **`dispatch_plan.sh`** in the **primary managed-project repo**, as its first action before dispatching any child tasks. This is the first point at which the target project is touched — intentionally after the human has reviewed and merged the plan PR.
+
+The Planner does **not** create this issue. Keeping tracker issue creation in `dispatch_plan.sh` preserves the human-review gate: if the plan is rejected, the target project is never touched.
 
 **Required structure:**
 
@@ -144,7 +146,7 @@ Child task issues link back to this tracker and to the plan artifact.
 | Status | Meaning | Who sets it |
 |--------|---------|-------------|
 | `planning` | Plan task dispatched; Planner has not yet created the PR | `create_plan_task.sh` |
-| `plan_ready` | Plan PR merged; ready to dispatch child tasks | Human (after merging plan PR) |
+| `plan_ready` | Plan PR merged; ready to dispatch child tasks — no target project issue exists yet | Human (after merging plan PR) |
 | `dispatching` | Some child tasks dispatched, not all | `dispatch_plan.sh` |
 | `dispatched` | All child tasks dispatched | `dispatch_plan.sh` |
 | `completed` | All child PRs merged | Human (manual update for now) |

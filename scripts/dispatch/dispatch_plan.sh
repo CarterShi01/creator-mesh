@@ -2,6 +2,7 @@
 set -euo pipefail
 
 PLANS_INDEX_FILE="${CREATORMESH_PLANS_INDEX_FILE:-$HOME/creator-mesh-runtime/plans/index.jsonl}"
+PROJECTS_FILE="${CREATORMESH_PROJECTS_FILE:-$HOME/creator-mesh-runtime/config/projects.yaml}"
 
 IDEA_ID=""
 PRIMARY_PROJECT_ID=""
@@ -57,7 +58,36 @@ if [[ ! -f "$TASKS_FILE" ]]; then
   exit 1
 fi
 
-# Extract tracker issue URL from plan.md if available
+PLAN_ARTIFACT_REF="docs/plans/${IDEA_ID}/"
+CONTROL_PLANE_REPO="CarterShi01/creator-mesh"
+
+# Look up target repo from projects registry
+TARGET_REPO="$(
+python3 - "$PROJECTS_FILE" "$PRIMARY_PROJECT_ID" <<'PY'
+import sys, re
+path, target = sys.argv[1], sys.argv[2]
+current_id = None
+with open(path, "r", encoding="utf-8") as f:
+    for raw in f:
+        line = raw.strip()
+        m = re.match(r"-\s+id:\s*(.+)", line)
+        if m:
+            current_id = m.group(1).strip().strip('"').strip("'")
+            continue
+        if current_id == target:
+            m = re.match(r"repo:\s*(.+)", line)
+            if m:
+                print(m.group(1).strip().strip('"').strip("'"))
+                sys.exit(0)
+sys.exit(1)
+PY
+)"
+
+if [[ -z "$TARGET_REPO" ]]; then
+  echo "Cannot find repo for project: $PRIMARY_PROJECT_ID" >&2; exit 1
+fi
+
+# Check if tracker issue already exists in plan.md (idempotency)
 TRACKER_ISSUE_URL=""
 if [[ -f "$PLAN_FILE" ]]; then
   TRACKER_ISSUE_URL="$(
@@ -69,20 +99,7 @@ if [[ -f "$PLAN_FILE" ]]; then
   )"
 fi
 
-PLAN_ARTIFACT_REF="docs/plans/${IDEA_ID}/"
-CONTROL_PLANE_REPO="CarterShi01/creator-mesh"
-
-echo "CreatorMesh Plan Dispatcher"
-echo "==========================="
-echo "Idea ID:          ${IDEA_ID}"
-echo "Primary project:  ${PRIMARY_PROJECT_ID}"
-echo "Tasks file:       ${TASKS_FILE}"
-if [[ -n "$TRACKER_ISSUE_URL" ]]; then
-  echo "Tracker issue:    ${TRACKER_ISSUE_URL}"
-fi
-echo ""
-
-# Count tasks
+# Count tasks (needed for tracker body)
 TASK_COUNT="$(python3 -c "
 import sys
 count = 0
@@ -93,10 +110,89 @@ with open('$TASKS_FILE', 'r', encoding='utf-8') as f:
 print(count)
 ")"
 
+echo "CreatorMesh Plan Dispatcher"
+echo "==========================="
+echo "Idea ID:          ${IDEA_ID}"
+echo "Primary project:  ${PRIMARY_PROJECT_ID}"
+echo "Target repo:      ${TARGET_REPO}"
+echo "Tasks file:       ${TASKS_FILE}"
+echo ""
 echo "Found ${TASK_COUNT} task(s) to dispatch."
 echo ""
 
-# Read and dispatch tasks
+# Create tracker issue in target project (first touch of the target project,
+# only after the plan has been reviewed and merged by the human operator)
+if [[ -z "$TRACKER_ISSUE_URL" ]]; then
+  IDEA_TITLE="$(grep '^# Plan:' "$PLAN_FILE" 2>/dev/null | sed 's/^# Plan: //' | head -1)"
+  [[ -z "$IDEA_TITLE" ]] && IDEA_TITLE="$IDEA_ID"
+
+  TASK_CHECKLIST="$(python3 - "$TASKS_FILE" <<'PY'
+import json, sys
+lines = []
+with open(sys.argv[1], "r", encoding="utf-8") as f:
+    for line in f:
+        line = line.strip()
+        if not line:
+            continue
+        d = json.loads(line)
+        lines.append(f"- [ ] {d['task_id']} — {d['title']}")
+print("\n".join(lines))
+PY
+)"
+
+  TRACKER_BODY="$(cat <<BODY
+# CreatorMesh Plan Tracker — ${IDEA_TITLE}
+
+**Idea ID:** ${IDEA_ID}
+**Primary project:** ${PRIMARY_PROJECT_ID}
+**Plan artifact:** https://github.com/${CONTROL_PLANE_REPO}/tree/master/${PLAN_ARTIFACT_REF}
+**Status:** plan_ready
+
+## Tasks
+${TASK_CHECKLIST}
+
+## Notes
+Each task is dispatched as a separate GitHub issue by \`dispatch_plan.sh\`.
+Child task issues link back to this tracker and to the plan artifact.
+BODY
+)"
+
+  echo "Creating tracker issue in ${TARGET_REPO}..."
+  TRACKER_ISSUE_URL="$(gh issue create \
+    --repo "$TARGET_REPO" \
+    --title "Plan Tracker: ${IDEA_TITLE}" \
+    --body "$TRACKER_BODY")"
+  echo "Tracker issue: ${TRACKER_ISSUE_URL}"
+  echo ""
+
+  # Update plans index with tracker URL
+  if [[ -f "$PLANS_INDEX_FILE" ]]; then
+    python3 - "$PLANS_INDEX_FILE" "$IDEA_ID" "$TRACKER_ISSUE_URL" <<'PY'
+import json, sys
+from datetime import datetime, timezone
+plans_file, idea_id, tracker_url = sys.argv[1:]
+records = []
+with open(plans_file, "r", encoding="utf-8") as f:
+    for line in f:
+        line = line.strip()
+        if line:
+            try: records.append(json.loads(line))
+            except: pass
+for rec in records:
+    if rec.get("idea_id") == idea_id:
+        rec["tracker_issue_url"] = tracker_url
+        rec["updated_at"] = datetime.now(timezone.utc).isoformat()
+with open(plans_file, "w", encoding="utf-8") as f:
+    for rec in records:
+        f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+PY
+  fi
+else
+  echo "Tracker issue:    ${TRACKER_ISSUE_URL} (already exists)"
+  echo ""
+fi
+
+# Dispatch tasks
 DISPATCHED=0
 SKIPPED=0
 

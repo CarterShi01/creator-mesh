@@ -39,7 +39,7 @@ Human-readable plan. Use this structure exactly:
 ...
 
 ## Tracker issue
-<URL of the tracker issue you open in step 2 below>
+TBD — will be created by `dispatch_plan.sh` when the operator dispatches tasks after this plan is reviewed and merged.
 
 ## Plan artifact
 docs/plans/{IDEA_ID}/
@@ -110,46 +110,14 @@ Append-only record. Start with one entry:
 
 ---
 
-## Step 2: Open a tracker issue in the primary managed project
+## Step 2: Create the pull request
 
-After creating the three files above, open a GitHub issue in the primary managed project repo (`{PRIMARY_PROJECT_ID}`):
-
-```bash
-gh issue create \
-  --repo <owner/primary-project-repo> \
-  --title "Plan Tracker: <Idea Title>" \
-  --body "$(cat <<'EOF'
-# CreatorMesh Plan Tracker — <Idea Title>
-
-**Idea ID:** {IDEA_ID}
-**Primary project:** {PRIMARY_PROJECT_ID}
-**Plan artifact:** (will be at docs/plans/{IDEA_ID}/ in CarterShi01/creator-mesh after this PR merges)
-**Status:** planning
-
-## Tasks
-- [ ] T01 — <title>
-- [ ] T02 — <title>
-
-## Notes
-Each task will be dispatched as a separate GitHub issue once this plan is reviewed and merged.
-Child task issues will link back to this tracker and to the plan artifact.
-EOF
-)"
-```
-
-Then add the tracker issue URL to the `## Tracker issue` section of `docs/plans/{IDEA_ID}/plan.md`.
-
----
-
-## Step 3: Create the pull request
-
-Open a PR on `creator-mesh` that adds the three plan files and the tracker issue URL. The PR title should be: `[Plan] {IDEA_ID}`.
+Open a PR on `creator-mesh` that adds the three plan files. The PR title should be: `[Plan] {IDEA_ID}`.
 
 The PR body should include:
 - Idea brief (1–3 sentences)
 - Number of tasks decomposed
-- Tracker issue URL
-- A note: "Do not merge until the plan has been reviewed. No code is written by this PR."
+- A note: "Do not merge until the plan has been reviewed. No code is written by this PR. The tracker issue in the primary project will be created by `dispatch_plan.sh` after this plan is merged."
 
 ---
 
@@ -167,6 +135,7 @@ The PR body should include:
 
 - Do not write any implementation code.
 - Do not modify files outside `docs/plans/{IDEA_ID}/`.
+- Do not open issues in the primary managed project (`{PRIMARY_PROJECT_ID}`) or any external repository — that is done by `dispatch_plan.sh` after human review.
 - Do not dispatch child tasks — that is done by the human operator via `dispatch_plan.sh`.
 - Do not merge the PR — create it for human review.
 - Do not invent features not mentioned in the brief.
