@@ -1,0 +1,14 @@
+projects:
+  - id: creator-mesh
+    repo: CarterShi01/creator-mesh
+    default_branch: master
+    executor: claude-code
+    allow_direct_merge: false
+    allow_deploy: false
+
+  - id: idea-factory
+    repo: CarterShi01/idea-factory
+    default_branch: master
+    executor: claude-code
+    allow_direct_merge: false
+    allow_deploy: false
