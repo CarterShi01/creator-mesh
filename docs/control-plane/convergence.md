@@ -22,6 +22,12 @@ See `docs/blueprint.md` for the strategic rationale behind this rule.
 | task `title` and `body` | `WorkflowDefinition.name` + `WorkflowInput` fields | `src/workflows/` |
 | project registry lookup | `ManagedProject` storage query | `src/storage/` (Phase 2 target) |
 | run tracking append | `WorkflowRun` storage write | `src/storage/` (Phase 2 target) |
+| **Planner role** (`create_plan_task.sh` dispatch into creator-mesh) | `AgentStep { agentRole: "planner" }` | `src/workflows/types.ts` |
+| `docs/plans/<idea-id>/plan.md` + `tasks.jsonl` + `decision-log.md` | `WorkflowOutput` of the planning `AgentStep` | `src/workflows/types.ts` |
+| `tasks.jsonl` entry (one child task spec) | `WorkflowInput` for a child `WorkflowDefinition` | `src/workflows/types.ts` |
+| Tracker issue (in primary managed-project repo) | `GovernanceCheckpoint` | `src/workflows/`, `src/governance/` |
+| `~/creator-mesh-runtime/plans/index.jsonl` | `WorkflowRun` storage cache (planning runs) | `src/storage/` (Phase 2 target) |
+| Idea ID slug (`YYYY-MM-DD-<slug>`) | `WorkflowDefinition` identifier prefix | `src/workflows/` |
 
 ---
 
@@ -44,9 +50,23 @@ Phase 2 (Full Wrap)
   connectors              →  ConnectorPort.execute via GitHub connector
   governance              →  GovernanceEvaluator on every HumanReviewStep
 
+Phase 1.5 (Planner introduced — NOW)
+  create_plan_task.sh     →  AgentStep { agentRole: "planner" } dispatch
+  planner-prompt.md       →  WorkflowDefinition for the planning role
+  tasks.jsonl entry       →  WorkflowInput for child WorkflowDefinition
+  plans/index.jsonl       →  WorkflowRun cache for planning runs
+  dispatch_plan.sh        →  iterates WorkflowInput[], calls RunnerPort per task
+
+Phase 2 (Full Wrap)
+  dispatcher              →  WorkflowDefinition + LocalWorkflowRunner
+  executor registry       →  RunnerRegistry (src/capabilities/runners)
+  connectors              →  ConnectorPort.execute via GitHub connector
+  governance              →  GovernanceEvaluator on every HumanReviewStep
+
 Phase 3 (Own)
-  More RunnerType values   →  research / design / review agents
+  More RunnerType values   →  research / design / review / growth / content agents
   Richer WorkflowDefinitions → multi-step, multi-role dispatch
+  Planner → TypeScript module implementing AgentStep with agentRole: "planner"
 ```
 
 ---

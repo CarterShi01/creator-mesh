@@ -14,32 +14,50 @@ The current execution path is:
 
 ## Current Status
 
-The Claude Code GitHub executor path is operational.
+The full Phase 1 dispatch loop is operational end-to-end, and the first multi-role addition (Planner) is in place.
 
-Verified capabilities:
+### Verified capabilities
 
+**Single-task dispatch (operational):**
 - GitHub issue comments can trigger Claude Code.
 - Claude Code can access the repository through GitHub Actions.
 - Claude Code can modify files and push a `claude/...` branch.
 - The workflow can create a pull request from the Claude branch.
 - Human review remains required before merge.
+- `scripts/dispatch/create_claude_task.sh` dispatches a task to any managed project via project registry lookup → GitHub issue → `@claude` comment → run record.
+- `scripts/dispatch/list_runs.sh` lists all `WorkflowRun` records from `runs.jsonl`.
+- `scripts/dispatch/check_run_status.sh` queries live GitHub state (issue, workflow run, PR) for a given run.
+- Dispatch validated against `idea-factory` (external managed project) end-to-end.
+- Natural-language entry via `skills/creatormesh-dispatch/SKILL.md`.
+
+**Planner role (introduced in Phase 1.5):**
+- `scripts/dispatch/create_plan_task.sh` dispatches a planning task into the `creator-mesh` repo itself using a planner prompt template.
+- `scripts/dispatch/templates/planner-prompt.md` instructs Claude Code to produce `plan.md`, `tasks.jsonl`, `decision-log.md`, and a tracker issue.
+- `scripts/dispatch/dispatch_plan.sh` iterates `tasks.jsonl`, asks y/n per task, and dispatches each as a child `WorkflowRun`.
+- `scripts/dispatch/list_plans.sh` lists all plan records from the runtime plans index.
+- Plan storage follows the three-layer model: Git artifact (source of truth) + tracker issue (status board) + runtime index (cache).
+- Natural-language entry via `skills/creatormesh-plan/SKILL.md`.
+- Plan format fully specified in `docs/control-plane/plan-artifact-format.md`.
+- All new constructs named in Phase 0 alignment — see `docs/control-plane/convergence.md`.
 
 ## What This Proves
 
 CreatorMesh does not need to build its own coding executor in Phase 1.
 
-Instead, CreatorMesh can act as a dispatch and control layer that sends work to GitHub plus Claude Code, then receives results back through pull requests.
+CreatorMesh acts as the dispatch and control layer: it decomposes ideas into tasks, creates GitHub issues, triggers Claude Code, and tracks outcomes through pull requests. The executor path is GitHub + Claude Code.
 
-## Next Step
+## Storage Model
 
-The next step is to build the upstream dispatch layer:
+| Asset | Location | Purpose |
+|-------|----------|---------|
+| Task run records | `~/creator-mesh-runtime/runs/runs.jsonl` | `WorkflowRun` log (one per dispatched task) |
+| Plan index | `~/creator-mesh-runtime/plans/index.jsonl` | Runtime cache of plan metadata |
+| Plan artifacts | `docs/plans/<idea-id>/` in `creator-mesh` repo | Git-backed source of truth for plans |
+| Project registry | `~/creator-mesh-runtime/config/projects.yaml` | `ManagedProject` entries |
 
-CreatorMesh dispatch script
-→ project registry lookup
-→ GitHub issue creation
-→ `@claude` comment
-→ run record tracking
+## Next Steps
 
-The first implementation will be a lightweight shell-based dispatcher:
-
-`scripts/dispatch/create_claude_task.sh`
+- Smoke test the Planner end-to-end with a real idea brief.
+- Add `kind: "plan" | "task"` field to `runs.jsonl` entries (back-compat with default `"task"`).
+- Build a helper to auto-update the tracker issue checklist as child PRs merge.
+- Phase 2: replace shell scripts with TypeScript modules implementing Phase 0 ports (`RunnerPort`, `ConnectorPort`, `WorkflowRun` storage adapter).
