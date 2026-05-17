@@ -43,24 +43,32 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          REPOSITORY: ${{ github.repository }}
         run: |
           set -euo pipefail
 
           echo "Looking for Claude branch for issue #${ISSUE_NUMBER}"
+          echo "Default branch: ${DEFAULT_BRANCH}"
 
-          current_branch="$(git branch --show-current || true)"
-          branch=""
+          git fetch origin "${DEFAULT_BRANCH}"
 
-          if [[ "$current_branch" == claude/issue-${ISSUE_NUMBER}-* ]]; then
-            branch="$current_branch"
-          else
-            git fetch origin "+refs/heads/claude/issue-${ISSUE_NUMBER}-*:refs/remotes/origin/claude/issue-${ISSUE_NUMBER}-*" || true
-            branch="$(git for-each-ref \
-              --sort=-committerdate \
-              --format='%(refname:short)' \
-              "refs/remotes/origin/claude/issue-${ISSUE_NUMBER}-*" \
-              | head -n 1 \
-              | sed 's#^origin/##')"
+          git fetch origin "+refs/heads/claude/issue-${ISSUE_NUMBER}-*:refs/remotes/origin/claude/issue-${ISSUE_NUMBER}-*" || true
+
+          branch="$(git for-each-ref \
+            --sort=-committerdate \
+            --format='%(refname:short)' \
+            "refs/remotes/origin/claude/issue-${ISSUE_NUMBER}-*" \
+            | head -n 1 \
+            | sed 's#^origin/##')"
+
+          if [[ -z "$branch" ]]; then
+            current_branch="$(git branch --show-current || true)"
+            if [[ "$current_branch" == claude/issue-${ISSUE_NUMBER}-* ]]; then
+              branch="$current_branch"
+              echo "Found local Claude branch: ${branch}"
+              git push origin "${branch}:${branch}"
+              git fetch origin "+refs/heads/${branch}:refs/remotes/origin/${branch}"
+            fi
           fi
 
           if [[ -z "$branch" ]]; then
@@ -68,19 +76,25 @@ jobs:
             exit 0
           fi
 
-          echo "Claude branch: $branch"
+          echo "Claude branch: ${branch}"
 
-          git fetch origin "$DEFAULT_BRANCH" "$branch"
+          base_ref="origin/${DEFAULT_BRANCH}"
+          head_ref="origin/${branch}"
 
-          if git diff --quiet "origin/${DEFAULT_BRANCH}...origin/${branch}"; then
+          if ! git rev-parse --verify "${head_ref}" >/dev/null 2>&1; then
+            echo "Remote Claude branch ref not found: ${head_ref}"
+            exit 0
+          fi
+
+          if git diff --quiet "${base_ref}...${head_ref}"; then
             echo "No changes between ${DEFAULT_BRANCH} and ${branch}. Nothing to PR."
             exit 0
           fi
 
           existing_pr="$(gh pr list \
-            --repo "${{ github.repository }}" \
+            --repo "${REPOSITORY}" \
             --state open \
-            --head "$branch" \
+            --head "${branch}" \
             --json number \
             --jq '.[0].number // empty')"
 
@@ -89,16 +103,17 @@ jobs:
             exit 0
           fi
 
-          gh pr create \
-            --repo "${{ github.repository }}" \
-            --base "$DEFAULT_BRANCH" \
-            --head "$branch" \
-            --title "Claude: resolve issue #${ISSUE_NUMBER}" \
-            --body "This PR was automatically created from Claude Code changes for issue #${ISSUE_NUMBER}.
+          echo "Creating PR from ${branch} to ${DEFAULT_BRANCH}"
 
-            Source branch:
-            - ${branch}
+          gh api "repos/${REPOSITORY}/pulls" \
+            -f title="Claude: resolve issue #${ISSUE_NUMBER}" \
+            -f head="${branch}" \
+            -f base="${DEFAULT_BRANCH}" \
+            -f body="This PR was automatically created from Claude Code changes for issue #${ISSUE_NUMBER}.
 
-            Notes:
-            - Created by the Claude Code GitHub Action.
-            - Please review before merging."
+          Source branch:
+          - ${branch}
+
+          Notes:
+          - Created by the Claude Code GitHub Action.
+          - Please review before merging."
