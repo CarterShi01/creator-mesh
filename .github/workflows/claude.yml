@@ -34,5 +34,5 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           claude_args: |
-            --max-turns 10
+            --max-turns 30
             --allowedTools "Bash(npm install),Bash(npm run build),Bash(npm run test),Bash(npm run lint),Bash(pnpm install),Bash(pnpm build),Bash(pnpm test),Bash(pnpm lint)"
