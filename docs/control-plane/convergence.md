@@ -10,17 +10,17 @@ See `docs/blueprint.md` for the strategic rationale behind this rule.
 
 | Phase 1 current implementation | Phase 0 aligned name | Phase 0 source |
 |-------------------------------|----------------------|----------------|
-| dispatch task (shell invocation) | `CreatorAction` + `WorkflowDefinition` | `src/creation/`, `src/workflows/` |
-| `projects.yaml` entry | `CreatorObject` (a managed project is a creator-maintained object) | `src/creation/` |
-| `runs.jsonl` record | `WorkflowRun` + `FeedbackRecord` | `src/workflows/`, `src/creation/` |
+| dispatch task (shell invocation) | `WorkflowDefinition` | `src/workflows/` |
+| `projects.yaml` entry | `ManagedProject` config entry | `src/capabilities/runners/` (Phase 2 target) |
+| `runs.jsonl` record | `WorkflowRun` | `src/workflows/` |
 | `executor` field value (e.g. `"claude-code"`) | `RunnerType` | `src/capabilities/runners/` |
 | GitHub issue creation step | `ConnectorStep` (GitHub connector) | `src/capabilities/connectors/` |
 | `@claude` comment that triggers Claude Code | `RunnerPort.invoke` | `src/capabilities/runners/claude-code/` |
 | PR human review gate | `HumanReviewStep` + `GovernanceCheckpoint` | `src/workflows/`, `src/governance/` |
 | run status string (`"dispatched"`, `"running"`, etc.) | `WorkflowRunStatus` enum | `src/workflows/` |
-| GitHub issue URL in a run record | `ArtifactRef.uri` | `src/creation/` |
-| task `title` and `body` | `CreatorAction.title` + `CreatorAction.expectedOutput` | `src/creation/` |
-| project registry lookup | `CreatorObject` storage query | `src/storage/` (Phase 2 target) |
+| GitHub issue URL in a run record | `WorkflowRun` output field | `src/workflows/` |
+| task `title` and `body` | `WorkflowDefinition.name` + `WorkflowInput` fields | `src/workflows/` |
+| project registry lookup | `ManagedProject` storage query | `src/storage/` (Phase 2 target) |
 | run tracking append | `WorkflowRun` storage write | `src/storage/` (Phase 2 target) |
 
 ---
@@ -29,14 +29,14 @@ See `docs/blueprint.md` for the strategic rationale behind this rule.
 
 ```
 Phase 1 (NOW — Borrow)
-  create_claude_task.sh   →  frames a CreatorAction, creates a GitHub issue
-  projects.yaml           →  flat CreatorObject registry
+  create_claude_task.sh   →  frames a WorkflowDefinition, creates a GitHub issue
+  projects.yaml           →  flat ManagedProject registry
   runs.jsonl              →  append-only WorkflowRun log
 
 Phase 1.5 (Wrap begins)
   shell scripts           →  TypeScript modules implementing Phase 0 ports
   runs.jsonl              →  WorkflowRun storage adapter (src/storage)
-  projects.yaml           →  CreatorObject persistence query
+  projects.yaml           →  ManagedProject persistence query
 
 Phase 2 (Full Wrap)
   dispatcher              →  WorkflowDefinition + LocalWorkflowRunner

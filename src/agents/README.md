@@ -2,9 +2,7 @@
 
 `src/agents` owns role-based execution subjects.
 
-Agents are role-based execution handles. They apply soft knowledge and request physical capabilities, but they do not own the CreatorMesh worldview. `creation` decides what should be understood and evolved; agents help perform the work.
-
-An agent is a higher-level callable entity with a specific responsibility, reasoning style, and capability set. Agents apply knowledge from `src/knowledge`, request tool use through `runtime`, and produce intermediate reasoning or structured output for `creation` or `workflows`.
+An agent is a higher-level callable entity with a specific responsibility, reasoning style, and capability set. Agents apply knowledge from `src/knowledge`, request tool use through `runtime`, and produce intermediate reasoning or structured output for `workflows`.
 
 ## What belongs here
 
@@ -16,7 +14,6 @@ An agent is a higher-level callable entity with a specific responsibility, reaso
 
 ## What does not belong here
 
-- The worldview or methodological core — `creation` owns Quest, Object, Relation, Action, ArtifactRef, Feedback
 - The runtime loop — `runtime` owns execution lifecycle, session/context, permission gate, and tool invocation
 - Direct ownership of connectors, runners, or provider SDKs — agents request capabilities; they do not implement them
 - Hardcoded business workflows — `workflows` owns stable routines
@@ -25,7 +22,6 @@ An agent is a higher-level callable entity with a specific responsibility, reaso
 
 ## What agents are NOT
 
-- Not the CreatorMesh worldview or methodological core — `creation` is the methodological center
 - Not the runtime execution loop — `runtime` owns execution lifecycle, session/context, pause/resume, and permission gates
 - Not direct owners of connectors or runners — agents request physical capabilities through runtime boundaries
 - Not hardcoded per-tool business workflows
@@ -55,9 +51,8 @@ Each agent should have a focused responsibility and should apply relevant knowle
 
 ## Role in the architecture
 
-`agents` sits alongside `knowledge` and `workflows` in the layer below `creation` and `runtime`, above `runners`, `connectors`, `governance`, `storage`, and `outputs`.
+`agents` sits alongside `knowledge` and `workflows` in the layer below `runtime`, above `runners`, `connectors`, `governance`, and `storage`.
 
-- `creation` frames the work and decides what needs to be understood.
 - `runtime` dispatches agent steps, enforces governance, and manages execution lifecycle.
 - `agents` perform domain reasoning: interpret context, apply knowledge, and return structured output.
 - `runners` and `connectors` provide physical execution capabilities that agents may request through runtime.

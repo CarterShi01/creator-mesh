@@ -12,17 +12,15 @@ Capabilities are callable physical or provider-backed abilities that the system 
 
 ## What capabilities are NOT
 
-- Not the system brain — `creation` owns the worldview and methodological core
+- Not the system brain — `runtime`, `agents`, and `workflows` decide what to do
 - Not the LLM loop — `runtime` owns the execution loop, session/context, tool invocation, and permission gate
 - Not agent reasoning — `agents` own role-based execution; capabilities are what agents *use*
-- Not semantic creation concepts (Quest, Object, Relation, Action, ArtifactRef, Feedback) — `creation` owns those
 
 ## Key rules
 
 - `runtime` invokes capabilities through port interfaces (`RunnerPort`, `ConnectorPort`)
 - `agents` may request capabilities through runtime; agents do not call provider SDKs directly
 - `governance` must still protect side effects — runtime invokes governance before capability execution when side effects are possible
-- `creation` does not directly depend on provider SDKs
 - Provider SDKs remain inside capability adapter implementation folders (`runners/claude-code/`, `connectors/notion/`, etc.)
 
 ## Structure
@@ -45,4 +43,4 @@ capabilities
   └── models        (future inference/model providers)
 ```
 
-Capabilities provide callable abilities. They do not decide what to do — `creation`, `runtime`, `agents`, and `workflows` decide. Capabilities execute.
+Capabilities provide callable abilities. They do not decide what to do — `runtime`, `agents`, and `workflows` decide. Capabilities execute.
