@@ -126,6 +126,32 @@ echo ""
 echo "Found ${TASK_COUNT} task(s) to dispatch."
 echo ""
 
+# Validate topological order: every depends_on target must appear earlier in the file
+echo "Validating task dependency order..."
+python3 - "$TASKS_FILE" <<'PY'
+import json, sys
+path = sys.argv[1]
+seen = set()
+ok = True
+with open(path, "r", encoding="utf-8") as f:
+    for line in f:
+        line = line.strip()
+        if not line:
+            continue
+        d = json.loads(line)
+        task_id = d.get("task_id", "?")
+        for dep in d.get("depends_on", []):
+            if dep not in seen:
+                print(f"  ERROR: {task_id} depends on {dep}, but {dep} has not been defined yet.", file=sys.stderr)
+                print(f"  Re-order tasks.jsonl so dependencies appear before the tasks that use them.", file=sys.stderr)
+                ok = False
+        seen.add(task_id)
+if not ok:
+    sys.exit(1)
+print("  Dependency order: OK")
+PY
+echo ""
+
 # Create tracker issue in target project (first touch of the target project,
 # only after the plan has been reviewed and merged by the human operator)
 if [[ -z "$TRACKER_ISSUE_URL" ]]; then
@@ -219,7 +245,8 @@ wait_for_merge() {
     status_output="$("$SCRIPT_DIR/check_run_status.sh" \
       --repo "$repo" --issue "$issue_number" 2>/dev/null)" || true
     overall="$(printf '%s\n' "$status_output" \
-      | awk '/^Overall/{getline; print; exit}')"
+      | grep -xE 'merged|needs_human_review|pr_closed_without_merge|waiting_for_workflow|workflow_running|waiting_for_pr|workflow_failed' \
+      | head -1 || true)"
 
     case "$overall" in
       merged)
@@ -321,16 +348,48 @@ while IFS= read -r line; do
     DISPATCH_OUTPUT="$("$SCRIPT_DIR/create_claude_task.sh" \
       --project "$EFFECTIVE_PROJECT" \
       --title "$TASK_TITLE" \
-      --body "$FULL_BODY")"
+      --body "$FULL_BODY" \
+      --kind task \
+      --plan-id "$IDEA_ID" \
+      --task-id "$TASK_ID")"
     echo "$DISPATCH_OUTPUT"
     DISPATCHED=$((DISPATCHED + 1))
     echo ""
 
+    # Extract dispatched issue URL / number (always, for back-write and merge gate)
+    DISPATCHED_ISSUE_URL="$(printf '%s\n' "$DISPATCH_OUTPUT" \
+      | grep '^Issue:' | awk '{print $2}')"
+    DISPATCHED_ISSUE_NUMBER="${DISPATCHED_ISSUE_URL##*/}"
+
+    # Back-write issue_number and issue_url into tasks.jsonl (Git artifact enrichment)
+    if [[ -n "$DISPATCHED_ISSUE_NUMBER" ]]; then
+      python3 - "$TASKS_FILE" "$TASK_ID" "$DISPATCHED_ISSUE_NUMBER" "$DISPATCHED_ISSUE_URL" <<'PY'
+import json, sys
+tasks_file, task_id, issue_number, issue_url = sys.argv[1:]
+lines_out = []
+with open(tasks_file, "r", encoding="utf-8") as f:
+    for line in f:
+        raw = line.rstrip('\n')
+        if raw.strip():
+            try:
+                d = json.loads(raw)
+                if d.get("task_id") == task_id:
+                    d["issue_number"] = issue_number
+                    d["issue_url"] = issue_url
+                raw = json.dumps(d, ensure_ascii=False)
+            except json.JSONDecodeError:
+                pass
+        lines_out.append(raw)
+# Preserve trailing newline
+with open(tasks_file, "w", encoding="utf-8") as f:
+    f.write("\n".join(lines_out))
+    if lines_out and lines_out[-1] != "":
+        f.write("\n")
+PY
+    fi
+
     # Sequential gate: wait for this PR to merge before dispatching the next task.
     if [[ "$NO_WAIT" != "true" ]]; then
-      DISPATCHED_ISSUE_URL="$(printf '%s\n' "$DISPATCH_OUTPUT" \
-        | grep '^Issue:' | awk '{print $2}')"
-      DISPATCHED_ISSUE_NUMBER="${DISPATCHED_ISSUE_URL##*/}"
       if [[ -n "$DISPATCHED_ISSUE_NUMBER" ]]; then
         wait_for_merge "$TARGET_REPO" "$DISPATCHED_ISSUE_NUMBER" "$TASK_ID" || {
           echo ""

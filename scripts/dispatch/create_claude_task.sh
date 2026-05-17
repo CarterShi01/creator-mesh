@@ -7,21 +7,18 @@ RUNS_FILE="${CREATORMESH_RUNS_FILE:-$HOME/creator-mesh-runtime/runs/runs.jsonl}"
 PROJECT_ID=""
 TITLE=""
 BODY=""
+PLAN_ID=""
+TASK_ID_VAL=""
+KIND=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --project)
-      PROJECT_ID="${2:-}"
-      shift 2
-      ;;
-    --title)
-      TITLE="${2:-}"
-      shift 2
-      ;;
-    --body)
-      BODY="${2:-}"
-      shift 2
-      ;;
+    --project)  PROJECT_ID="${2:-}";  shift 2 ;;
+    --title)    TITLE="${2:-}";       shift 2 ;;
+    --body)     BODY="${2:-}";        shift 2 ;;
+    --plan-id)  PLAN_ID="${2:-}";     shift 2 ;;
+    --task-id)  TASK_ID_VAL="${2:-}"; shift 2 ;;
+    --kind)     KIND="${2:-}";        shift 2 ;;
     *)
       echo "Unknown argument: $1" >&2
       exit 1
@@ -129,21 +126,24 @@ gh issue comment "$ISSUE_NUMBER" \
 
 mkdir -p "$(dirname "$RUNS_FILE")"
 
-python3 - "$RUNS_FILE" "$PROJECT_ID" "$REPO" "$ISSUE_NUMBER" "$ISSUE_URL" "$TITLE" <<'PY'
+python3 - "$RUNS_FILE" "$PROJECT_ID" "$REPO" "$ISSUE_NUMBER" "$ISSUE_URL" "$TITLE" "$PLAN_ID" "$TASK_ID_VAL" "$KIND" <<'PY'
 import json
 import sys
 from datetime import datetime, timezone
 
-runs_file, project_id, repo, issue_number, issue_url, title = sys.argv[1:]
+runs_file, project_id, repo, issue_number, issue_url, title, plan_id, task_id, kind = sys.argv[1:]
 
 record = {
     "created_at": datetime.now(timezone.utc).isoformat(),
+    "kind": kind or "task",
     "project_id": project_id,
     "repo": repo,
     "executor": "claude-code",
     "issue_number": issue_number,
     "issue_url": issue_url,
     "title": title,
+    "plan_id": plan_id,
+    "task_id": task_id,
     "status": "dispatched"
 }
 

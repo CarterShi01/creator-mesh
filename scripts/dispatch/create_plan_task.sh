@@ -103,7 +103,9 @@ echo ""
 "$SCRIPT_DIR/create_claude_task.sh" \
   --project creator-mesh \
   --title "$TASK_TITLE" \
-  --body "$TASK_BODY"
+  --body "$TASK_BODY" \
+  --kind plan \
+  --plan-id "$IDEA_ID"
 
 # Capture the issue URL from the most recent run record
 ISSUE_URL=""
