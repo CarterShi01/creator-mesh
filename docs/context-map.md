@@ -24,20 +24,18 @@ Before reading any implementation file, read in this order:
 
 | Directory | Purpose |
 |-----------|---------|
-| `src/triggers` | Interaction boundary — stable input primitives (Thought, Message), trigger signal types, input normalization. Formerly split across `src/core`, `src/triggers`, `src/intake`. |
-| `src/creation` | Semantic kernel and worldview (Quest, CreatorObject, CreationRelation, CreatorAction, ArtifactRef, FeedbackRecord) |
-| `src/knowledge` | Callable soft knowledge — domain knowledge, principles, skills, examples, checklists, reasoning assets |
+| `src/triggers` | Interaction boundary — stable input primitives (Thought, Message), trigger signal types, input normalization. |
 | `src/runtime` | Execution loop — step dispatch, governance enforcement, pause/resume |
 | `src/agents` | Role-based execution subjects — apply knowledge, request capabilities through runtime |
+| `src/workflows` | Stable creator routines — reusable, creator-approved step sequences and types (WorkflowRun, WorkflowStep, etc.) |
 | `src/capabilities` | Callable capability layer — groups runners, connectors, and models (scaffold) |
 | `src/capabilities/runners` | Execution environment adapters (Claude Code, human runner, future Codex/OpenHands) |
 | `src/capabilities/connectors` | External system integrations (Notion, GitHub, MCP, etc.) |
 | `src/capabilities/models` | Scaffold only — future model-provider/inference capabilities |
-| `src/workflows` | Stable creator routines — reusable, creator-approved step sequences |
 | `src/governance` | Approval, audit, permission, and safety policies |
-| `src/storage` | Persistence abstractions and adapters |
-| `src/outputs` | Output artifacts and write-back preparation |
-| `src/shared` | Small reusable utilities |
+| `src/knowledge` | Callable soft knowledge — domain knowledge, principles, skills, reasoning assets. Planned (Phase 2/3 target). |
+| `src/storage` | Persistence abstractions and adapters. Planned (Phase 2/3 target). |
+| `src/shared` | Small reusable utilities. Planned (Phase 2/3 target). |
 
 
 ## Cost Rule

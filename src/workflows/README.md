@@ -6,7 +6,7 @@ A workflow is a reusable, creator-approved routine for recurring work. It repres
 
 Workflows are stable creator routines. They should represent repeatable ways of handling work that the creator or system has decided are worth preserving. They are not meant to enumerate every possible tool call. Dynamic tool choice belongs to the runtime/agent execution path; workflow definitions preserve stable routines.
 
-A workflow may be executed by `runtime` and may call agents, knowledge, runners, connectors, governance, storage, and outputs through proper ports and boundaries.
+A workflow may be executed by `runtime` and may call agents, knowledge, runners, connectors, governance, and storage through proper ports and boundaries.
 
 ## What belongs here
 
@@ -18,17 +18,14 @@ A workflow may be executed by `runtime` and may call agents, knowledge, runners,
 
 ## What does not belong here
 
-- The worldview or methodological core — `creation` owns that
 - The LLM loop or execution session management — `runtime` owns that
 - One workflow per specific connector/tool combination (e.g. ThoughtToNotion, MessageToGmail, IdeaToLinear)
 - An exhaustive enumeration of every possible tool-specific scenario
 - Low-level connector or runner implementation
-- Domain primitives (Quest, Object, Relation, Action, Artifact, Feedback) — `creation` owns those
 - UI components or storage adapters
 
 ## What workflows are NOT
 
-- Not the CreatorMesh worldview — `creation` is the methodological center
 - Not the runtime loop — `runtime` owns execution lifecycle, session/context, permission gate, and tool invocation
 - Not a replacement for dynamic agent tool use
 - Not a catalog of every connector call the system could make
@@ -56,9 +53,8 @@ These are stable routines — not one-off tool calls and not per-connector autom
 
 ## Role in the architecture
 
-`workflows` sits below `creation` and `runtime` and above `runners`, `connectors`, `governance`, `storage`, and `outputs`.
+`workflows` sits below `runtime` and above `runners`, `connectors`, `governance`, and `storage`.
 
-- `creation` decides what work needs to be done.
 - `runtime` executes the workflow safely, enforcing governance and managing session state.
 - `workflows` defines the stable routine structure that runtime follows.
 - `agents`, `runners`, and `connectors` provide the callable capabilities that workflow steps invoke.

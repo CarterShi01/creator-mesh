@@ -12,7 +12,7 @@ CreatorMesh is a **general multi-role AI agent platform** for independent creato
 
 It turns thoughts, messages, and intentions into structured knowledge, plans, actions, workflows, and shipped products — across any role a creator plays: developer, designer, researcher, writer, reviewer, career manager, or solo founder.
 
-The framework is designed top-down: a shared runtime, semantic kernel, knowledge layer, governance, and capability registry that any role-specific agent can build on.
+The framework is designed top-down: a shared runtime, knowledge layer, governance, and capability registry that any role-specific agent can build on.
 
 ### Current instance (Phase 1 control plane)
 
@@ -28,7 +28,7 @@ This is the first concrete instance of the Phase 0 framework. It validates the f
 
 Phase 1 is not a separate project. It is the **first instance** of Phase 0.
 
-The framework's core abstractions (Quest, Action, Workflow, Runner, Connector, Governance) were designed precisely to support this kind of multi-role coordination. Phase 1 exercises those abstractions at the dispatch layer, using borrowed infrastructure (GitHub Actions + Claude Code) instead of a full internal runtime.
+The framework's core abstractions (Workflow, Runner, Connector, Governance) were designed precisely to support this kind of multi-role coordination. Phase 1 exercises those abstractions at the dispatch layer, using borrowed infrastructure (GitHub Actions + Claude Code) instead of a full internal runtime.
 
 As Phase 1 validates the workflow, Phase 2 will replace borrowed infrastructure with implementations of the Phase 0 ports — without redesigning the abstractions. This is why naming alignment (see `convergence.md`) matters now, not later.
 
@@ -77,7 +77,7 @@ Choose the reading path based on task type. Do not read more than the path requi
 |----------|--------|-----------------|
 | **Active (Phase 1)** | Running | `scripts/dispatch/`, `.github/workflows/claude.yml`, `docs/control-plane/`, `configs/projects.example.yaml` |
 | **Frozen-Live** | Working code, no new commits since 2026-05-16 | `src/runtime/`, `src/agents/`, `src/workflows/`, `src/capabilities/` |
-| **Planned (Phase 2/3 target)** | Documented, no implementation yet | `src/creation/`, `src/knowledge/`, `src/storage/`, `src/outputs/`, `src/shared/` |
+| **Planned (Phase 2/3 target)** | Documented, no implementation yet | `src/knowledge/`, `src/storage/`, `src/shared/` |
 | **Frozen prototype** | mock-only, pre-pivot UI reference | `clients/creator-console/` |
 
 ---

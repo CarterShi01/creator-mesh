@@ -22,24 +22,21 @@ Knowledge is not raw captured input. It is the distilled, reusable reasoning mat
 
 ## What does not belong here
 
-- The semantic model of creation (Quest, Object, Relation, Action, ArtifactRef, Feedback) — `creation` owns that worldview
+- Workflow execution types (WorkflowRun, WorkflowStep, etc.) — `src/workflows` owns those
 - Runtime session memory or execution context — `runtime` owns that
 - External connector storage or provider-specific data — `connectors` and `storage` own that
-- Raw notes generated directly from inputs — those belong to `creation` or `triggers` output
+- Raw notes generated directly from inputs — those belong in `triggers` or workflow outputs
 - Physical execution logic — `agents`, `runners`, and `connectors` execute; knowledge supports reasoning
 - Direct Notion API calls, XMind integration, or any provider SDK
 
 ## What knowledge is NOT
 
-- Not the owner of the CreatorMesh worldview — `creation` is the methodological center
 - Not a runtime session store or LLM context buffer
 - Not a database of connector outputs
 - Not just "notes generated from thoughts"
 - Not the physical executor — knowledge supports reasoning, it does not run tasks
 
-## Relationship to agents and creation
-
-`creation` uses knowledge when interpreting intent, framing quests, or evaluating decisions.
+## Relationship to agents and workflows
 
 `agents` use knowledge when applying domain expertise to a task — a ThoughtAgent may draw on writing principles, a CareerAgent on career frameworks, a ResearchAgent on research methodologies.
 
@@ -49,6 +46,6 @@ Knowledge is the soft layer. It does not own goals or artifacts, and it does not
 
 ## Role in the architecture
 
-`knowledge` sits alongside `agents` and `workflows` in the layer below `creation` and `runtime`, above `runners`, `connectors`, `governance`, `storage`, and `outputs`.
+`knowledge` sits alongside `agents` and `workflows` in the layer below `runtime`, above `runners`, `connectors`, `governance`, and `storage`.
 
 It is tool-agnostic. Notion may store some knowledge artifacts, but the knowledge layer itself does not depend on Notion or any other external system. Knowledge assets should be callable regardless of which storage backend or connector is active.
