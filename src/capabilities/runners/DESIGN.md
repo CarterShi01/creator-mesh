@@ -142,7 +142,7 @@ RunnerContext {
 }
 ```
 
-For Claude Code: `files` provides relevant source paths; `constraints` carries AGENTS.md rules or scope limits.
+For Claude Code: `files` provides relevant source paths; `constraints` carries CLAUDE.md rules or scope limits.
 
 For LocalScript: `workingDirectory` and `parameters` are primary; `files` is optional context.
 

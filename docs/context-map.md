@@ -6,13 +6,15 @@ This is the compact source map for AI coding agents working in this project.
 
 Before reading any implementation file, read in this order:
 
-1. `AGENTS.md`
-2. `docs/context-map.md` — this file
-3. `docs/architecture.md`
-4. Target directory `README.md`
-5. Target directory `DESIGN.md` — if it exists
-6. Target directory `INTERFACE.md` — if it exists
-7. Only then: specific implementation files needed for the task
+1. `CLAUDE.md`
+2. `docs/blueprint.md` — north star and convergence rule
+3. `docs/control-plane/progress.md` — current status
+4. `docs/context-map.md` — this file (for `src/` work)
+5. `docs/architecture.md`
+6. Target directory `README.md`
+7. Target directory `DESIGN.md` — if it exists
+8. Target directory `INTERFACE.md` — if it exists
+9. Only then: specific implementation files needed for the task
 
 ## Client Layer
 

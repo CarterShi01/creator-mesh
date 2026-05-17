@@ -38,9 +38,9 @@ Update direction: implementation file → INTERFACE.md → DESIGN.md → README.
 
 Layer ordering from foundation to top:
 
-1. `src/core`, `src/shared` — zero dependencies; changes here affect everything above
-2. `src/triggers`, `src/intake`, `src/agents`, `src/runners`, `src/connectors`, `src/storage`, `src/governance`
-3. `src/knowledge`, `src/orchestrator`, `src/outputs`
+1. `src/shared` — zero dependencies; changes here affect everything above
+2. `src/triggers`, `src/agents`, `src/capabilities`, `src/storage`, `src/governance`
+3. `src/creation`, `src/knowledge`, `src/runtime`, `src/outputs`
 4. `src/workflows` — integrates all layers; highest propagation surface
 
 After updating an INTERFACE.md, ask:

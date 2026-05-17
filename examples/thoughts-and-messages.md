@@ -1,6 +1,6 @@
 # Thoughts and Messages
 
-CreatorMesh starts from two core input primitives: Thoughts and Messages.
+Examples of the two core input primitives that CreatorMesh processes.
 
 ## Thoughts
 

@@ -11,14 +11,16 @@ The goal is to reduce context cost by reading compact architecture and interface
 
 ## Procedure
 
-1. Read AGENTS.md.
-2. Read docs/context-map.md.
-3. Read docs/architecture.md.
-4. Identify the target source directory.
-5. Read the target directory README.md.
-6. Read the target directory DESIGN.md if it exists.
-7. Read the target directory INTERFACE.md if it exists.
-8. Only then read specific implementation files needed for the task.
+1. Read `CLAUDE.md`.
+2. Read `docs/blueprint.md`.
+3. Read `docs/control-plane/progress.md`.
+4. Read `docs/context-map.md`.
+5. Read `docs/architecture.md` (if touching `src/` code).
+6. Identify the target source directory.
+7. Read the target directory `README.md`.
+8. Read the target directory `DESIGN.md` if it exists.
+9. Read the target directory `INTERFACE.md` if it exists.
+10. Only then read specific implementation files needed for the task.
 
 ## Output Before Editing
 

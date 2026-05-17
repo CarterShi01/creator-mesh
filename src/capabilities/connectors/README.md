@@ -19,7 +19,7 @@ Possible future connectors may include:
 
 ## Port Pattern
 
-All connectors implement **ConnectorPort** — a single normalized interface with a `capabilities()` registry and an `execute(ConnectorAction)` method. Callers in `src/orchestrator`, `src/workflows`, and `src/outputs` depend only on `ConnectorPort`, never on a specific adapter.
+All connectors implement **ConnectorPort** — a single normalized interface with a `capabilities()` registry and an `execute(ConnectorAction)` method. Callers in `src/runtime`, `src/workflows`, and `src/outputs` depend only on `ConnectorPort`, never on a specific adapter.
 
 The **CapabilityRegistry** declares which standard capabilities (read, search, create, update, append, delete, sync, subscribe, execute) a connector supports, at what permission level, and under what approval conditions.
 

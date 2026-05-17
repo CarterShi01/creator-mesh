@@ -1,5 +1,9 @@
 # Knowledge
 
+> **Status: Planned (Phase 2/3 target)**
+> This module owns callable soft knowledge assets. No implementation code exists yet. Phase 1 dispatch does not depend on it.
+> When naming new Phase 1 constructs that relate to this module's concepts, use [convergence.md](../../docs/control-plane/convergence.md) to find the aligned name.
+
 `src/knowledge` owns callable soft knowledge.
 
 Knowledge provides the soft cognitive substrate for CreatorMesh. It contains reusable domain understanding, skills, principles, examples, checklists, and context that can be called by `creation` and `agents` when interpreting problems or producing outputs.

@@ -1,5 +1,7 @@
 # CreatorMesh Control Plane Vision
 
+> Phase 1 positioning document. For the unified strategic blueprint covering both Phase 0 and Phase 1, see [`../blueprint.md`](../blueprint.md).
+
 CreatorMesh is an AI workflow control plane for super-individuals and small teams.
 
 It starts as a lightweight glue layer that coordinates existing tools such as GitHub, Claude Code, OpenClaw, chat channels, GitHub Actions, and shell scripts.

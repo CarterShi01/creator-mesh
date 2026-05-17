@@ -30,10 +30,10 @@ This module was formed by merging `src/core` and `src/intake` into `src/triggers
 
 `triggers` is the entry point of the system. All inputs enter CreatorMesh through this layer.
 
-It defines what a Thought is, what a Message is, and how they are created with enforced invariants. It does not decide what to do with them — that is the responsibility of `creation` and `orchestrator`.
+It defines what a Thought is, what a Message is, and how they are created with enforced invariants. It does not decide what to do with them — that is the responsibility of `creation` and `runtime`.
 
 ## Zero-dependency invariant
 
-`src/triggers` must not import from higher-level modules: `creation`, `knowledge`, `workflows`, `orchestrator`, `agents`, `runners`, `connectors`, `governance`, `storage`, or `outputs`.
+`src/triggers` must not import from higher-level modules: `creation`, `knowledge`, `workflows`, `runtime`, `agents`, `capabilities`, `governance`, `storage`, or `outputs`.
 
 It may import from `src/shared` if strictly necessary. Ideally it remains self-contained.

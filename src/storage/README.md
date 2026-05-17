@@ -1,5 +1,9 @@
 # Storage
 
+> **Status: Planned (Phase 2/3 target)**
+> This module provides persistence abstractions. No implementation code exists yet — `runs.jsonl` is the Phase 1 stand-in.
+> When naming new Phase 1 constructs that relate to this module's concepts, use [convergence.md](../../docs/control-plane/convergence.md) to find the aligned name.
+
 The `storage` directory contains persistence abstractions and storage adapters.
 
 CreatorMesh may start local-first, but it should be able to support different storage backends over time.

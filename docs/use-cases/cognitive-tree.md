@@ -57,8 +57,7 @@ Possible outputs include:
 
 This use case uses the general CreatorMesh architecture:
 
-- `triggers` receives the initial signal.
-- `intake` normalizes the input.
+- `triggers` receives and normalizes the initial signal.
 - `knowledge` handles knowledge structure and relationships.
 - `agents` provide reasoning roles such as classification, placement, reflection, and review.
 - `workflows` defines the end-to-end cognitive tree flow.

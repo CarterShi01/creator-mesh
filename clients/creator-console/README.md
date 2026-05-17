@@ -1,5 +1,9 @@
 # CreatorMesh Console
 
+> **Status: Frozen (pre-pivot prototype)**
+> This directory is a mock-only PWA prototype built before the Phase 1 control plane pivot (2026-05-11). It has not been integrated with Phase 1 dispatch.
+> Preserved as a reference implementation for the future Phase 0 multi-role UI. Do not modify during Phase 1 work.
+
 Isolated PWA-ready web client and Tauri macOS desktop shell for the CreatorMesh Agent OS.
 Phase 2 — PWA + Phase 3 — Tauri Desktop Shell + Phase 4 — Governed Runtime Bridge + Phase 5 — Session Bridge / Remote Control MVP.
 

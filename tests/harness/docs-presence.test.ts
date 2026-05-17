@@ -9,8 +9,12 @@ const srcModules = readdirSync(join(ROOT, "src")).filter((name) =>
 );
 
 describe("docs presence: root files", () => {
-  it("AGENTS.md exists", () => {
-    expect(existsSync(join(ROOT, "AGENTS.md"))).toBe(true);
+  it("CLAUDE.md exists", () => {
+    expect(existsSync(join(ROOT, "CLAUDE.md"))).toBe(true);
+  });
+
+  it("docs/blueprint.md exists", () => {
+    expect(existsSync(join(ROOT, "docs", "blueprint.md"))).toBe(true);
   });
 
   it("README.md exists", () => {

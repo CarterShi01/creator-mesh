@@ -85,7 +85,7 @@ The current goal is to:
 
 ### Why harness validation exists
 
-CreatorMesh relies on AI agents following project rules: reading order, interface-first design, zero-dependency invariants, documentation presence, and skill format. These rules are written in `AGENTS.md` and `CLAUDE.md`, but words in a markdown file are not enforced automatically.
+CreatorMesh relies on AI agents following project rules: reading order, interface-first design, zero-dependency invariants, documentation presence, and skill format. These rules are written in `CLAUDE.md` and `docs/blueprint.md`, but words in a markdown file are not enforced automatically.
 
 The harness layer exists to make project rules machine-verifiable. When a rule is in the harness, it fails a test rather than silently drifting.
 
@@ -103,7 +103,7 @@ Without a harness test, these violations pass `npm run verify:quick` undetected.
 | Test file | Rule enforced |
 |---|---|
 | `architecture-boundaries.test.ts` | `src/triggers` must not import from higher-level `src/*` modules (input-boundary invariant) |
-| `docs-presence.test.ts` | `AGENTS.md`, `README.md`, `docs/architecture.md`, `docs/context-map.md` must exist; each `src/` module must have `README.md` and `INTERFACE.md` |
+| `docs-presence.test.ts` | `CLAUDE.md`, `docs/blueprint.md`, `README.md`, `docs/architecture.md`, `docs/context-map.md` must exist; each `src/` module must have `README.md` and `INTERFACE.md` |
 | `skills-format.test.ts` | Each `.claude/skills/*/` directory must contain `SKILL.md`; test is a no-op if `.claude/skills` is absent |
 
 ### Placeholder checks (not yet implemented)

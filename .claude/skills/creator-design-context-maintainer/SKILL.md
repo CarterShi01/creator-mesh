@@ -48,9 +48,9 @@ Update order within a module (specific → abstract):
 4. `README.md` — purpose and boundaries; updated only when the module's role changes significantly
 
 Update order across modules (foundation → top):
-1. `src/core`, `src/shared` — foundational; changes propagate widely
-2. `src/triggers`, `src/intake`, `src/agents`, `src/runners`, `src/connectors`, `src/storage`, `src/governance`
-3. `src/knowledge`, `src/orchestrator`, `src/outputs`
+1. `src/shared` — foundational; changes propagate widely
+2. `src/triggers`, `src/agents`, `src/capabilities`, `src/storage`, `src/governance`
+3. `src/creation`, `src/knowledge`, `src/runtime`, `src/outputs`
 4. `src/workflows` — highest-level; most abstract and most concise
 
 When a lower-level module's design changes, ask:
