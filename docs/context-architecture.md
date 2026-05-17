@@ -16,8 +16,11 @@ CreatorMesh is structured to make this path explicit and cheap to follow.
 
 When starting work on any task, read in this order:
 
-1. **`AGENTS.md`**  
-   Project purpose, rules, reading order, cost control principles, and prohibited defaults. This is the entry point for every session.
+1. **`CLAUDE.md`**  
+   Current phase, required reading order, hard rules, and convergence rule. This is the entry point for every session.
+
+1a. **`docs/blueprint.md`**  
+   North star: long-term vision, current instance, phase model, convergence rule, implementation snapshot.
 
 2. **`docs/context-map.md`** (if it exists)  
    A living summary of the current state of the project. What exists, what is in progress, what decisions have been made recently. This prevents rediscovery.
@@ -38,9 +41,9 @@ This order is designed to answer the question "what do I need to know?" as cheap
 
 ## The Role of Each Document
 
-### `AGENTS.md`
+### `CLAUDE.md` and `docs/blueprint.md`
 
-The project's rulebook for AI agents. Every session starts here. It defines how to read the project, how to plan, and what not to do by default.
+`CLAUDE.md` is the operational rulebook for every session: reading order, hard rules, and the convergence rule. `docs/blueprint.md` provides the strategic north star: long-term vision, current instance, phase evolution model, and implementation snapshot. Together they replace what `AGENTS.md` formerly provided.
 
 ### `docs/context-map.md`
 

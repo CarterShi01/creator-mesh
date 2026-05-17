@@ -1,5 +1,9 @@
 # Creation
 
+> **Status: Planned (Phase 2/3 target)**
+> This module defines the semantic kernel. No implementation code exists yet. Phase 1 dispatch does not depend on it.
+> When naming new Phase 1 constructs that relate to this module's concepts, use [convergence.md](../../docs/control-plane/convergence.md) to find the aligned name.
+
 `src/creation` is the semantic kernel of CreatorMesh. It defines how the system understands and evolves what the creator is pursuing. It does not execute tools directly. Instead, it frames quests, constructs objects, maps relations, proposes actions, tracks artifacts, and absorbs feedback. Runtime, agents, workflows, runners, connectors, governance, storage, and outputs execute and persist this work through their own boundaries.
 
 ## What creation answers

@@ -1,5 +1,9 @@
 # Outputs
 
+> **Status: Planned (Phase 2/3 target)**
+> This module handles output generation and delivery preparation. No implementation code exists yet. Phase 1 dispatch does not depend on it.
+> When naming new Phase 1 constructs that relate to this module's concepts, use [convergence.md](../../docs/control-plane/convergence.md) to find the aligned name.
+
 The `outputs` directory contains output generation and delivery preparation logic.
 
 Outputs are the results CreatorMesh produces after processing inputs.

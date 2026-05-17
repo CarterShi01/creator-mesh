@@ -1,63 +1,32 @@
 # CreatorMesh
 
-CreatorMesh is a personal agent operating system for independent creators, turning thoughts and messages into knowledge, plans, actions, and shipped products.
+CreatorMesh is a personal AI agent platform for independent creators and developers.
 
-## What is CreatorMesh?
+**Long-term vision:** A general multi-role agent operating system that turns thoughts, messages, and intentions into structured knowledge, plans, actions, and shipped products — across any role a creator plays.
 
-CreatorMesh is designed for independent creators who need to capture ideas, process external messages, organize knowledge, plan meaningful work, and turn intent into real outputs.
+**Current phase:** A 7×24 dispatch control plane for a super-individual developer, coordinating Claude Code agents across multiple GitHub repositories to act as a small team.
 
-It is not only for programmers. It is for developers, lawyers, writers, influencers, financial professionals, consultants, educators, researchers, designers, solo founders, and other independent professionals who need more leverage over their thoughts, messages, workflows, and products.
+→ [docs/blueprint.md](docs/blueprint.md) — full strategic north star and phase model
 
-## Core Inputs
+## How it works (Phase 1)
 
-CreatorMesh starts from two core input primitives:
+1. A task is dispatched to a managed GitHub repository as an issue.
+2. A `@claude` comment triggers the Claude Code GitHub Action.
+3. Claude Code modifies the repository and opens a pull request.
+4. A human reviews and merges.
 
-### Thoughts
+→ [docs/control-plane/progress.md](docs/control-plane/progress.md) — current capabilities
 
-Thoughts are internally generated inputs.
+## Who is it for?
 
-They include ideas, reflections, notes, insights, plans, personal thinking, observations, decisions, and creative sparks.
-
-### Messages
-
-Messages are externally triggered inputs.
-
-They include opportunities, feedback, requests, conversations, client messages, user responses, collaboration updates, work items, and tasks.
-
-## From Inputs to Outputs
-
-CreatorMesh helps independent creators transform thoughts and messages into:
-
-- Structured knowledge
-- Plans
-- Actions
-- Workflows
-- Shipped products
-
-Each step from input to output should remain controllable. Human review, correction, approval, and intervention should be supported by default.
-
-## Why CreatorMesh?
-
-Independent creators often work across many roles at once.
-
-They think, write, communicate, plan, build, publish, respond, and improve continuously. Their most valuable inputs are often scattered across notes, messages, conversations, documents, tasks, and tools.
-
-CreatorMesh aims to provide a personal agent operating system that connects these inputs and helps turn them into structured, actionable, and shippable outcomes.
+Independent developers, designers, researchers, writers, solo founders — anyone operating across multiple roles who needs continuous, asynchronous agent execution without a full-time team.
 
 ## Principles
 
-- Creator-first
-- Trigger-first
-- Local-first where possible
 - Human-in-the-loop by default
-- Extensible agent architecture
-- Auditability and user control
-
-## Current Status
-
-CreatorMesh is in early exploration and initial development.
-
-The current goal is to establish a clean open-source foundation, clear positioning, and a minimal project structure before adding integrations or agent logic.
+- Borrow before building (GitHub + Claude Code as execution layer)
+- Converge gradually (Phase 1 dispatch → Phase 2 TypeScript ports → Phase 3 owned runtime)
+- Auditability and user control at every step
 
 ## License
 

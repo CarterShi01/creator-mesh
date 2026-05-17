@@ -35,6 +35,8 @@ description: Use when starting any CreatorMesh coding, architecture, documentati
 | `/creator-interface-maintainer` | After changing public behavior, types, or module boundaries |
 | `/creator-skill-harvester` | After completing a meaningful session to extract reusable patterns |
 | `/creator-design-context-maintainer` | After architecture discussions or design decisions to preserve context |
+| `/creator-progress-maintainer` | After any implementation, doc, design, or architecture change — updates project progress document |
+| `/creator-context-brief` | When generating a compressed context brief for ChatGPT or another LLM handoff |
 
 ## How to Invoke
 

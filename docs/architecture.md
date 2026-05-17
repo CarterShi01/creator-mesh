@@ -1,5 +1,11 @@
 # CreatorMesh Architecture
 
+> **This document describes the Phase 0 target architecture (13-layer framework).**
+> Current implementation status → [`docs/control-plane/progress.md`](control-plane/progress.md)
+> Current Phase 1 Borrow dispatch instance → [`docs/control-plane/`](control-plane/)
+> Phase 1 ↔ Phase 0 naming alignment → [`docs/control-plane/convergence.md`](control-plane/convergence.md)
+> North star and phase model → [`docs/blueprint.md`](blueprint.md)
+
 CreatorMesh is a personal creator operating system. It helps independent creators turn thoughts, messages, and intentions into structured objects, actions, artifacts, and feedback.
 
 CreatorMesh keeps its internal model below the surface. Users interact with a simple creator-facing mental model — Quest, Object, Action, Output, and Review — while the system internally expands this into runtime execution, creation semantics, knowledge assets, agents, workflows, capabilities, governance, storage, and outputs.

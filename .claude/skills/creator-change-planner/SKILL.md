@@ -10,12 +10,13 @@ Use this skill before implementing any non-trivial change.
 ## Procedure
 
 1. Understand the requested change.
-2. Read AGENTS.md.
-3. Read docs/context-map.md.
-4. Identify target modules.
-5. Read target module README.md, DESIGN.md if it exists, and INTERFACE.md if it exists.
-6. Do not read implementation files unless needed to prepare the plan.
-7. Produce a concise change plan.
+2. Read `CLAUDE.md` and `docs/blueprint.md`.
+3. Read `docs/control-plane/convergence.md` if the change involves naming new Phase 1 constructs.
+4. Read `docs/context-map.md`.
+5. Identify target modules.
+6. Read target module `README.md`, `DESIGN.md` if it exists, and `INTERFACE.md` if it exists.
+7. Do not read implementation files unless needed to prepare the plan.
+8. Produce a concise change plan.
 
 ## Change Plan Format
 
@@ -49,9 +50,9 @@ Update documentation from the most specific level upward, stopping when a level 
 After updating a module's docs, check whether higher-layer modules need corresponding updates.
 
 Layer order (foundation to top):
-1. `src/core`, `src/shared`
-2. `src/triggers`, `src/intake`, `src/agents`, `src/runners`, `src/connectors`, `src/storage`, `src/governance`
-3. `src/knowledge`, `src/orchestrator`, `src/outputs`
+1. `src/shared`
+2. `src/triggers`, `src/agents`, `src/capabilities`, `src/storage`, `src/governance`
+3. `src/creation`, `src/knowledge`, `src/runtime`, `src/outputs`
 4. `src/workflows`
 
 Higher-layer updates should be more abstract and concise — summarize the impact, do not repeat the detail.

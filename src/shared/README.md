@@ -1,5 +1,8 @@
 # Shared
 
+> **Status: Planned (Phase 2/3 target)**
+> This module contains shared utilities. No implementation code exists yet.
+
 The `shared` directory contains utilities that are used across multiple layers.
 
 Shared code should remain small and generic.
@@ -18,7 +21,7 @@ Shared code should remain small and generic.
 - Agent role definitions
 - Tool-specific connectors
 - Workflow-specific logic
-- Domain models that belong in `core`
+- Domain models that belong in `triggers` or `creation`
 
 ## Role in the architecture
 
