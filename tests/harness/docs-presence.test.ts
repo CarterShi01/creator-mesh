@@ -35,9 +35,5 @@ describe("docs presence: src module documentation", () => {
     it(`src/${mod} has README.md`, () => {
       expect(existsSync(join(ROOT, "src", mod, "README.md"))).toBe(true);
     });
-
-    it(`src/${mod} has INTERFACE.md`, () => {
-      expect(existsSync(join(ROOT, "src", mod, "INTERFACE.md"))).toBe(true);
-    });
   }
 });

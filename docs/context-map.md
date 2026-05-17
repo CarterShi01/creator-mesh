@@ -12,15 +12,13 @@ Before reading any implementation file, read in this order:
 4. `docs/context-map.md` — this file (for `src/` work)
 5. `docs/architecture.md`
 6. Target directory `README.md`
-7. Target directory `DESIGN.md` — if it exists
-8. Target directory `INTERFACE.md` — if it exists
-9. Only then: specific implementation files needed for the task
+7. Only then: specific implementation files needed for the task
 
 ## Client Layer
 
 | Directory | Purpose |
 |-----------|---------|
-| `clients/creator-console` | Phase 4 Governed Runtime Bridge — isolated Vite + React + TypeScript PWA client; WorkflowClient abstraction + RunLedger; mock-only runtime; zero src/ import; read DESIGN.md before working here |
+| `clients/creator-console` | Phase 4 Governed Runtime Bridge — isolated Vite + React + TypeScript PWA client; WorkflowClient abstraction + RunLedger; mock-only runtime; zero src/ import. Status: Frozen (pre-pivot prototype). |
 
 ## Source Map
 
@@ -41,23 +39,7 @@ Before reading any implementation file, read in this order:
 | `src/outputs` | Output artifacts and write-back preparation |
 | `src/shared` | Small reusable utilities |
 
-## When to read creation docs
-
-Read `src/creation/` docs before `src/knowledge/` or `src/workflows/` when working on:
-
-- `Quest`, `CreatorObject`, `CreatorAction`, `ArtifactRef`, `FeedbackRecord`, or `CreationRelation`
-- any flow that tracks what the creator is pursuing (not how the system executes)
-- semantic intent, worldview, or methodological kernel questions
-- long-running continuity across many workflow runs, agent steps, or tool interactions
 
 ## Cost Rule
 
-Do not read implementation files until the relevant interface document has been read.
-
-If `INTERFACE.md` exists in the target directory, read it before opening any source file.
-
-## Change Rule
-
-When a module's public concepts, inputs, outputs, dependencies, or invariants change, update its `INTERFACE.md`.
-
-The context map and interface documents are the source of truth for agents. Keep them current.
+Do not read implementation files until you have read the target module's `README.md`. Prefer reading `.ts` source files directly over any secondary document.
