@@ -5,18 +5,21 @@ PLANS_INDEX_FILE="${CREATORMESH_PLANS_INDEX_FILE:-$HOME/creator-mesh-runtime/pla
 
 IDEA_ID=""
 PRIMARY_PROJECT_ID=""
+YES_ALL=false
 
 usage() {
   cat <<USAGE
 Usage:
-  $0 --idea-id <slug> --project <project_id>
+  $0 --idea-id <slug> --project <project_id> [--yes]
 
 Arguments:
   --idea-id   The idea slug matching a merged plan under docs/plans/<slug>/
   --project   The primary managed project to dispatch child tasks to
+  --yes       Dispatch all tasks without interactive prompts
 
 Examples:
   $0 --idea-id 2026-05-18-idea-ranking --project idea-factory
+  $0 --idea-id 2026-05-18-idea-ranking --project idea-factory --yes
 
 Prerequisites:
   - docs/plans/<idea-id>/tasks.jsonl must exist locally (run git pull after merging the plan PR)
@@ -28,6 +31,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --idea-id)   IDEA_ID="${2:-}";              shift 2 ;;
     --project)   PRIMARY_PROJECT_ID="${2:-}";   shift 2 ;;
+    --yes|-y)    YES_ALL=true;                  shift ;;
     -h|--help)   usage; exit 0 ;;
     *)           echo "Unknown argument: $1" >&2; usage; exit 1 ;;
   esac
@@ -144,7 +148,13 @@ while IFS= read -r line; do
   fi
   echo ""
 
-  read -r -p "Dispatch this task? [y/N] " ANSWER </dev/tty
+  if [[ "$YES_ALL" == true ]]; then
+    ANSWER="y"
+  elif [[ -e /dev/tty ]]; then
+    read -r -p "Dispatch this task? [y/N] " ANSWER </dev/tty
+  else
+    read -r -p "Dispatch this task? [y/N] " ANSWER
+  fi
   echo ""
 
   if [[ "$ANSWER" =~ ^[Yy]$ ]]; then
