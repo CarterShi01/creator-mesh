@@ -36,3 +36,69 @@ jobs:
           claude_args: |
             --max-turns 30
             --allowedTools "Bash(npm install),Bash(npm run build),Bash(npm run test),Bash(npm run lint),Bash(pnpm install),Bash(pnpm build),Bash(pnpm test),Bash(pnpm lint)"
+
+      - name: Create pull request from Claude branch
+        if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+
+          echo "Looking for Claude branch for issue #${ISSUE_NUMBER}"
+
+          current_branch="$(git branch --show-current || true)"
+          branch=""
+
+          if [[ "$current_branch" == claude/issue-${ISSUE_NUMBER}-* ]]; then
+            branch="$current_branch"
+          else
+            git fetch origin "+refs/heads/claude/issue-${ISSUE_NUMBER}-*:refs/remotes/origin/claude/issue-${ISSUE_NUMBER}-*" || true
+            branch="$(git for-each-ref \
+              --sort=-committerdate \
+              --format='%(refname:short)' \
+              "refs/remotes/origin/claude/issue-${ISSUE_NUMBER}-*" \
+              | head -n 1 \
+              | sed 's#^origin/##')"
+          fi
+
+          if [[ -z "$branch" ]]; then
+            echo "No Claude branch found for issue #${ISSUE_NUMBER}. Nothing to PR."
+            exit 0
+          fi
+
+          echo "Claude branch: $branch"
+
+          git fetch origin "$DEFAULT_BRANCH" "$branch"
+
+          if git diff --quiet "origin/${DEFAULT_BRANCH}...origin/${branch}"; then
+            echo "No changes between ${DEFAULT_BRANCH} and ${branch}. Nothing to PR."
+            exit 0
+          fi
+
+          existing_pr="$(gh pr list \
+            --repo "${{ github.repository }}" \
+            --state open \
+            --head "$branch" \
+            --json number \
+            --jq '.[0].number // empty')"
+
+          if [[ -n "$existing_pr" ]]; then
+            echo "PR already exists: #${existing_pr}"
+            exit 0
+          fi
+
+          gh pr create \
+            --repo "${{ github.repository }}" \
+            --base "$DEFAULT_BRANCH" \
+            --head "$branch" \
+            --title "Claude: resolve issue #${ISSUE_NUMBER}" \
+            --body "This PR was automatically created from Claude Code changes for issue #${ISSUE_NUMBER}.
+
+            Source branch:
+            - ${branch}
+
+            Notes:
+            - Created by the Claude Code GitHub Action.
+            - Please review before merging."
