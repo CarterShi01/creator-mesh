@@ -81,7 +81,9 @@ One JSON object per line. Each line is a `WorkflowInput` for a child dispatch (s
 | `project_id` | string | yes | Target managed project, e.g. `idea-factory` |
 | `title` | string | yes | GitHub issue title. Under 72 chars. Action-verb start. |
 | `body` | string | yes | Full task body following the Coding-task standard form |
-| `depends_on` | string[] | yes | List of `task_id` values this task depends on. Empty array if none. |
+| `depends_on` | string[] | yes | List of `task_id` values this task depends on. Empty array if none. Must be listed in topological order — `dispatch_plan.sh` validates and rejects plans where a task appears before its dependencies. |
+| `issue_number` | string | no | Set by `dispatch_plan.sh` after the task is dispatched. |
+| `issue_url` | string | no | Set by `dispatch_plan.sh` after the task is dispatched. |
 
 **Example line:**
 
@@ -167,8 +169,10 @@ One JSON object per line. Append-only (except status updates by `dispatch_plan.s
 | `primary_project_id` | string | Primary managed project |
 | `plan_artifact_path` | string | Relative path in creator-mesh repo, e.g. `docs/plans/2026-05-18-idea-ranking/` |
 | `planning_issue_url` | string | URL of the planning task issue in the creator-mesh repo |
-| `tracker_issue_url` | string | URL of the tracker issue in the primary managed-project repo (filled after Planner runs) |
+| `tracker_issue_url` | string | URL of the tracker issue in the primary managed-project repo (filled by `dispatch_plan.sh` or backfilled by `plan_progress.sh --write-back`) |
 | `status` | string | See status lifecycle above |
+
+`plan_progress.sh --write-back` advances `status` to `completed` when all tasks are merged, and backfills `tracker_issue_url` from `plan.md` if the index record has it empty.
 
 **This is a cache.** If it drifts from Git truth, `list_plans.sh` will show stale data. Reconcile by comparing `docs/plans/*/` with the index.
 
@@ -200,6 +204,31 @@ Validation commands:
 PR requirements:
 Keep the change small and focused. Do not merge automatically. Create a pull request for human review.
 ```
+
+---
+
+## Runtime runs: `~/creator-mesh-runtime/runs/runs.jsonl`
+
+One JSON object per line, appended by `create_claude_task.sh` for every dispatched issue.
+
+**Schema (current fields):**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `created_at` | ISO8601 | When the task was dispatched |
+| `kind` | string | `"plan"` for planner runs, `"task"` for child task runs |
+| `project_id` | string | Managed project the issue was created in |
+| `repo` | string | GitHub repo slug, e.g. `CarterShi01/idea-factory` |
+| `executor` | string | Always `"claude-code"` in Phase 1 |
+| `issue_number` | string | GitHub issue number |
+| `issue_url` | string | Full GitHub issue URL |
+| `title` | string | Issue title |
+| `plan_id` | string | `idea_id` of the parent plan (empty for ad-hoc dispatches) |
+| `task_id` | string | `task_id` within the plan (e.g. `T01`; empty for plan-records and ad-hoc) |
+| `status` | string | Starts as `"dispatched"`; refreshed by `plan_progress.sh --write-back` to the live GitHub status |
+| `status_updated_at` | ISO8601 | When `status` was last refreshed (present only after a write-back) |
+
+**Phase 0 alignment:** each record corresponds to one `WorkflowRun`. `plan_id` → future `parentRunId`; `task_id` → `WorkflowStepRecord.stepId` of the task within the parent plan run.
 
 ---
 

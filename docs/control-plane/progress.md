@@ -33,13 +33,21 @@ The full Phase 1 dispatch loop is operational end-to-end, and the first multi-ro
 **Planner role (validated end-to-end 2026-05-18):**
 - `scripts/dispatch/create_plan_task.sh` dispatches a planning task into the `creator-mesh` repo itself using a planner prompt template.
 - `scripts/dispatch/templates/planner-prompt.md` instructs Claude Code to produce `plan.md`, `tasks.jsonl`, and `decision-log.md` only — no external repo writes.
-- `scripts/dispatch/dispatch_plan.sh` creates the tracker issue in the target project (first target-project touch, after human plan approval), then iterates `tasks.jsonl` and dispatches each as a child `WorkflowRun`. Supports `--yes` for non-interactive dispatch.
+- `scripts/dispatch/dispatch_plan.sh` creates the tracker issue in the target project (first target-project touch, after human plan approval), validates topological order of `tasks.jsonl`, then iterates tasks sequentially (waits for each PR to merge before dispatching the next). Supports `--yes` for non-interactive dispatch and `--no-wait` for dry runs.
+- After each dispatch, `dispatch_plan.sh` back-writes `issue_number`/`issue_url` into `tasks.jsonl` so the Git artifact records what was dispatched.
 - `scripts/dispatch/list_plans.sh` lists all plan records from the runtime plans index.
 - Plan storage follows the three-layer model: Git artifact (source of truth) + tracker issue (status board) + runtime index (cache).
 - Natural-language entry via `skills/creatormesh-plan/SKILL.md`.
 - Plan format fully specified in `docs/control-plane/plan-artifact-format.md`.
 - All new constructs named in Phase 0 alignment — see `docs/control-plane/convergence.md`.
 - First real plan validated: `2026-05-18-idea-ranking` — 4 child tasks dispatched to `idea-factory` (issues #8–#11).
+
+**Plan-level progress tracking (2026-05-18):**
+- `scripts/dispatch/plan_progress.sh` aggregates per-task GitHub status into a plan-level view: per-task table, completion percentage, and next-action hints.
+- `--write-back` refreshes `runs.jsonl` status fields from live GitHub state and advances `plans/index.jsonl` to `completed` when all tasks are merged.
+- `--refresh-tracker` rewrites the GitHub tracker issue checklist, marking tasks `[x]` as they merge and appending issue/PR numbers.
+- Natural-language entry via `skills/creatormesh-progress/SKILL.md`.
+- `runs.jsonl` records now carry `kind` (`plan` | `task`), `plan_id`, and `task_id` fields, enabling plan-scoped queries (`list_runs.sh --idea-id <slug>`).
 
 **GitHub Action (`.github/workflows/claude.yml`):**
 - `Write`, `Edit`, `Bash(mkdir *)`, `Bash(gh issue create *)`, `Bash(gh pr create *)`, `Bash(gh api *)` added to `allowedTools`.
@@ -62,13 +70,13 @@ CreatorMesh acts as the dispatch and control layer: it decomposes ideas into tas
 
 ## Known Gaps
 
-- `plans/index.jsonl` `tracker_issue_url` field is empty for the first plan run (dispatched before the design fix moved tracker issue creation to `dispatch_plan.sh`). Future runs will populate it correctly.
-- No `kind: "plan" | "task"` field in `runs.jsonl` — all records appear as tasks; plans are only distinguishable by title prefix `[Plan]`.
-- Tracker issue checklist is not auto-updated as child PRs merge — manual update required.
+- `plans/index.jsonl` `tracker_issue_url` for the first plan run (`2026-05-18-idea-ranking`) is empty — dispatched before the tracker-creation fix. Run `plan_progress.sh --idea-id 2026-05-18-idea-ranking --write-back` to backfill.
+- `dispatch_plan.sh` does not automatically commit the back-written `tasks.jsonl` (issue_number/issue_url fields) — the operator must `git add docs/plans/<idea-id>/tasks.jsonl && git commit` after dispatch.
+- Tracker issue checklist refresh requires explicit `--refresh-tracker` flag — not automatic on merge.
+- No `WorkflowRunnerPort` TypeScript implementation yet (Phase 2 target).
 
 ## Next Steps
 
-- Add `kind: "plan" | "task"` field to `runs.jsonl` entries (back-compat with default `"task"`).
-- Build a helper to auto-update the tracker issue checklist as child PRs merge.
-- Monitor idea-factory child PRs (#8–#11) through to merge; close tracker issue when all merged.
+- Backfill `2026-05-18-idea-ranking`: run `plan_progress.sh --write-back --refresh-tracker` to reconcile runtime state.
+- Add `git commit` reminder or automation after `dispatch_plan.sh` back-writes `tasks.jsonl`.
 - Phase 2: replace shell scripts with TypeScript modules implementing Phase 0 ports (`RunnerPort`, `ConnectorPort`, `WorkflowRun` storage adapter).
