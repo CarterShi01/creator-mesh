@@ -7,16 +7,21 @@ PROJECTS_FILE="${CREATORMESH_PROJECTS_FILE:-$HOME/creator-mesh-runtime/config/pr
 IDEA_ID=""
 PRIMARY_PROJECT_ID=""
 YES_ALL=false
+NO_WAIT=false
+POLL_INTERVAL=30
 
 usage() {
   cat <<USAGE
 Usage:
-  $0 --idea-id <slug> --project <project_id> [--yes]
+  $0 --idea-id <slug> --project <project_id> [--yes] [--no-wait]
 
 Arguments:
-  --idea-id   The idea slug matching a merged plan under docs/plans/<slug>/
-  --project   The primary managed project to dispatch child tasks to
-  --yes       Dispatch all tasks without interactive prompts
+  --idea-id    The idea slug matching a merged plan under docs/plans/<slug>/
+  --project    The primary managed project to dispatch child tasks to
+  --yes        Dispatch all tasks without interactive prompts
+  --no-wait    Dispatch all tasks immediately without waiting for each PR to
+               merge (reverts to the old parallel behaviour — causes conflicts
+               when tasks share files, use only for dry runs)
 
 Examples:
   $0 --idea-id 2026-05-18-idea-ranking --project idea-factory
@@ -33,6 +38,7 @@ while [[ $# -gt 0 ]]; do
     --idea-id)   IDEA_ID="${2:-}";              shift 2 ;;
     --project)   PRIMARY_PROJECT_ID="${2:-}";   shift 2 ;;
     --yes|-y)    YES_ALL=true;                  shift ;;
+    --no-wait)   NO_WAIT=true;                  shift ;;
     -h|--help)   usage; exit 0 ;;
     *)           echo "Unknown argument: $1" >&2; usage; exit 1 ;;
   esac
@@ -192,7 +198,67 @@ else
   echo ""
 fi
 
-# Dispatch tasks
+# ---------------------------------------------------------------------------
+# wait_for_merge: poll check_run_status.sh until the PR for a given issue
+# is merged (or a terminal failure state is reached).
+# Usage: wait_for_merge <repo> <issue_number> <task_id>
+# ---------------------------------------------------------------------------
+wait_for_merge() {
+  local repo="$1"
+  local issue_number="$2"
+  local task_id="$3"
+  local last_status=""
+
+  echo ""
+  echo "  Waiting for ${task_id} PR to be merged (polling every ${POLL_INTERVAL}s)..."
+  echo "  Issue: https://github.com/${repo}/issues/${issue_number}"
+  echo ""
+
+  while true; do
+    local status_output overall pr_url
+    status_output="$("$SCRIPT_DIR/check_run_status.sh" \
+      --repo "$repo" --issue "$issue_number" 2>/dev/null)" || true
+    overall="$(printf '%s\n' "$status_output" \
+      | awk '/^Overall/{getline; print; exit}')"
+
+    case "$overall" in
+      merged)
+        echo "  ✓ ${task_id} merged. Proceeding."
+        return 0
+        ;;
+      workflow_failed)
+        echo "  ✗ Workflow failed for ${task_id} (issue #${issue_number})."
+        printf '%s\n' "$status_output"
+        return 1
+        ;;
+      pr_closed_without_merge)
+        echo "  ✗ PR closed without merge for ${task_id}."
+        return 1
+        ;;
+      needs_human_review)
+        if [[ "$overall" != "$last_status" ]]; then
+          pr_url="$(printf '%s\n' "$status_output" \
+            | grep '^URL:' | tail -1 | awk '{print $2}')"
+          echo "  → PR open — please review and merge, then this script will continue."
+          [[ -n "$pr_url" ]] && echo "  → PR: ${pr_url}"
+        fi
+        ;;
+      *)
+        if [[ "$overall" != "$last_status" ]]; then
+          echo "  Status: ${overall:-waiting} ..."
+        fi
+        ;;
+    esac
+
+    last_status="$overall"
+    sleep "$POLL_INTERVAL"
+  done
+}
+
+# ---------------------------------------------------------------------------
+# Dispatch tasks sequentially: each task waits for its PR to merge before
+# the next task is dispatched. Use --no-wait to skip this gate.
+# ---------------------------------------------------------------------------
 DISPATCHED=0
 SKIPPED=0
 
@@ -205,14 +271,12 @@ while IFS= read -r line; do
   TASK_BODY_RAW="$(python3 -c "import json,sys; d=json.loads(sys.argv[1]); print(d.get('body',''))" "$line")"
   DEPENDS_ON="$(python3 -c "import json,sys; d=json.loads(sys.argv[1]); deps=d.get('depends_on',[]); print(', '.join(deps) if deps else 'none')" "$line")"
 
-  # Override project_id if provided on CLI, otherwise use the one in tasks.jsonl
   EFFECTIVE_PROJECT="${TASK_PROJECT:-$PRIMARY_PROJECT_ID}"
   if [[ -n "$PRIMARY_PROJECT_ID" ]]; then
     EFFECTIVE_PROJECT="$PRIMARY_PROJECT_ID"
   fi
 
   # Append back-links to the task body
-  BACK_LINKS=""
   if [[ -n "$TRACKER_ISSUE_URL" ]]; then
     BACK_LINKS="
 ---
@@ -254,12 +318,29 @@ while IFS= read -r line; do
   echo ""
 
   if [[ "$ANSWER" =~ ^[Yy]$ ]]; then
-    "$SCRIPT_DIR/create_claude_task.sh" \
+    DISPATCH_OUTPUT="$("$SCRIPT_DIR/create_claude_task.sh" \
       --project "$EFFECTIVE_PROJECT" \
       --title "$TASK_TITLE" \
-      --body "$FULL_BODY"
+      --body "$FULL_BODY")"
+    echo "$DISPATCH_OUTPUT"
     DISPATCHED=$((DISPATCHED + 1))
     echo ""
+
+    # Sequential gate: wait for this PR to merge before dispatching the next task.
+    if [[ "$NO_WAIT" != "true" ]]; then
+      DISPATCHED_ISSUE_URL="$(printf '%s\n' "$DISPATCH_OUTPUT" \
+        | grep '^Issue:' | awk '{print $2}')"
+      DISPATCHED_ISSUE_NUMBER="${DISPATCHED_ISSUE_URL##*/}"
+      if [[ -n "$DISPATCHED_ISSUE_NUMBER" ]]; then
+        wait_for_merge "$TARGET_REPO" "$DISPATCHED_ISSUE_NUMBER" "$TASK_ID" || {
+          echo ""
+          echo "Stopping dispatch after ${TASK_ID} failed. Fix the issue and re-run." >&2
+          exit 1
+        }
+      else
+        echo "  (Could not determine issue number — skipping merge wait for ${TASK_ID})"
+      fi
+    fi
   else
     echo "  Skipped ${TASK_ID}."
     SKIPPED=$((SKIPPED + 1))
