@@ -15,7 +15,8 @@
     "verify": "npm run typecheck && npm run test",
     "think": "tsx src/cli.ts",
     "runtime": "tsx src/runtime-cli.ts",
-    "server": "tsx src/server/index.ts"
+    "server": "tsx src/server/index.ts",
+    "decompose": "tsx src/decompose-cli.ts"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
