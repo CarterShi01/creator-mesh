@@ -13,7 +13,8 @@
     "verify:harness": "npm run typecheck && npm run test:harness",
     "verify:quick": "npm run typecheck && npm run test:smoke",
     "verify": "npm run typecheck && npm run test",
-    "think": "tsx src/cli.ts"
+    "think": "tsx src/cli.ts",
+    "runtime": "tsx src/runtime-cli.ts"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
@@ -23,6 +24,9 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.95.1",
+    "@langchain/anthropic": "^1.3.29",
+    "@langchain/core": "^1.1.46",
+    "@langchain/langgraph": "^1.3.0",
     "@notionhq/client": "^5.20.0"
   }
 }

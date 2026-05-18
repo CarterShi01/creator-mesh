@@ -18,9 +18,9 @@ pnpm-debug.log*
 config/*.local.yaml
 configs/*.local.yaml
 
-# Runtime state
+# Runtime state (local, outside project root — ~/creator-mesh-runtime/)
 .creator-mesh-runtime/
-runtime/
+/runtime/
 logs/
 tmp/
 

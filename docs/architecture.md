@@ -76,11 +76,11 @@ runtime / Runtime Execution Loop
 ├── Context Manager [placeholder]
 ├── Context Builder [placeholder]
 ├── Context Compression [placeholder]
-├── LLM Loop [placeholder]
-├── Tool Invocation Gateway [placeholder]
-├── Pause / Resume
-├── Permission Gate
-├── Runtime Event Log [placeholder]
+├── LLM Loop [implemented — LangGraph StateGraph + LangChain Anthropic]
+├── Tool Invocation Gateway [implemented — ControllerPanel shell adapter]
+├── Pause / Resume [implemented for structured workflows; pending for LLM loop]
+├── Permission Gate [implemented — PermissionPolicy in loop/]
+├── Runtime Event Log [implemented — JSONL writer to ~/creator-mesh-runtime/runtime-events/]
 └── Runtime Recovery [placeholder]
 
 creation / Worldview and Methodological Kernel
@@ -399,7 +399,7 @@ The following reflects the current state of the repository. Placeholder concepts
 
 **Implemented and tested:**
 - `triggers` — `Thought` and `Message` primitives, input normalization, zero-dependency invariant enforced by harness
-- `runtime` — `Runtime` class, step dispatch (agent/connector/runner steps), input mapping resolution, optional `GovernanceEvaluator` injection, pause/resume via `HumanReviewStep`
+- `runtime` — `Runtime` class (step dispatch, input mapping, governance, pause/resume via `HumanReviewStep`) + first real LLM Loop: LangGraph `StateGraph` with LangChain Anthropic for structured tool selection, permission policy, ControllerPanel shell adapter, JSONL event writer. `runRuntimeTurn` is the production entry point.
 - `creation` — module documented and positioned as worldview kernel; implementation of domain types (`Quest`, `CreatorObject`, etc.) is deferred
 - `knowledge` — module structured; no knowledge assets implemented yet
 - `agents` — `AgentRole` interface defined; `ThoughtAgent` implemented (classifies thoughts via Anthropic API)
@@ -418,7 +418,14 @@ The following reflects the current state of the repository. Placeholder concepts
 - Tauri native build blocked pending Rust installation
 
 **Test suite (root package):**
-- 242 tests passing across smoke, harness layers
+- 251 tests passing across smoke, harness, and runtime unit layers
+
+**Runtime architecture principles (added with LLM Loop):**
+- Runtime starts as a real LLM Loop, not a fixed workflow engine.
+- The runtime accepts raw human intent, uses tools to operate managed projects, and records every LLM decision, tool call, and result as runtime events.
+- Workflows are not invented upfront. They are extracted from repeated successful runtime traces.
+- Agents are not the starting point. They emerge later as stable roles after tools, workflows, and review patterns become clear.
+- Knowledge is not an upfront RAG layer. It is distilled later from completed runs, human reviews, decisions, failures, and repeated workflows.
 
 Many concepts in the architecture panorama above are marked `[placeholder]`. These represent architectural intent and future direction. They are not implemented in the current codebase.
 

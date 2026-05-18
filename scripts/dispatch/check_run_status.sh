@@ -148,6 +148,7 @@ trap 'rm -rf "$TMP_DIR"' EXIT
 ISSUE_JSON_FILE="$TMP_DIR/issue.json"
 RUNS_JSON_FILE="$TMP_DIR/runs.json"
 PRS_JSON_FILE="$TMP_DIR/prs.json"
+PRS_SEARCH_FILE="$TMP_DIR/prs_search.json"
 
 if ! gh issue view "$ISSUE_NUMBER" \
   --repo "$REPO" \
@@ -178,11 +179,24 @@ if ! gh pr list \
   echo "[]" > "$PRS_JSON_FILE"
 fi
 
-python3 - "$PROJECT_ID" "$REPO" "$ISSUE_NUMBER" "$ISSUE_JSON_FILE" "$RUNS_JSON_FILE" "$PRS_JSON_FILE" <<'PY'
+# Supplementary: search for PRs that reference the issue number via closes/fixes/resolves.
+# This catches non-standard branch names (e.g. rebase/fix branches) that the primary
+# branch-name match would miss.
+if ! gh pr list \
+  --repo "$REPO" \
+  --state all \
+  --search "is:pr #${ISSUE_NUMBER}" \
+  --limit 20 \
+  --json number,title,state,url,mergedAt,headRefName,createdAt,updatedAt,isDraft \
+  > "$PRS_SEARCH_FILE" 2>/dev/null; then
+  echo "[]" > "$PRS_SEARCH_FILE"
+fi
+
+python3 - "$PROJECT_ID" "$REPO" "$ISSUE_NUMBER" "$ISSUE_JSON_FILE" "$RUNS_JSON_FILE" "$PRS_JSON_FILE" "$PRS_SEARCH_FILE" <<'PY'
 import json
 import sys
 
-project_id, repo, issue_number, issue_path, runs_path, prs_path = sys.argv[1:]
+project_id, repo, issue_number, issue_path, runs_path, prs_path, prs_search_path = sys.argv[1:]
 
 with open(issue_path, "r", encoding="utf-8") as f:
     issue = json.load(f)
@@ -191,7 +205,19 @@ with open(runs_path, "r", encoding="utf-8") as f:
     runs = json.load(f)
 
 with open(prs_path, "r", encoding="utf-8") as f:
-    prs = json.load(f)
+    prs_primary = json.load(f)
+
+with open(prs_search_path, "r", encoding="utf-8") as f:
+    prs_search = json.load(f)
+
+# Merge primary and search results, deduplicate by PR number.
+seen_pr_numbers = set()
+prs = []
+for pr in prs_primary + prs_search:
+    n = pr.get("number")
+    if n not in seen_pr_numbers:
+        seen_pr_numbers.add(n)
+        prs.append(pr)
 
 issue_title = issue.get("title") or ""
 issue_state = issue.get("state") or ""
