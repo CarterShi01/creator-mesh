@@ -25,7 +25,7 @@ Before reading any implementation file, read in this order:
 | Directory | Purpose |
 |-----------|---------|
 | `src/triggers` | Interaction boundary — stable input primitives (Thought, Message), trigger signal types, input normalization. |
-| `src/runtime` | Execution loop — step dispatch, governance enforcement, pause/resume |
+| `src/runtime` | Always-on LLM Loop and graph execution layer. Receives raw human or trigger input, uses a real LLM API (LangChain + Anthropic) to select ControllerPanel tools, enforces permission policy, records runtime events to JSONL, supports future checkpointing, visualization, workflow extraction, and human-in-the-loop governance. Sub-modules: `loop/`, `graph/`, `llm/`, `tools/`, `adapters/`, `policies/`, `events/`. The pre-existing `runtime.ts` (StepExecutor for structured workflows) is preserved alongside. |
 | `src/agents` | Role-based execution subjects — apply knowledge, request capabilities through runtime |
 | `src/workflows` | Stable creator routines — reusable, creator-approved step sequences and types (WorkflowRun, WorkflowStep, etc.) |
 | `src/capabilities` | Callable capability layer — groups runners, connectors, and models (scaffold) |
