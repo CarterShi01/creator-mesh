@@ -10,12 +10,27 @@ export type WorkflowStepType =
   | "storage";
 
 export type WorkflowRunStatus =
-  | "created"
-  | "running"
-  | "paused"
-  | "completed"
-  | "failed"
-  | "cancelled";
+  // Phase 0 lifecycle
+  | "created" | "running" | "paused" | "completed" | "failed" | "cancelled"
+  // Phase 1 dispatch states
+  | "dispatched" | "planning" | "plan_ready" | "dispatching"
+  // Phase 1 GitHub-derived states (from check_run_status.sh overall token)
+  | "merged" | "needs_human_review" | "pr_closed_without_merge"
+  | "waiting_for_workflow" | "workflow_running" | "waiting_for_pr" | "workflow_failed"
+  | "not_dispatched" | "unknown";
+
+// Phase 2 target: will align with RunnerPort abstractions.
+export type RunnerType = "claude-code" | "human" | "script" | "codex" | "openhands";
+
+// Phase 2 target: will be persisted via src/storage ManagedProjectStore.
+export interface ManagedProject {
+  id: string;
+  repo: string; // "owner/name"
+  defaultBranch: string;
+  executor: RunnerType;
+  allowDirectMerge: boolean;
+  allowDeploy: boolean;
+}
 
 export type WorkflowStepStatus =
   | "pending"
