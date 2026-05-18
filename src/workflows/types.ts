@@ -7,7 +7,8 @@ export type WorkflowStepType =
   | "runner"
   | "knowledge"
   | "human-review"
-  | "storage";
+  | "storage"
+  | "fanout";
 
 export type WorkflowRunStatus =
   // Phase 0 lifecycle
@@ -126,10 +127,31 @@ export interface StorageStep extends WorkflowStepBase {
   outputKey: string;
 }
 
+// FanoutStep expands one step into N child workflow executions.
+// Each item in the resolved array runs the childWorkflow sequentially (Phase A)
+// or in parallel when parallelism > 1 (Phase B).
+// Child workflows must not contain HumanReviewStep — human review gates
+// are placed in the parent workflow around the FanoutStep.
+export interface FanoutStep extends WorkflowStepBase {
+  type: "fanout";
+  // Ref to prior step output that is an array: "$steps.stepId.fieldName"
+  itemsMapping: string;
+  // Workflow to execute for each item. Typed as unknown to avoid circular import;
+  // the tree runner casts it to WorkflowDefinition at runtime.
+  childWorkflow: unknown;
+  // How to build child workflow input: values are "$item.field", "$input.field", or "$steps.x.y"
+  childInputMapping: Record<string, string>;
+  // Join policy: "all" requires every child to succeed
+  joinPolicy: "all" | "first-success";
+  // Phase A: 1 (sequential). Phase B: "unlimited" or a number for bounded concurrency.
+  parallelism: number | "unlimited";
+}
+
 export type WorkflowStep =
   | AgentStep
   | ConnectorStep
   | RunnerStep
   | KnowledgeStep
   | HumanReviewStep
-  | StorageStep;
+  | StorageStep
+  | FanoutStep;

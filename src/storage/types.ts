@@ -5,7 +5,7 @@ import type { WorkflowRunStatus, RunnerType } from "../workflows/types.js";
 // dispatch definitions gain explicit steps[].
 export interface WorkflowDefinitionRecord {
   id: string; // "plan:<ideaId>" or "task:<ideaId>:<taskId>"
-  kind: "plan" | "task";
+  kind: "plan" | "task" | "epic" | "feature" | "idea";
   ideaId: string;
   taskId?: string;
   name: string;
@@ -16,6 +16,12 @@ export interface WorkflowDefinitionRecord {
   artifactPath?: string; // docs/plans/<ideaId>/ for kind="plan"
   createdAt: string; // ISO 8601
   updatedAt: string; // ISO 8601
+  // Tree node extensions (migration 002, all nullable for backward compatibility)
+  nodeType?: "idea" | "epic" | "feature" | "task";
+  parentNodeId?: string;
+  producedByRole?: "pm" | "architect" | "planner" | "op" | "human";
+  rolePhase?: "pending" | "running" | "produced" | "approved";
+  depth?: number; // 0=idea, 1=epic, 2=feature, 3=task
 }
 
 // Phase 1 storage type for a dispatched run record.
@@ -40,13 +46,18 @@ export interface WorkflowRunRecord {
   createdAt: string; // ISO 8601
   statusUpdatedAt?: string;
   completedAt?: string;
+  parentRunId?: string; // for child runs spawned by FanoutStep (migration 002)
 }
 
 export type RelationType =
   | "task_depends_on"
   | "plan_contains_task"
   | "plan_tracked_by_issue"
-  | "plan_planned_by_issue";
+  | "plan_planned_by_issue"
+  // Tree node relations (migration 002)
+  | "plan_contains_plan"    // epic→features, idea→epics
+  | "node_produced_by_role" // which agent role produced a node
+  | "node_depends_on";      // cross-level dependency
 
 export interface RelationRow {
   fromId: string;
