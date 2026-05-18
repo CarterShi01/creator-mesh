@@ -67,6 +67,7 @@ export function createRuntimeLLMClient(config: LLMModelConfig): RuntimeLLMClient
   const model = new ChatAnthropic({
     apiKey: config.apiKey,
     model: config.model,
+    ...(config.baseUrl ? { anthropicApiUrl: config.baseUrl } : {}),
   });
 
   const structured = model.withStructuredOutput(DECISION_JSON_SCHEMA, {
