@@ -15,3 +15,22 @@ export type {
   ConnectorPort,
   ConnectorResult,
 } from "./port.js";
+
+export {
+  GitHubConnectorAdapter,
+  GitHubDispatchService,
+  GitHubClient,
+  GITHUB_CAPABILITIES,
+  createGitHubConnector,
+} from "./github/index.js";
+export type {
+  GitHubConnectorConfig,
+  GitHubClientConfig,
+  CreateGitHubConnectorOptions,
+  DispatchTaskOptions,
+  DispatchTaskResult,
+  RunStatus,
+  IssueData,
+  PrData,
+  WorkflowRunData,
+} from "./github/index.js";
