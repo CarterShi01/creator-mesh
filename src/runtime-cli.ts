@@ -4,9 +4,29 @@
  * Single-shot:  tsx src/runtime-cli.ts "show recent runs"
  * Interactive:  tsx src/runtime-cli.ts
  * npm script:   npm run runtime -- "show recent runs"
+ *
+ * Env vars are loaded from .env in the project root if present.
  */
+import { readFileSync } from "fs";
+import { fileURLToPath } from "url";
+import path from "path";
 import { createInterface } from "readline/promises";
 import { stdin as input, stdout as output } from "process";
+
+// Load .env from project root (no extra dependency needed).
+// Variables already set in the shell take precedence.
+try {
+  const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+  const lines = readFileSync(path.join(root, ".env"), "utf-8").split("\n");
+  for (const line of lines) {
+    const m = line.match(/^([A-Z_][A-Z0-9_]*)\s*=\s*(.*)$/);
+    if (!m) continue;
+    const [, key, raw] = m;
+    if (!(key in process.env)) {
+      process.env[key] = raw.replace(/^(['"])(.*)\1$/, "$2").trim();
+    }
+  }
+} catch { /* .env not required */ }
 import { runRuntimeTurn, callToolWithApproval } from "./runtime/loop/runtime-loop.js";
 import type { RuntimeTurnResult } from "./runtime/loop/runtime-loop.js";
 
