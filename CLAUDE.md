@@ -5,9 +5,9 @@ You are the main development executor for this repository.
 ## Two-layer positioning (30-second read)
 
 - **Long-term target (Phase 0):** General multi-role AI agent framework — see `docs/blueprint.md`.
-- **Current phase (Phase 1 Borrow):** Super-individual dispatch control plane — lightweight glue coordinating GitHub, Claude Code, and shell scripts.
+- **Current phase (Phase 2 Wrap):** Super-individual dispatch control plane — TypeScript-native control plane with LLM Loop (LangGraph), multi-role agents (PM/Arch/Planner/OP), GitHub/Filesystem connectors, SQLite storage, HTTP server + streaming frontend. Last-mile dispatch still uses shell + GitHub Actions.
 
-Phase 1 is the first concrete instance of the Phase 0 framework. They share one repository because they converge. Do not treat them as separate projects.
+Phase 2 is the active implementation of the Phase 0 framework. They share one repository because they converge. Do not treat them as separate projects.
 
 ## Required reading
 
@@ -17,7 +17,7 @@ Phase 1 is the first concrete instance of the Phase 0 framework. They share one 
 2. `docs/blueprint.md` — north star, phase model, convergence rule
 3. `docs/control-plane/progress.md` — current capability status
 
-**When naming any new Phase 1 construct:**
+**When naming any new Phase 2 construct:**
 
 4. `docs/control-plane/convergence.md` — mandatory before naming fields, files, or modules
 
@@ -25,7 +25,7 @@ Phase 1 is the first concrete instance of the Phase 0 framework. They share one 
 
 | Task type | Additional reading |
 |-----------|-------------------|
-| Touching `src/` code | `docs/architecture.md` → target module `README.md` / `DESIGN.md` / `INTERFACE.md` |
+| Touching `src/` code | `docs/architecture.md` → target module `README.md` / `DESIGN.md` / `INTERFACE.md`; if touching multi-role agents, also read `src/knowledge/<role>/system-prompt.ts` and `src/workflows/definitions/idea-decompose.ts` |
 | Onboarding a new managed project | `docs/control-plane/add-managed-project.md` |
 
 ## Task execution workflow
@@ -49,11 +49,10 @@ Phase 1 is the first concrete instance of the Phase 0 framework. They share one 
 
 ## Convergence hard rule
 
-Before naming any new Phase 1 field, file, or module: check `docs/control-plane/convergence.md`. Using a name that drifts from the Phase 0 abstraction creates future refactoring debt. The convergence map is the safeguard.
+Before naming any new Phase 2 field, file, or module: check `docs/control-plane/convergence.md`. Using a name that drifts from the Phase 0 abstraction creates future refactoring debt. The convergence map is the safeguard.
 
-## Phase 1 principles
+## Phase 2 principles
 
-- Prefer documentation-first scaffolding, simple scripts, and GitHub-based workflow integration.
-- Do not introduce unnecessary runtime complexity.
+- Prefer extending existing ports (`RunnerPort` / `ConnectorPort` / `WorkflowRunnerPort`) over inventing new abstractions.
 - Do not assume all target project code lives inside this repository. CreatorMesh dispatches to multiple GitHub-managed systems.
 - Do not build what GitHub + Claude Code already provide.
