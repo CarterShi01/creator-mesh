@@ -43,26 +43,31 @@ export async function runRuntimeTurnWithClient(
   input: RuntimeInput,
   llmClient: RuntimeLLMClient,
   sessionId?: string,
-  turnId?: string
+  turnId?: string,
+  onEvent?: (event: RuntimeEvent) => void
 ): Promise<RuntimeTurnResult> {
   const sid = sessionId ?? input.sessionId ?? randomUUID();
   const tid = turnId ?? randomUUID();
   const inputEvent = makeInputEvent(sid, tid, input.userInput);
+  onEvent?.(inputEvent);
   const graph = createRuntimeGraph(llmClient);
 
   try {
-    const finalState = await graph.invoke({
-      sessionId: sid,
-      turnId: tid,
-      userInput: input.userInput,
-      events: [inputEvent],
-      status: "received",
-      interpretedIntent: "",
-      selectedToolName: "none",
-      selectedToolArgs: {},
-      toolResult: null,
-      finalResponse: "",
-    });
+    const finalState = await graph.invoke(
+      {
+        sessionId: sid,
+        turnId: tid,
+        userInput: input.userInput,
+        events: [inputEvent],
+        status: "received",
+        interpretedIntent: "",
+        selectedToolName: "none",
+        selectedToolArgs: {},
+        toolResult: null,
+        finalResponse: "",
+      },
+      onEvent ? { configurable: { onEvent } } : undefined
+    );
 
     const allEvents: RuntimeEvent[] = finalState.events ?? [];
     await writeRuntimeEvents(allEvents).catch(() => {});
@@ -95,7 +100,10 @@ export async function runRuntimeTurnWithClient(
 
 // runRuntimeTurn is the production entry point.
 // It loads real API config from environment variables.
-export async function runRuntimeTurn(input: RuntimeInput): Promise<RuntimeTurnResult> {
+export async function runRuntimeTurn(
+  input: RuntimeInput,
+  onEvent?: (event: RuntimeEvent) => void
+): Promise<RuntimeTurnResult> {
   const sessionId = input.sessionId ?? randomUUID();
   const turnId = randomUUID();
   const inputEvent = makeInputEvent(sessionId, turnId, input.userInput);
@@ -123,7 +131,7 @@ export async function runRuntimeTurn(input: RuntimeInput): Promise<RuntimeTurnRe
   }
 
   const llmClient = createRuntimeLLMClient(config);
-  return runRuntimeTurnWithClient(input, llmClient, sessionId, turnId);
+  return runRuntimeTurnWithClient(input, llmClient, sessionId, turnId, onEvent);
 }
 
 // callToolWithApproval executes a tool that was held at needs_approval,
