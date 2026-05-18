@@ -1,7 +1,7 @@
 # Storage
 
-> **Status: Planned (Phase 2/3 target)**
-> This module provides persistence abstractions. No implementation code exists yet — `runs.jsonl` is the Phase 1 stand-in.
+> **Status: Phase 1.5 implemented (SQLite)**
+> Four stores (`WorkflowDefinitionStore`, `WorkflowRunStore`, `ManagedProjectStore`, `RelationStore`) backed by SQLite (better-sqlite3). `runs.jsonl` / `plans/index.jsonl` remain the Phase 1 write-path during the bridge period; use the importer to sync into SQLite for reads.
 > When naming new Phase 1 constructs that relate to this module's concepts, use [convergence.md](../../docs/control-plane/convergence.md) to find the aligned name.
 
 The `storage` directory contains persistence abstractions and storage adapters.
