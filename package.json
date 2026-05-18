@@ -14,7 +14,8 @@
     "verify:quick": "npm run typecheck && npm run test:smoke",
     "verify": "npm run typecheck && npm run test",
     "think": "tsx src/cli.ts",
-    "runtime": "tsx src/runtime-cli.ts"
+    "runtime": "tsx src/runtime-cli.ts",
+    "server": "tsx src/server/index.ts"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
@@ -24,11 +25,13 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.95.1",
+    "@hono/node-server": "^2.0.3",
     "@langchain/anthropic": "^1.3.29",
     "@langchain/core": "^1.1.46",
     "@langchain/langgraph": "^1.3.0",
     "@notionhq/client": "^5.20.0",
     "@types/better-sqlite3": "^7.6.13",
-    "better-sqlite3": "^12.10.0"
+    "better-sqlite3": "^12.10.0",
+    "hono": "^4.12.19"
   }
 }
