@@ -401,24 +401,26 @@ The following reflects the current state of the repository. Placeholder concepts
 - `triggers` — `Thought` and `Message` primitives, input normalization, zero-dependency invariant enforced by harness
 - `runtime` — `Runtime` class (step dispatch, input mapping, governance, pause/resume via `HumanReviewStep`) + first real LLM Loop: LangGraph `StateGraph` with LangChain Anthropic for structured tool selection, permission policy, ControllerPanel shell adapter, JSONL event writer. `runRuntimeTurn` is the production entry point.
 - `creation` — module documented and positioned as worldview kernel; implementation of domain types (`Quest`, `CreatorObject`, etc.) is deferred
-- `knowledge` — module structured; no knowledge assets implemented yet
-- `agents` — `AgentRole` interface defined; `ThoughtAgent` implemented (classifies thoughts via Anthropic API)
-- `workflows` — `WorkflowRunnerPort` and `LocalWorkflowRunner` implemented; `ThoughtToNoteWorkflow` defined end-to-end
+- `knowledge` — Phase 2 implemented: role-specific system prompts and output schemas for pm/, architect/, planner/, op/
+- `agents` — Phase 2 implemented: `AgentRole` interface + `ThoughtAgent` + `PMAgent` / `ArchitectAgent` / `PlannerAgent` / `OPAgent` / `FeatureCollectorAgent` (multi-role decomposition pipeline); `CreatorMeshLLMClient` (shared LLM client, reads `CREATORMESH_*` env vars)
+- `workflows` — Phase 2 implemented: `WorkflowRunnerPort`, `LocalWorkflowRunner`, `TreeWorkflowRunner`; `FanoutStep` (tree expansion primitive, `parallelism: 1 | "unlimited"`); `HumanReviewStep` (pause/resume); `idea-decompose.ts` (PM→Arch→Planner→OP pipeline WorkflowDefinition)
 - `capabilities/runners` — `RunnerPort` defined; `ClaudeCodeRunnerAdapter` implemented (subprocess invocation)
-- `capabilities/connectors` — `ConnectorPort` and `CapabilityRegistry` defined; `NotionConnectorAdapter` implemented (search, read, create, append)
+- `capabilities/connectors` — Phase 2 implemented: `ConnectorPort` and `CapabilityRegistry`; `NotionConnectorAdapter`; `GitHubConnectorAdapter` (TS replacement for gh CLI); `FilesystemConnectorAdapter` (batch artifact writes to docs/plans/)
 - `capabilities/models` — scaffold only; no implementation
 - `governance` — `GovernanceEvaluator` implemented (MVP conservative policy: safe-read auto-approved, destructive denied, write/execute gated on prior human review)
-- `storage` — module structured; no adapters implemented yet
+- `storage` — Phase 2 implemented: SQLite adapters for `WorkflowRun`, `WorkflowDefinition`, `Relation`, `ManagedProject`; import-from-jsonl tool; migrations 001 (base) + 002 (node tree)
+- `server` — Phase 2 implemented: Hono HTTP server, REST endpoints (`/api/runs`, `/api/plans`, `/api/projects`, `/api/turns`), SSE streaming for LLM Loop turns, Bearer auth
 - `outputs` — module structured; no materializers implemented yet
 - `shared` — small utilities present
 
-**Console client (`clients/creator-console`):**
-- Phase 1–7 complete: responsive web console, PWA, Tauri shell scaffold, governed runtime bridge, session bridge, architecture consolidation, test infrastructure
-- 76 console tests passing
-- Tauri native build blocked pending Rust installation
+**Client: `clients/creator-app/` (Phase 2, active):**
+- Next.js + Tailwind PWA, SSE streaming runtime chat, runs/plans/settings views, iOS PWA manifest
+
+**Client: `clients/creator-console/` (frozen prototype):**
+- Phase 1–7 scaffolded; 76 console tests; pre-pivot prototype, no active development
 
 **Test suite (root package):**
-- 251 tests passing across smoke, harness, and runtime unit layers
+- 325 tests passing (54 test files) across smoke, harness, and runtime unit layers
 
 **Runtime architecture principles (added with LLM Loop):**
 - Runtime starts as a real LLM Loop, not a fixed workflow engine.
@@ -428,6 +430,9 @@ The following reflects the current state of the repository. Placeholder concepts
 - Knowledge is not an upfront RAG layer. It is distilled later from completed runs, human reviews, decisions, failures, and repeated workflows.
 
 Many concepts in the architecture panorama above are marked `[placeholder]`. These represent architectural intent and future direction. They are not implemented in the current codebase.
+
+**Multi-Role Tree Decomposition (Phase 2, 2026-05-18):**
+`ideaDecomposeWorkflow` in `src/workflows/definitions/idea-decompose.ts` is the first fully wired multi-role pipeline. It chains PM → Architect → Planner → OP agents via `FanoutStep` (tree expansion) with `HumanReviewStep` gates at three points (PRD review, arch review, plan review). `TreeWorkflowRunner` executes the pipeline sequentially (Phase A) and supports pause/resume at human review gates. Each agent reads from `src/knowledge/<role>/` and writes artifacts via `FilesystemConnectorAdapter` to `docs/plans/<ideaId>/`.
 
 ---
 

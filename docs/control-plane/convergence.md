@@ -1,6 +1,6 @@
-# Phase 1 ↔ Phase 0 Convergence Map
+# Phase 1→2 ↔ Phase 0 Convergence Map
 
-When building or naming any Phase 1 construct, consult this table first. The right column is the authoritative name — use it even when the current implementation is a shell script or YAML field. This makes Phase 2 slot-in possible without renaming.
+When building or naming any Phase 1 or Phase 2 construct, consult this table first. The right column is the authoritative name — use it even when the current implementation is a shell script or TypeScript adapter. This makes Phase 3 slot-in possible without renaming.
 
 See `docs/blueprint.md` for the strategic rationale behind this rule.
 
@@ -28,52 +28,52 @@ See `docs/blueprint.md` for the strategic rationale behind this rule.
 | Tracker issue (in primary managed-project repo) | `GovernanceCheckpoint` | `src/workflows/`, `src/governance/` |
 | `~/creator-mesh-runtime/plans/index.jsonl` | `WorkflowRun` storage cache (planning runs) | `src/storage/` (Phase 2 target) |
 | Idea ID slug (`YYYY-MM-DD-<slug>`) | `WorkflowDefinition` identifier prefix | `src/workflows/` |
+| `GitHubDispatchService` (TS) | `ConnectorPort.execute` via GitHub connector | `src/capabilities/connectors/github/` |
+| `FilesystemConnectorAdapter` | `ConnectorPort` implementation | `src/capabilities/connectors/filesystem/` |
+| `PMAgent { agentRole: "pm" }` | `AgentStep { agentRole: "pm" }` | `src/agents/pm-agent.ts` |
+| `ArchitectAgent { agentRole: "architect" }` | `AgentStep { agentRole: "architect" }` | `src/agents/architect-agent.ts` |
+| `PlannerAgent { agentRole: "planner" }` | `AgentStep { agentRole: "planner" }` | `src/agents/planner-agent.ts` |
+| `OPAgent { agentRole: "op" }` | `AgentStep { agentRole: "op" }` | `src/agents/op-agent.ts` |
+| `FanoutStep` | `WorkflowStep { type: "fanout" }` | `src/workflows/types.ts` |
+| `TreeWorkflowRunner` | `WorkflowRunnerPort` implementation | `src/workflows/tree-runner.ts` |
+| `idea-decompose.ts` workflow | `WorkflowDefinition` (multi-role pipeline) | `src/workflows/definitions/idea-decompose.ts` |
+| `runtime-cli.ts` / `decompose-cli.ts` | CLI surface over LangGraph LLM Loop / multi-role pipeline | `src/runtime-cli.ts`, `src/decompose-cli.ts` |
+| `src/server/app.ts` (Hono + SSE) | HTTP surface over `WorkflowRunnerPort` + LLM Loop | `src/server/` |
 
 ---
 
 ## Phase evolution path
 
 ```
-Phase 1 (NOW — Borrow)
-  create_claude_task.sh   →  frames a WorkflowDefinition, creates a GitHub issue
+Phase 1 (completed — Borrow)
+  create_claude_task.sh   →  framed a WorkflowDefinition, created a GitHub issue
   projects.yaml           →  flat ManagedProject registry
   runs.jsonl              →  append-only WorkflowRun log
 
-Phase 1.5 (Wrap begins)
+Phase 2 (NOW — Wrap)
   shell scripts           →  TypeScript modules implementing Phase 0 ports
-  runs.jsonl              →  WorkflowRun storage adapter (src/storage)
-  projects.yaml           →  ManagedProject persistence query
-
-Phase 2 (Full Wrap)
-  dispatcher              →  WorkflowDefinition + LocalWorkflowRunner
+  runs.jsonl              →  WorkflowRun SQLite adapter (src/storage)
+  projects.yaml           →  ManagedProject persistence query (src/storage)
+  dispatcher              →  WorkflowDefinition + LocalWorkflowRunner + TreeWorkflowRunner
   executor registry       →  RunnerRegistry (src/capabilities/runners)
-  connectors              →  ConnectorPort.execute via GitHub connector
-  governance              →  GovernanceEvaluator on every HumanReviewStep
+  connectors              →  ConnectorPort.execute (GitHub, Filesystem)
+  multi-role agents       →  AgentStep { agentRole: pm | architect | planner | op }
+  multi-role pipeline     →  idea-decompose.ts WorkflowDefinition
+  LLM runtime             →  LangGraph StateGraph in src/runtime/
+  HTTP / streaming surface →  Hono + SSE in src/server/
+  web client              →  Next.js + Tailwind in clients/creator-app/
 
-Phase 1.5 (Planner introduced — NOW)
-  create_plan_task.sh     →  AgentStep { agentRole: "planner" } dispatch
-  planner-prompt.md       →  WorkflowDefinition for the planning role
-  tasks.jsonl entry       →  WorkflowInput for child WorkflowDefinition
-  plans/index.jsonl       →  WorkflowRun cache for planning runs
-  dispatch_plan.sh        →  iterates WorkflowInput[], calls RunnerPort per task
-
-Phase 2 (Full Wrap)
-  dispatcher              →  WorkflowDefinition + LocalWorkflowRunner
-  executor registry       →  RunnerRegistry (src/capabilities/runners)
-  connectors              →  ConnectorPort.execute via GitHub connector
-  governance              →  GovernanceEvaluator on every HumanReviewStep
-
-Phase 3 (Own)
-  More RunnerType values   →  research / design / review / growth / content agents
+Phase 3 (future — Own)
+  More RunnerType values  →  research / design / review / growth / content agents
   Richer WorkflowDefinitions → multi-step, multi-role dispatch
-  Planner → TypeScript module implementing AgentStep with agentRole: "planner"
+  GovernanceEvaluator     →  full implementation in src/governance/
 ```
 
 ---
 
 ## Checklist for new Phase 1 constructs
 
-Before adding a new field, file, or concept to the Phase 1 control plane:
+Before adding a new field, file, or concept to the Phase 1 or Phase 2 control plane:
 
 - [ ] Checked this table for an existing Phase 0 name?
 - [ ] Using the Phase 0-aligned name (even if the value is just a string today)?

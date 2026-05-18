@@ -1,10 +1,14 @@
 # CreatorMesh Control Plane Progress
 
-## Phase 1: Borrow
+## Phase 2: Wrap (Active)
 
-CreatorMesh Phase 1 focuses on borrowing existing tools before building a full internal agent runtime.
+CreatorMesh Phase 2 implements the Phase 0 framework ports as TypeScript modules — LLM Loop, multi-role agents, SQLite storage, GitHub/Filesystem connectors, HTTP server, and streaming frontend. Last-mile dispatch still uses shell + GitHub Actions (Phase 1 carry-over, TS migration pending).
 
-The current execution path is:
+## Phase 1: Borrow (Completed)
+
+CreatorMesh Phase 1 bootstrapped the dispatch concept using borrowed tools.
+
+The Phase 1 execution path was:
 
 1. A GitHub issue is created in the target repository.
 2. A comment mentioning `@claude` triggers the Claude Code GitHub Action.
@@ -54,7 +58,7 @@ The full Phase 1 dispatch loop is operational end-to-end. Task-level control and
 - `Write`, `Edit`, `Bash(mkdir *)`, `Bash(gh issue create *)`, `Bash(gh pr create *)`, `Bash(gh api *)` added to `allowedTools`.
 - `--max-turns` raised from 30 to 60. Required for the Planner role to complete without hitting permission denials or turn limits.
 
-**First real LLM Loop runtime (implemented 2026-05-18, pending PR):**
+**First real LLM Loop runtime (implemented 2026-05-18, merged as PR #42):**
 - `src/runtime/loop/runtime-loop.ts` — `runRuntimeTurn(input)` production entry point; loads `ANTHROPIC_API_KEY` + `CREATORMESH_RUNTIME_MODEL`, delegates to LangGraph graph.
 - `src/runtime/graph/create-runtime-graph.ts` — LangGraph `StateGraph` with 4 nodes: `llm_decide_tool → check_permission → execute_tool → respond`. Real LLM-driven, not a keyword router.
 - `src/runtime/graph/runtime-state.ts` — `RuntimeStateAnnotation` (`Annotation.Root`) and `RuntimeStatus` type.
@@ -69,7 +73,38 @@ The full Phase 1 dispatch loop is operational end-to-end. Task-level control and
 - `.gitignore` fixed: `runtime/` → `/runtime/` so `src/runtime/` subdirectories are no longer git-ignored.
 - `docs/architecture.md` updated: LLM Loop items marked as implemented; runtime architecture principles added.
 - `docs/context-map.md` updated: `src/runtime` description updated to reflect LLM Loop.
-- Full test suite: 251 tests passing (up from 242).
+- Full test suite: 325 tests passing, 54 test files (up from 251).
+
+---
+
+## Phase 2 Wrap — TypeScript-native modules (active 2026-05-18)
+
+**Multi-role agent tree (implemented):**
+- `src/agents/pm-agent.ts` — PMAgent: produces PRD, epics, and artifact files
+- `src/agents/architect-agent.ts` — ArchitectAgent: produces arch.md, features.jsonl, risks.md, interfaces.md per epic
+- `src/agents/planner-agent.ts` — PlannerAgent: produces plan.md and tasks.jsonl per feature
+- `src/agents/op-agent.ts` — OPAgent: produces acceptance.md and exec-plan.yaml per feature
+- `src/agents/feature-collector-agent.ts` — FeatureCollectorAgent: pure TS aggregation (no LLM), flattens arch fan-out results
+- `src/agents/llm-client.ts` — CreatorMeshLLMClient (shared LLM client, reads CREATORMESH_* env vars)
+- `src/knowledge/pm|architect|planner|op/` — role-specific system prompts and output schemas
+
+**Tree workflow runtime (implemented):**
+- `src/workflows/types.ts` — `FanoutStep` (tree expansion primitive, `parallelism: 1 | "unlimited"`)
+- `src/workflows/tree-runner.ts` — `TreeWorkflowRunner` implementing `WorkflowRunnerPort`; supports `HumanReviewStep` (pause/resume) and `FanoutStep` (sequential Phase A)
+- `src/workflows/definitions/idea-decompose.ts` — `ideaDecomposeWorkflow` (PM→Arch→Planner→OP pipeline with 3 human review gates)
+- `src/capabilities/connectors/filesystem/` — `FilesystemConnectorAdapter` writes docs/plans/ artifacts
+- `src/decompose-cli.ts` — `npm run decompose` CLI entry point for multi-role pipeline
+
+**HTTP Server + Streaming Frontend (implemented 2026-05-18, PRs #46 + #49):**
+- `src/server/app.ts` — Hono server, REST endpoints (`/api/runs`, `/api/plans`, `/api/projects`, `/api/turns`), SSE `/api/turns` for LLM Loop streaming
+- `clients/creator-app/` — Next.js + Tailwind frontend, SSE streaming chat, runs/plans/settings views, iOS PWA manifest
+
+**GitHub Connector Phase 2 (implemented 2026-05-18, PR #48):**
+- `src/capabilities/connectors/github/` — TypeScript replacement for `gh` CLI dispatch
+- `GitHubDispatchService` wired into Runtime Loop tools
+- `src/runtime/adapters/github-dispatch-adapter.ts` — bridges Runtime tool → GitHubConnector
+
+---
 
 ## What This Proves
 
@@ -92,14 +127,16 @@ CreatorMesh acts as the dispatch and control layer: it decomposes ideas into tas
 - `check_run_status.sh` branch-matching only covers `claude/issue-N-*` branches. Tasks whose final PR used a custom branch (e.g., a rebase/fix branch) will show `pr_closed_without_merge` even if the work was merged — T04 (`idea-factory#11`, PR #15 closed, actual work in PR #17 `rebase/t04-cli`) demonstrates this. `plan_progress.sh` inherits this limitation.
 - `dispatch_plan.sh` does not automatically commit the back-written `tasks.jsonl` (`issue_number`/`issue_url` fields) — the operator must `git add docs/plans/<idea-id>/tasks.jsonl && git commit` after dispatch.
 - Tracker issue checklist refresh requires explicit `--refresh-tracker` flag — not automatic on merge.
-- No `WorkflowRunnerPort` TypeScript implementation yet (Phase 2 target).
-- LLM Loop: `create_claude_task` returns `needs_approval` but does not yet prompt for interactive confirmation — the operator must re-invoke with explicit intent after seeing the approval message.
-- LLM Loop: no CLI or trigger surface yet — `runRuntimeTurn` is callable from code/tests only.
+- `check_run_status.sh` branch-matching only covers `claude/issue-N-*` branches (Phase 1 carry-over).
+- `dispatch_plan.sh` does not automatically commit back-written `tasks.jsonl` fields — operator must `git add` + commit manually.
+- `TreeWorkflowRunner` runs FanoutStep children sequentially (Phase A); parallel execution (Phase B) not yet implemented.
+- `src/governance/` GovernanceEvaluator is MVP-conservative only; full policy implementation is Phase 3 target.
+- `npm run decompose` multi-role pipeline not yet validated end-to-end with live API keys.
 
 ## Next Steps
 
-- Add a minimal CLI entry point (e.g., `tsx src/cli.ts "show recent runs"`) to exercise `runRuntimeTurn` end-to-end from the terminal.
-- Add interactive `create_claude_task` approval flow (prompt user to confirm before dispatching).
-- Widen `check_run_status.sh` PR search to cover non-`claude/` branches (e.g., search by issue-closing keyword `closes #N` via `gh pr list --search`).
+- Validate `npm run decompose` multi-role pipeline end-to-end with live API keys.
+- Implement `TreeWorkflowRunner` concurrent FanoutStep execution (`parallelism > 1`, Phase B).
+- Complete `dispatch_plan.sh` TypeScript migration (last Phase 1 shell script).
+- Begin `src/governance/` GovernanceEvaluator full implementation (Phase 3 preparation).
 - Add `git commit` reminder or automation after `dispatch_plan.sh` back-writes `tasks.jsonl`.
-- Phase 2: replace shell scripts with TypeScript modules implementing Phase 0 ports (`RunnerPort`, `ConnectorPort`, `WorkflowRun` storage adapter).

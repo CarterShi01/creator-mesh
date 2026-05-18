@@ -18,24 +18,26 @@ Before reading any implementation file, read in this order:
 
 | Directory | Purpose |
 |-----------|---------|
-| `clients/creator-console` | Phase 4 Governed Runtime Bridge — isolated Vite + React + TypeScript PWA client; WorkflowClient abstraction + RunLedger; mock-only runtime; zero src/ import. Status: Frozen (pre-pivot prototype). |
+| `clients/creator-app` | Phase 2 — Active Next.js + Tailwind PWA; SSE streaming runtime chat; runs/plans/settings views; iOS PWA manifest. |
+| `clients/creator-console` | Frozen prototype (pre-pivot) — Vite + React + TypeScript; WorkflowClient abstraction + RunLedger; mock-only runtime. No active development. |
 
 ## Source Map
 
 | Directory | Purpose |
 |-----------|---------|
 | `src/triggers` | Interaction boundary — stable input primitives (Thought, Message), trigger signal types, input normalization. |
-| `src/runtime` | Always-on LLM Loop and graph execution layer. Receives raw human or trigger input, uses a real LLM API (LangChain + Anthropic) to select ControllerPanel tools, enforces permission policy, records runtime events to JSONL, supports future checkpointing, visualization, workflow extraction, and human-in-the-loop governance. Sub-modules: `loop/`, `graph/`, `llm/`, `tools/`, `adapters/`, `policies/`, `events/`. The pre-existing `runtime.ts` (StepExecutor for structured workflows) is preserved alongside. |
-| `src/agents` | Role-based execution subjects — apply knowledge, request capabilities through runtime |
-| `src/workflows` | Stable creator routines — reusable, creator-approved step sequences and types (WorkflowRun, WorkflowStep, etc.) |
+| `src/runtime` | Always-on LLM Loop and graph execution layer. Receives raw human or trigger input, uses a real LLM API (LangChain + Anthropic) to select ControllerPanel tools, enforces permission policy, records runtime events to JSONL, supports future checkpointing, visualization, workflow extraction, and human-in-the-loop governance. Sub-modules: `loop/`, `graph/`, `llm/`, `tools/`, `adapters/`, `policies/`, `events/`. Exposes HTTP API via `src/server/` (Hono + SSE). CLI: `runtime-cli.ts` (conversational), `decompose-cli.ts` (multi-role pipeline). |
+| `src/server` | HTTP API server — Hono framework, REST endpoints (`/api/runs`, `/api/plans`, `/api/projects`, `/api/turns`), SSE streaming for LLM Loop turns, Bearer auth. Phase 2 implemented. |
+| `src/agents` | Role-based execution subjects — PM / Architect / Planner / OP / FeatureCollector agents; `CreatorMeshLLMClient` (shared LLM client). Phase 2 implemented. |
+| `src/workflows` | Stable creator routines — `WorkflowRunnerPort`, `LocalWorkflowRunner`, `TreeWorkflowRunner`; `FanoutStep` + `HumanReviewStep`; `idea-decompose.ts` (multi-role pipeline WorkflowDefinition). Phase 2 implemented. |
 | `src/capabilities` | Callable capability layer — groups runners, connectors, and models (scaffold) |
 | `src/capabilities/runners` | Execution environment adapters (Claude Code, human runner, future Codex/OpenHands) |
-| `src/capabilities/connectors` | External system integrations (Notion, GitHub, MCP, etc.) |
+| `src/capabilities/connectors` | External system integrations. Phase 2 implemented: `github/` (TS replacement for gh CLI), `filesystem/` (artifact writes), `notion/`. |
 | `src/capabilities/models` | Scaffold only — future model-provider/inference capabilities |
-| `src/governance` | Approval, audit, permission, and safety policies |
-| `src/knowledge` | Callable soft knowledge — domain knowledge, principles, skills, reasoning assets. Planned (Phase 2/3 target). |
-| `src/storage` | Persistence abstractions and adapters. Planned (Phase 2/3 target). |
-| `src/shared` | Small reusable utilities. Planned (Phase 2/3 target). |
+| `src/governance` | Approval, audit, permission, and safety policies (MVP conservative policy implemented; full GovernanceEvaluator is Phase 3 target) |
+| `src/knowledge` | Callable soft knowledge — Phase 2 implemented: role-specific prompt templates and output schemas for pm/, architect/, planner/, op/ |
+| `src/storage` | Persistence abstractions and adapters — Phase 2 implemented: SQLite adapters for WorkflowRun, WorkflowDefinition, Relation, ManagedProject; import tooling; migrations 001 + 002 |
+| `src/shared` | Small reusable utilities. |
 
 
 ## Cost Rule
