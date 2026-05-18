@@ -1,4 +1,5 @@
 import { StateGraph, END, START } from "@langchain/langgraph";
+import type { RunnableConfig } from "@langchain/core/runnables";
 import { randomUUID } from "crypto";
 import { RuntimeStateAnnotation } from "./runtime-state.js";
 import type { RuntimeGraphState, RuntimeStatus } from "./runtime-state.js";
@@ -23,6 +24,10 @@ function makeEvent(
     data,
     createdAt: new Date().toISOString(),
   };
+}
+
+function getOnEvent(config?: RunnableConfig): ((e: RuntimeEvent) => void) | undefined {
+  return config?.configurable?.["onEvent"] as ((e: RuntimeEvent) => void) | undefined;
 }
 
 function formatToolResult(result: unknown): string {
@@ -53,25 +58,22 @@ export function createRuntimeGraph(llmClient: RuntimeLLMClient) {
 
   const graph = new StateGraph(RuntimeStateAnnotation)
 
-    // Node 1: Call the real LLM to interpret intent and select a tool
-    .addNode("llm_decide_tool", async (state: RuntimeGraphState) => {
-      const events: RuntimeEvent[] = [
-        makeEvent(state, "llm_started", "Calling LLM for intent understanding and tool selection"),
-      ];
+    .addNode("llm_decide_tool", async (state: RuntimeGraphState, config?: RunnableConfig) => {
+      const onEvent = getOnEvent(config);
+      const events: RuntimeEvent[] = [];
+      const emit = (e: RuntimeEvent) => { events.push(e); onEvent?.(e); };
+
+      emit(makeEvent(state, "llm_started", "Calling LLM for intent understanding and tool selection"));
 
       try {
         const decision = await llmClient.decideTool(state.userInput);
 
-        events.push(
-          makeEvent(state, "llm_completed", "LLM decision received", {
-            toolName: decision.toolName,
-            confidence: decision.confidence,
-          })
-        );
-        events.push(makeEvent(state, "intent_interpreted", decision.intent));
-        events.push(
-          makeEvent(state, "tool_selected", `Selected tool: ${decision.toolName}`)
-        );
+        emit(makeEvent(state, "llm_completed", "LLM decision received", {
+          toolName: decision.toolName,
+          confidence: decision.confidence,
+        }));
+        emit(makeEvent(state, "intent_interpreted", decision.intent));
+        emit(makeEvent(state, "tool_selected", `Selected tool: ${decision.toolName}`));
 
         if (decision.needsClarification) {
           const question =
@@ -95,7 +97,7 @@ export function createRuntimeGraph(llmClient: RuntimeLLMClient) {
         };
       } catch (err) {
         const message = (err as Error).message;
-        events.push(makeEvent(state, "tool_failed", `LLM call failed: ${message}`));
+        emit(makeEvent(state, "tool_failed", `LLM call failed: ${message}`));
         return {
           events,
           status: "failed" as RuntimeStatus,
@@ -104,16 +106,14 @@ export function createRuntimeGraph(llmClient: RuntimeLLMClient) {
       }
     })
 
-    // Node 2: Check permission policy before any tool execution
-    .addNode("check_permission", (state: RuntimeGraphState) => {
+    .addNode("check_permission", (state: RuntimeGraphState, config?: RunnableConfig) => {
+      const onEvent = getOnEvent(config);
       const toolName = state.selectedToolName;
       const decision = checkPermission(toolName);
-      const events: RuntimeEvent[] = [
-        makeEvent(state, "permission_checked", `${toolName}: ${decision}`, {
-          toolName,
-          decision,
-        }),
-      ];
+      const events: RuntimeEvent[] = [];
+      const emit = (e: RuntimeEvent) => { events.push(e); onEvent?.(e); };
+
+      emit(makeEvent(state, "permission_checked", `${toolName}: ${decision}`, { toolName, decision }));
 
       if (decision === "needs_approval") {
         return {
@@ -139,16 +139,17 @@ export function createRuntimeGraph(llmClient: RuntimeLLMClient) {
       return { events, status: "executing" as RuntimeStatus };
     })
 
-    // Node 3: Execute the selected tool
-    .addNode("execute_tool", async (state: RuntimeGraphState) => {
+    .addNode("execute_tool", async (state: RuntimeGraphState, config?: RunnableConfig) => {
+      const onEvent = getOnEvent(config);
       const toolName = state.selectedToolName;
       const tool = toolRegistry.get(toolName);
-      const events: RuntimeEvent[] = [
-        makeEvent(state, "tool_started", `Executing tool: ${toolName}`),
-      ];
+      const events: RuntimeEvent[] = [];
+      const emit = (e: RuntimeEvent) => { events.push(e); onEvent?.(e); };
+
+      emit(makeEvent(state, "tool_started", `Executing tool: ${toolName}`));
 
       if (!tool) {
-        events.push(makeEvent(state, "tool_failed", `Tool not registered: ${toolName}`));
+        emit(makeEvent(state, "tool_failed", `Tool not registered: ${toolName}`));
         return {
           events,
           status: "failed" as RuntimeStatus,
@@ -158,15 +159,11 @@ export function createRuntimeGraph(llmClient: RuntimeLLMClient) {
 
       try {
         const result = await tool.run(state.selectedToolArgs);
-        events.push(makeEvent(state, "tool_completed", `${toolName} completed successfully`));
-        return {
-          events,
-          toolResult: result,
-          status: "completed" as RuntimeStatus,
-        };
+        emit(makeEvent(state, "tool_completed", `${toolName} completed successfully`));
+        return { events, toolResult: result, status: "completed" as RuntimeStatus };
       } catch (err) {
         const message = (err as Error).message;
-        events.push(makeEvent(state, "tool_failed", `${toolName} failed: ${message}`));
+        emit(makeEvent(state, "tool_failed", `${toolName} failed: ${message}`));
         return {
           events,
           status: "failed" as RuntimeStatus,
@@ -175,21 +172,21 @@ export function createRuntimeGraph(llmClient: RuntimeLLMClient) {
       }
     })
 
-    // Node 4: Build the final user-facing response
-    .addNode("respond", (state: RuntimeGraphState) => {
+    .addNode("respond", (state: RuntimeGraphState, config?: RunnableConfig) => {
+      const onEvent = getOnEvent(config);
       const events: RuntimeEvent[] = [];
+      const emit = (e: RuntimeEvent) => { events.push(e); onEvent?.(e); };
 
       if (state.finalResponse) {
-        events.push(makeEvent(state, "response_created", state.finalResponse));
+        emit(makeEvent(state, "response_created", state.finalResponse));
         return { events };
       }
 
       const finalResponse = formatToolResult(state.toolResult);
-      events.push(makeEvent(state, "response_created", finalResponse));
+      emit(makeEvent(state, "response_created", finalResponse));
       return { events, finalResponse };
     })
 
-    // Edges
     .addEdge(START, "llm_decide_tool")
     .addConditionalEdges("llm_decide_tool", (state: RuntimeGraphState) => {
       if (state.status === "completed" || state.status === "failed") return "respond";
