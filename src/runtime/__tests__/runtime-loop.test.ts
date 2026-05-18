@@ -3,7 +3,7 @@ import os from "os";
 import path from "path";
 import { promises as fs } from "fs";
 
-// Mock the shell adapter to avoid real external script calls
+// Mock the shell adapter (listProjects, listRuns still live here)
 vi.mock("../adapters/shell-controller-adapter.js", () => ({
   listProjects: vi.fn().mockResolvedValue({
     projects: [
@@ -11,8 +11,12 @@ vi.mock("../adapters/shell-controller-adapter.js", () => ({
     ],
   }),
   listRuns: vi.fn().mockResolvedValue({ output: "run1 dispatched\nrun2 merged" }),
-  checkRunStatus: vi.fn().mockResolvedValue({ output: "merged\nPull request merged." }),
-  createClaudeTask: vi.fn().mockResolvedValue({ stdout: "Created issue #42", stderr: "" }),
+}));
+
+// Mock the GitHub dispatch adapter (checkRunStatus, createClaudeTask moved here in Phase 2)
+vi.mock("../adapters/github-dispatch-adapter.js", () => ({
+  checkRunStatus: vi.fn().mockResolvedValue({ output: "overall: merged\npr_number: 42\npr_url: https://github.com/CarterShi01/idea-factory/pull/42" }),
+  createClaudeTask: vi.fn().mockResolvedValue({ stdout: "Dispatch completed.\nIssue: https://github.com/CarterShi01/idea-factory/issues/8", stderr: "" }),
 }));
 
 import { checkPermission } from "../policies/permission-policy.js";

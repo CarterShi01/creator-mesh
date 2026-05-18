@@ -1,5 +1,6 @@
 import type { RuntimeTool, RuntimeToolName } from "./controller-tools.js";
-import * as adapter from "../adapters/shell-controller-adapter.js";
+import * as shellAdapter from "../adapters/shell-controller-adapter.js";
+import * as githubAdapter from "../adapters/github-dispatch-adapter.js";
 
 interface CheckRunStatusArgs {
   projectId: string;
@@ -17,13 +18,13 @@ const TOOL_DEFINITIONS: RuntimeTool[] = [
     name: "list_projects",
     description: "List all managed projects in the CreatorMesh registry.",
     requiresApproval: false,
-    run: () => adapter.listProjects(),
+    run: () => shellAdapter.listProjects(),
   },
   {
     name: "list_runs",
     description: "Show recent task dispatch run records from the CreatorMesh run log.",
     requiresApproval: false,
-    run: () => adapter.listRuns(),
+    run: () => shellAdapter.listRuns(),
   },
   {
     name: "check_run_status",
@@ -33,7 +34,7 @@ const TOOL_DEFINITIONS: RuntimeTool[] = [
     requiresApproval: false,
     run: (args: unknown) => {
       const { projectId, issueNumber } = args as CheckRunStatusArgs;
-      return adapter.checkRunStatus(projectId, issueNumber);
+      return githubAdapter.checkRunStatus(projectId, issueNumber);
     },
   },
   {
@@ -45,7 +46,7 @@ const TOOL_DEFINITIONS: RuntimeTool[] = [
     requiresApproval: true,
     run: (args: unknown) => {
       const { projectId, title, body } = args as CreateClaudeTaskArgs;
-      return adapter.createClaudeTask(projectId, title, body);
+      return githubAdapter.createClaudeTask(projectId, title, body);
     },
   },
 ];
