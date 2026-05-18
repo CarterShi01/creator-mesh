@@ -1,0 +1,58 @@
+import type { Capability } from "../port.js";
+
+export const GITHUB_CAPABILITIES: Capability[] = [
+  {
+    id: "github.read.issue",
+    type: "read",
+    resourceType: "issue",
+    permissionLevel: "safe-read",
+    approvalRequirement: "never",
+    reversible: true,
+    description: "Read a GitHub issue by number",
+  },
+  {
+    id: "github.create.issue",
+    type: "create",
+    resourceType: "issue",
+    permissionLevel: "external-side-effect",
+    approvalRequirement: "conditional",
+    reversible: false,
+    description: "Create a GitHub issue in a managed project repo",
+  },
+  {
+    id: "github.create.issue-comment",
+    type: "create",
+    resourceType: "issue-comment",
+    permissionLevel: "external-side-effect",
+    approvalRequirement: "conditional",
+    reversible: false,
+    description: "Add a comment to an existing GitHub issue (e.g. @claude trigger)",
+  },
+  {
+    id: "github.update.issue",
+    type: "update",
+    resourceType: "issue",
+    permissionLevel: "write",
+    approvalRequirement: "conditional",
+    reversible: false,
+    description: "Update a GitHub issue body, title, or state",
+  },
+  {
+    id: "github.search.pull-request",
+    type: "search",
+    resourceType: "pull-request",
+    permissionLevel: "safe-read",
+    approvalRequirement: "never",
+    reversible: true,
+    description: "List or search pull requests in a repo",
+  },
+  {
+    id: "github.search.workflow-run",
+    type: "search",
+    resourceType: "workflow-run",
+    permissionLevel: "safe-read",
+    approvalRequirement: "never",
+    reversible: true,
+    description: "List GitHub Actions workflow runs in a repo",
+  },
+];
